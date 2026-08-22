@@ -73,9 +73,21 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+origins = [
+    settings.frontend_url,
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:8080",
+    "http://localhost",
+    "https://localhost",
+    "capacitor://localhost",
+    "ionic://localhost",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url, "http://localhost:5173", "http://localhost:3000"],
+    allow_origins=origins,
+    allow_origin_regex=r"https?://localhost(:[0-9]+)?|capacitor://.*|ionic://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

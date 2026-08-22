@@ -30,3 +30,16 @@ services:
         value: HS256
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "10080"
+
+  - type: staticSite
+    name: paperkit-web
+    rootDir: paper-kit
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false
