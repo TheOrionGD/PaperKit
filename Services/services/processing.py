@@ -1,9 +1,7 @@
-"""PDF processing service using PyMuPDF (fitz) + LibreOffice + Tesseract"""
+"""PDF processing service using PyMuPDF (fitz) + ReportLab + Pure Python"""
 import io
 import os
 import uuid
-import subprocess
-import tempfile
 from typing import Optional
 import fitz  # PyMuPDF
 
@@ -167,39 +165,6 @@ def get_page_count(pdf_bytes: bytes) -> int:
     return count
 
 
-def convert_with_libreoffice(input_bytes: bytes, input_ext: str, output_ext: str, libreoffice_path: str = "libreoffice") -> bytes:
-    """Convert document using LibreOffice headless."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        input_path = os.path.join(tmpdir, f"input.{input_ext}")
-        with open(input_path, "wb") as f:
-            f.write(input_bytes)
-
-        cmd = [
-            libreoffice_path, "--headless"
-        ]
-        if input_ext.lower() == "pdf":
-            cmd.extend(["--infilter=writer_pdf_import"])
-        
-        cmd.extend([
-            "--convert-to", output_ext,
-            "--outdir", tmpdir, input_path,
-        ])
-        result = subprocess.run(cmd, capture_output=True, timeout=120)
-        if result.returncode != 0:
-            raise RuntimeError(f"LibreOffice error: {result.stderr.decode()}")
-
-        output_path = os.path.join(tmpdir, f"input.{output_ext}")
-        if not os.path.exists(output_path):
-            # LibreOffice may use different output names
-            files = [f for f in os.listdir(tmpdir) if f.endswith(f".{output_ext}")]
-            if not files:
-                raise RuntimeError("LibreOffice produced no output")
-            output_path = os.path.join(tmpdir, files[0])
-
-        with open(output_path, "rb") as f:
-            return f.read()
-
-
 def pdf_to_images(pdf_bytes: bytes, dpi: int = 150) -> list[bytes]:
     """Convert PDF pages to JPEG images."""
     doc = fitz.open("pdf", pdf_bytes)
@@ -267,12 +232,14 @@ def extract_text(pdf_bytes: bytes) -> str:
     return text
 
 
-def organize_pdf_pages(pdf_bytes: bytes, pages_config: list[dict]) -> bytes:
-    """Rotate, reorder, and remove pages in a single workflow."""
+def organize_pdf_pages(pdf_bytes: bytes, pages_config: Optional[list[dict]] = None, **kwargs) -> bytes:
+    """Rotate, reorder, duplicate, and remove pages in a single workflow."""
+    configs = pages_config if pages_config is not None else kwargs.get("page_actions", [])
     doc = fitz.open("pdf", pdf_bytes)
     new_doc = fitz.open()
-    for item in pages_config:
-        idx = int(item["index"])
+    for item in configs:
+        # Support index, source_page, or page_index
+        idx = int(item.get("index", item.get("source_page", item.get("page_index", 0))))
         rotation = int(item.get("rotation", 0))
         if 0 <= idx < doc.page_count:
             # Insert page from source doc
@@ -329,7 +296,28 @@ def pdf_to_html(pdf_bytes: bytes) -> bytes:
 
 
 def pdf_to_word_fallback(pdf_bytes: bytes) -> bytes:
-    """Fallback PDF to Word DOCX converter."""
+    """High-fidelity PDF to Word DOCX converter preserving layout, tables, fonts, and images."""
+    import tempfile
+    import os
+    try:
+        from pdf2docx import Converter
+        with tempfile.TemporaryDirectory() as tmpdir:
+            pdf_path = os.path.join(tmpdir, "input.pdf")
+            docx_path = os.path.join(tmpdir, "output.docx")
+            with open(pdf_path, "wb") as f:
+                f.write(pdf_bytes)
+            
+            cv = Converter(pdf_path)
+            cv.convert(docx_path)
+            cv.close()
+            
+            if os.path.exists(docx_path):
+                with open(docx_path, "rb") as f:
+                    return f.read()
+    except Exception as e:
+        print(f"[Conversion] pdf2docx failed: {e}. Using paragraph fallback...")
+
+    # Fallback if pdf2docx fails on unsupported PDF structure
     from docx import Document
     doc = fitz.open("pdf", pdf_bytes)
     docx_doc = Document()
@@ -404,24 +392,47 @@ def pdf_to_ppt_fallback(pdf_bytes: bytes) -> bytes:
 
 
 def word_to_pdf_fallback(word_bytes: bytes) -> bytes:
-    """Fallback DOCX to PDF converter."""
+    """DOCX to PDF converter preserving paragraphs, headings, and tables."""
     from docx import Document
     from reportlab.lib.pagesizes import letter
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
     from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.lib import colors
     
     doc_stream = io.BytesIO(word_bytes)
     docx_doc = Document(doc_stream)
     
     pdf_stream = io.BytesIO()
-    pdf_doc = SimpleDocTemplate(pdf_stream, pagesize=letter)
+    pdf_doc = SimpleDocTemplate(pdf_stream, pagesize=letter, leftMargin=36, rightMargin=36, topMargin=36, bottomMargin=36)
     styles = getSampleStyleSheet()
     story = []
     
+    # Process all paragraphs
     for para in docx_doc.paragraphs:
         if para.text.strip():
-            story.append(Paragraph(para.text, styles['Normal']))
-            story.append(Spacer(1, 10))
+            # Check for headings
+            style_name = 'Heading1' if 'Heading 1' in para.style.name else 'Normal'
+            story.append(Paragraph(para.text, styles.get(style_name, styles['Normal'])))
+            story.append(Spacer(1, 8))
+            
+    # Process all tables
+    for tbl in docx_doc.tables:
+        table_data = []
+        for row in tbl.rows:
+            row_data = [Paragraph(cell.text.strip(), styles['Normal']) for cell in row.cells]
+            table_data.append(row_data)
+        
+        if table_data:
+            t = Table(table_data)
+            t.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.whitesmoke),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ]))
+            story.append(t)
+            story.append(Spacer(1, 12))
             
     pdf_doc.build(story)
     return pdf_stream.getvalue()
@@ -586,6 +597,39 @@ def apply_pdf_edits(pdf_bytes: bytes, operations: list[dict]) -> bytes:
             text = op.get("text", "Note")
             annot = page.add_text_annot(fitz.Point(x, y), text)
             annot.update()
+
+        elif op_type == "table":
+            start_x = float(op.get("x", 50))
+            start_y = float(op.get("y", 50))
+            table_data = op.get("data", op.get("rows", []))
+            if table_data:
+                num_cols = max(len(r_data) for r_data in table_data) if table_data else 1
+                default_col_w = float(op.get("colWidth", 100))
+                col_widths = op.get("colWidths", [default_col_w] * num_cols)
+                row_h = float(op.get("rowHeight", 22))
+                tbl_font_size = int(op.get("fontSize", 10))
+                header_bg = op.get("headerBg", [0.92, 0.92, 0.95])
+                border_c = (float(color[0]), float(color[1]), float(color[2])) if color != [0, 0, 0] else (0.5, 0.5, 0.5)
+
+                curr_y = start_y
+                for r_idx, r_data in enumerate(table_data):
+                    curr_x = start_x
+                    for c_idx in range(num_cols):
+                        cw = float(col_widths[c_idx]) if c_idx < len(col_widths) else default_col_w
+                        cell_rect = fitz.Rect(curr_x, curr_y, curr_x + cw, curr_y + row_h)
+                        
+                        # Draw cell background & border
+                        if r_idx == 0 and header_bg:
+                            page.draw_rect(cell_rect, color=border_c, fill=(float(header_bg[0]), float(header_bg[1]), float(header_bg[2])), width=0.75)
+                        else:
+                            page.draw_rect(cell_rect, color=border_c, width=0.5)
+                        
+                        # Draw cell text
+                        val = str(r_data[c_idx]) if c_idx < len(r_data) and r_data[c_idx] is not None else ""
+                        if val:
+                            page.insert_text(fitz.Point(curr_x + 5, curr_y + row_h - 6), val, fontsize=tbl_font_size, color=(r, g, b))
+                        curr_x += cw
+                    curr_y += row_h
 
     buf = io.BytesIO()
     doc.save(buf, garbage=3, deflate=True, clean=True)

@@ -6,7 +6,7 @@ from middleware.auth import get_current_user
 from services.storage import upload_file, get_file_bytes
 from services.processing import (
     merge_pdfs, split_pdf, compress_pdf,
-    convert_with_libreoffice, rotate_pdf, add_watermark, pdf_to_images, images_to_pdf,
+    rotate_pdf, add_watermark, pdf_to_images, images_to_pdf,
     organize_pdf_pages, get_page_count,
     pdf_to_txt, pdf_to_html, pdf_to_word_fallback, pdf_to_excel_fallback, pdf_to_ppt_fallback,
     word_to_pdf_fallback, excel_to_pdf_fallback, ppt_to_pdf_fallback,
@@ -259,16 +259,6 @@ async def convert(body: dict, current_user: dict = Depends(get_current_user)):
 
     to_ext = EXT_MAP.get(to_fmt, to_fmt)
     from_ext = EXT_MAP.get(from_fmt, from_fmt)
-    
-    # Check if we should use LibreOffice
-    lo_available = False
-    if settings.libreoffice_path:
-        import shutil
-        import os
-        if os.path.isabs(settings.libreoffice_path):
-            lo_available = os.path.exists(settings.libreoffice_path)
-        else:
-            lo_available = shutil.which(settings.libreoffice_path) is not None
 
     try:
         # Route conversions
@@ -284,32 +274,25 @@ async def convert(body: dict, current_user: dict = Depends(get_current_user)):
                 result_bytes = pdf_to_html(src_bytes)
             elif to_fmt == "markdown":
                 # AI-powered or fallback Markdown
-                if settings.gemini_api_key:
+                if settings.groq_api_key or settings.gemini_api_key:
                     from services import ai_service
                     from services.processing import extract_text
                     pdf_text = extract_text(src_bytes)
                     if not pdf_text.strip():
-                        raise HTTPException(status_code=422, detail="PDF has no extractable text.")
-                    md_text = await ai_service.pdf_to_markdown(pdf_text)
+                        # Scanned PDF fallback to Multimodal OCR
+                        md_text = await ai_service.ocr_pdf(src_bytes, max_pages=10)
+                    else:
+                        md_text = await ai_service.pdf_to_markdown(pdf_text)
                     result_bytes = md_text.encode("utf-8")
                 else:
                     # Simple text extraction formatted as text
                     result_bytes = pdf_to_txt(src_bytes)
             elif to_fmt == "word":
-                if lo_available:
-                    result_bytes = convert_with_libreoffice(src_bytes, "pdf", "docx", settings.libreoffice_path)
-                else:
-                    result_bytes = pdf_to_word_fallback(src_bytes)
+                result_bytes = pdf_to_word_fallback(src_bytes)
             elif to_fmt == "excel":
-                if lo_available:
-                    result_bytes = convert_with_libreoffice(src_bytes, "pdf", "xlsx", settings.libreoffice_path)
-                else:
-                    result_bytes = pdf_to_excel_fallback(src_bytes)
+                result_bytes = pdf_to_excel_fallback(src_bytes)
             elif to_fmt == "ppt":
-                if lo_available:
-                    result_bytes = convert_with_libreoffice(src_bytes, "pdf", "pptx", settings.libreoffice_path)
-                else:
-                    result_bytes = pdf_to_ppt_fallback(src_bytes)
+                result_bytes = pdf_to_ppt_fallback(src_bytes)
             else:
                 raise HTTPException(status_code=400, detail=f"Unsupported target format {to_fmt}")
 
@@ -317,20 +300,11 @@ async def convert(body: dict, current_user: dict = Depends(get_current_user)):
             if from_fmt == "image":
                 result_bytes = images_to_pdf([src_bytes])
             elif from_fmt == "word":
-                if lo_available:
-                    result_bytes = convert_with_libreoffice(src_bytes, "docx", "pdf", settings.libreoffice_path)
-                else:
-                    result_bytes = word_to_pdf_fallback(src_bytes)
+                result_bytes = word_to_pdf_fallback(src_bytes)
             elif from_fmt == "excel":
-                if lo_available:
-                    result_bytes = convert_with_libreoffice(src_bytes, "xlsx", "pdf", settings.libreoffice_path)
-                else:
-                    result_bytes = excel_to_pdf_fallback(src_bytes)
+                result_bytes = excel_to_pdf_fallback(src_bytes)
             elif from_fmt == "ppt":
-                if lo_available:
-                    result_bytes = convert_with_libreoffice(src_bytes, "pptx", "pdf", settings.libreoffice_path)
-                else:
-                    result_bytes = ppt_to_pdf_fallback(src_bytes)
+                result_bytes = ppt_to_pdf_fallback(src_bytes)
             elif from_fmt == "txt":
                 # Convert TXT to PDF fallback
                 from reportlab.lib.pagesizes import letter
@@ -525,15 +499,9 @@ async def get_history(
     return items
 
 
-import shutil
-
 @router.get("/registry")
 async def get_tools_registry():
-    ai_available = bool(settings.gemini_api_key)
-    lo_available = False
-    if settings.libreoffice_path:
-        lo_available = shutil.which(settings.libreoffice_path) is not None
-        
+    ai_available = bool(settings.groq_api_key or settings.gemini_api_key)
     tools = [
         # Organize Category
         {

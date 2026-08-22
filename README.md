@@ -47,7 +47,7 @@ PaperKit was engineered using a modular, decoupled architecture:
 * **Frontend Core**: React 19 paired with Vite 8 for instant Hot Module Replacement (HMR) and optimized tree-shaken production bundles.
 * **Styling Framework**: Pure Vanilla CSS custom properties with hardware-accelerated transforms, zero-overhead CSS variables, and bespoke glassmorphic design tokens.
 * **Local Processing Engine**: `pdf-lib` and `pdfjs-dist` compiled for client-side document assembly, page mutations, and rendering.
-* **Backend Processing Engine**: FastAPI running asynchronous worker pools powered by PyMuPDF (Fitz), PyTesseract OCR, OpenCV, PIL, ReportLab, and FFmpeg/FFprobe binaries.
+* **Backend Processing Engine**: FastAPI running asynchronous worker pools powered by PyMuPDF (Fitz), Groq & Gemini Multimodal AI OCR, OpenCV, PIL, ReportLab, and FFmpeg/FFprobe binaries.
 * **Intelligent Routing**: A polymorphic execution context dynamically orchestrating task states, progress reporting, telemetry, and local cache synchronization.
 * **Native Runtime**: Capacitor 8 bringing native Android hardware access, haptic feedback, deep linking, background downloads, and camera scanning.
 
@@ -139,11 +139,10 @@ graph TB
         WorkerQueue["Async Background Worker Pool"]
         PyMuPDF["PyMuPDF / Fitz PDF Engine"]
         FFmpegBin["FFmpeg / FFprobe Media Processor"]
-        TesseractEngine["Tesseract OCR Engine"]
     end
 
     subgraph ExternalServices ["External Intelligence & Cloud Storage"]
-        GeminiAPI["Google Gemini 1.5 Pro / Flash API"]
+        AIProviders["Groq / Google Gemini Multimodal AI"]
         MongoDBAtlas[("MongoDB Atlas Database")]
         CloudinaryStore[("Cloudinary Ephemeral Storage")]
     end
@@ -158,8 +157,7 @@ graph TB
     APIRouters --> WorkerQueue
     WorkerQueue --> PyMuPDF
     WorkerQueue --> FFmpegBin
-    WorkerQueue --> TesseractEngine
-    WorkerQueue --> GeminiAPI
+    WorkerQueue --> AIProviders
     APIRouters <--> MongoDBAtlas
     WorkerQueue <--> CloudinaryStore
 ```
@@ -205,7 +203,7 @@ sequenceDiagram
     participant UI as React UI / Processing Context
     participant API as FastAPI Gateway
     participant Worker as Background Task Worker
-    participant Engine as Engine (FFmpeg / PyMuPDF / Tesseract)
+    participant Engine as Engine (FFmpeg / PyMuPDF / AI OCR)
     participant DB as MongoDB Atlas
 
     User->>UI: Select Media / Heavy Document & Configure Options
@@ -275,7 +273,7 @@ PaperKit hosts 28+ native production tools categorized into four modular functio
 | `remove-pages`  | **Remove Pages** | Client WASM / Local | `.pdf` | Pruned `.pdf` | `< 0.5s` | Array filter page splicing |
 | `reorder-pages` | **Reorder Pages** | Client WASM / Local | `.pdf` | Spliced `.pdf` | `< 0.5s` | Custom permutation mapping |
 | `duplicate-pages`| **Duplicate Pages** | Client WASM / Local | `.pdf` | Expanded `.pdf` | `< 0.5s` | In-memory page cloning |
-| `word-to-pdf`   | **Word to PDF** | Backend Worker | `.docx`, `.doc` | Standard `.pdf` | `< 3.2s` | Headless LibreOffice / Python-docx renderer |
+| `word-to-pdf`   | **Word to PDF** | Backend Worker | `.docx`, `.doc` | Standard `.pdf` | `< 3.2s` | Python-docx / ReportLab renderer |
 | `pdf-to-word`   | **PDF to Word** | Backend Worker | `.pdf` | Editable `.docx` | `< 3.5s` | Layout text block recognition & XML assembly |
 | `pdf-to-excel`  | **PDF to Excel** | Backend Worker | `.pdf` | Structured `.xlsx` | `< 2.9s` | Table bounding box grid detection |
 | `pdf-to-pptx`   | **PDF to PowerPoint**| Backend Worker | `.pdf` | Editable `.pptx` | `< 4.1s` | Vector-to-slide shape transformation |

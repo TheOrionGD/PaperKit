@@ -16,9 +16,11 @@ class Settings(BaseSettings):
 
 
 
-    # Google Gemini
+    # AI Providers
     gemini_api_key: str = ""
-
+    groq_api_key: str = ""
+    groq_text_model: str = "openai/gpt-oss-120b"
+    groq_vision_model: str = "llama-3.2-11b-vision-preview"
 
     # Frontend
     frontend_url: str = "http://localhost:5173"
@@ -27,8 +29,6 @@ class Settings(BaseSettings):
     firebase_project_id: str = "paperkit-ai2026"
 
     # Processing tools
-    libreoffice_path: str = "libreoffice"
-    tesseract_cmd: str = "tesseract"
     ffmpeg_path: str = "ffmpeg"
     ffprobe_path: str = "ffprobe"
 
