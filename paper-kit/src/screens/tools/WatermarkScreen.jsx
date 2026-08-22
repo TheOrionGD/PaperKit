@@ -63,7 +63,7 @@ export default function WatermarkScreen() {
       if (result.download_url) {
         const url = result.download_url.startsWith('http') || result.download_url.startsWith('blob:')
           ? result.download_url
-          : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${result.download_url}`;
+          : `${import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'}${result.download_url}`;
         window.open(url, '_blank');
       }
       navigate('/files', { replace: true });

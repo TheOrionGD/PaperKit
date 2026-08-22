@@ -70,7 +70,7 @@ export default function JobProgressBar({ job, onCancel, compact = false }) {
                   key={i}
                   href={asset.storageUrl?.startsWith('http')
                     ? asset.storageUrl
-                    : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${asset.storageUrl}`}
+                    : `${import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'}${asset.storageUrl}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="job-progress__download-btn"

@@ -146,7 +146,7 @@ async function fetchFileArrayBuffer(fileOrId) {
   const downloadUrl = await getFileDownloadUrl(fileId);
   const fullUrl = downloadUrl.startsWith('http')
     ? downloadUrl
-    : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${downloadUrl}`;
+    : `${import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'}${downloadUrl}`;
 
   const response = await api.get(fullUrl, { responseType: 'arraybuffer' });
   return response.data;

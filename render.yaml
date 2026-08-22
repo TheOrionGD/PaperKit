@@ -25,7 +25,7 @@ services:
       - key: GROQ_VISION_MODEL
         value: llama-3.2-11b-vision-preview
       - key: FRONTEND_URL
-        sync: false
+        value: https://paperkit-web.onrender.com
       - key: ALGORITHM
         value: HS256
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
@@ -42,4 +42,4 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        sync: false
+        value: https://paperkit-backend.onrender.com

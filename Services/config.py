@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     groq_vision_model: str = "llama-3.2-11b-vision-preview"
 
     # Frontend
-    frontend_url: str = "http://localhost:5173"
+    frontend_url: str = "https://paperkit-web.onrender.com"
 
     # Firebase
     firebase_project_id: str = "paperkit-ai2026"

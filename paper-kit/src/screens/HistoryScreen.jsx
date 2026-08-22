@@ -6,7 +6,7 @@ import LoadingState from '../components/ui/LoadingState';
 import EmptyState from '../components/ui/EmptyState';
 import './HistoryScreen.css';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com';
 
 const STATUS_ICONS = {
   completed: <CheckCircle size={16} style={{ color: '#22c55e' }} />,

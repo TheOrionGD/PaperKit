@@ -200,7 +200,7 @@ export default function ProfileScreen() {
         <div className="profile-screen__avatar-container">
           {user?.avatar_url ? (
             <img 
-              src={user.avatar_url.startsWith('http') ? user.avatar_url : `http://localhost:8000${user.avatar_url}`} 
+              src={user.avatar_url.startsWith('http') ? user.avatar_url : `${import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'}${user.avatar_url}`} 
               alt="Profile" 
               className="profile-screen__avatar-img" 
             />

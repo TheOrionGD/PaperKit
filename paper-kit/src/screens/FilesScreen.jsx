@@ -145,7 +145,7 @@ export default function FilesScreen() {
     } else {
       try {
         const downloadUrl = await getFileDownloadUrl(file._id);
-        const fullUrl = downloadUrl.startsWith('http') ? downloadUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${downloadUrl}`;
+        const fullUrl = downloadUrl.startsWith('http') ? downloadUrl : `${import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'}${downloadUrl}`;
         if (window.Capacitor?.isNativePlatform?.()) {
           await downloadAndOpenFile(fullUrl, file.original_filename, file.mime_type || 'application/octet-stream');
         } else {
@@ -162,7 +162,7 @@ export default function FilesScreen() {
     if (!file) return;
     try {
       const downloadUrl = await getFileDownloadUrl(file._id);
-      const fullUrl = downloadUrl.startsWith('http') ? downloadUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${downloadUrl}`;
+      const fullUrl = downloadUrl.startsWith('http') ? downloadUrl : `${import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'}${downloadUrl}`;
       await downloadAndOpenFile(fullUrl, file.original_filename, file.mime_type || 'application/octet-stream');
       showToast('Download started', 'success');
     } catch (err) {
@@ -175,7 +175,7 @@ export default function FilesScreen() {
     if (!file) return;
     try {
       const downloadUrl = await getFileDownloadUrl(file._id);
-      const fullUrl = downloadUrl.startsWith('http') ? downloadUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${downloadUrl}`;
+      const fullUrl = downloadUrl.startsWith('http') ? downloadUrl : `${import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'}${downloadUrl}`;
       await shareFile(fullUrl, file.original_filename, file.mime_type || 'application/octet-stream');
     } catch (err) {
       showToast('Sharing failed: ' + err.message, 'error');

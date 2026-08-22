@@ -48,7 +48,7 @@ export default function StorageScreen() {
   const handlePreview = async (file) => {
     try {
       const downloadUrl = await getFileDownloadUrl(file._id);
-      const url = downloadUrl.startsWith('http') ? downloadUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${downloadUrl}`;
+      const url = downloadUrl.startsWith('http') ? downloadUrl : `${import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'}${downloadUrl}`;
       window.open(url, '_blank');
     } catch (err) {
       setError(err?.message || 'Preview failed');
@@ -58,7 +58,7 @@ export default function StorageScreen() {
   const handleDownload = async (file) => {
     try {
       const downloadUrl = await getFileDownloadUrl(file._id);
-      const url = downloadUrl.startsWith('http') ? downloadUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${downloadUrl}`;
+      const url = downloadUrl.startsWith('http') ? downloadUrl : `${import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'}${downloadUrl}`;
       const a = document.createElement('a');
       a.href = url;
       a.download = file.original_filename;
@@ -310,7 +310,7 @@ export default function StorageScreen() {
               <div className="storage-meta-row">
                 <span className="storage-meta-label">URL</span>
                 <span className="storage-meta-val">
-                  <a href={selectedFileMeta.storageUrl.startsWith('http') ? selectedFileMeta.storageUrl : `http://localhost:8000${selectedFileMeta.storageUrl}`} target="_blank" rel="noopener noreferrer">
+                  <a href={selectedFileMeta.storageUrl.startsWith('http') ? selectedFileMeta.storageUrl : `${import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'}${selectedFileMeta.storageUrl}`} target="_blank" rel="noopener noreferrer">
                     Open File
                   </a>
                 </span>

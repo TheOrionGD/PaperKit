@@ -213,7 +213,7 @@ export default function HomeScreen() {
                     onClick={() => {
                       const url = item.output_file.storage_url.startsWith('http')
                         ? item.output_file.storage_url
-                        : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${item.output_file.storage_url}`;
+                        : `${import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'}${item.output_file.storage_url}`;
                       window.open(url, '_blank');
                     }}
                     style={{
