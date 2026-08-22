@@ -1,5 +1,5 @@
 # ==============================================================================
-# OS generated files
+# OS Generated Files
 # ==============================================================================
 .DS_Store
 .DS_Store?
@@ -17,34 +17,70 @@ desktop.ini
 .vscode/
 *.swp
 *.swo
+*.sublime-workspace
+*.sublime-project
 .gemini/
 .agents/
 .system_generated/
 
 # ==============================================================================
-# Python (Services)
+# Environment Variables & Secrets (CRITICAL)
 # ==============================================================================
-# Byte-compiled / optimized / DLL files
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.env.local
+!.env.example
+!*/.env.example
+google-services.json
+GoogleService-Info.plist
+*.keystore
+*.jks
+*.p8
+*.p12
+
+# ==============================================================================
+# Node.js & Web App (paper-kit)
+# ==============================================================================
+node_modules/
+paper-kit/node_modules/
+npm-debug.log
+npm-debug.log.*
+yarn-error.log
+yarn-debug.log*
+.pnpm-debug.log
+dist/
+paper-kit/dist/
+dist-ssr/
+*.local
+
+# ==============================================================================
+# Python & Backend (Services)
+# ==============================================================================
 __pycache__/
+*/__pycache__/
 *.py[cod]
 *$py.class
-
-# Virtual Environments
 venv/
 .venv/
 env/
 .env/
 pip-log.txt
 pip-delete-this-directory.txt
-
-# Runtime file uploads and processing cache
-Services/storage/
-storage/
-
-# Distribution / packaging
+.pytest_cache/
+.coverage
+htmlcov/
+coverage/
+.nyc_output/
+*.egg-info/
+.installed.cfg
+*.egg
 build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
@@ -55,27 +91,39 @@ sdist/
 var/
 wheels/
 share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
 
-# Environment variables
-.env
-.env.*
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-!.env.example
-!*/.env.example
+# Runtime Storage & File Uploads
+Services/storage/
+storage/
 
-# Binaries and packages
+# ==============================================================================
+# Android & Native Mobile Builds (Capacitor)
+# ==============================================================================
+android/.gradle/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/build/
+android/local.properties
+android/.idea/
+android/*.iml
+android/app/*.iml
+paper-kit/android/.gradle/
+paper-kit/android/build/
+paper-kit/android/app/build/
+paper-kit/android/capacitor-cordova-android-plugins/build/
+paper-kit/android/local.properties
+paper-kit/android/.idea/
+paper-kit/android/*.iml
+paper-kit/android/app/*.iml
+ios/App/build/
+ios/App/Pods/
+paper-kit/ios/App/build/
+paper-kit/ios/App/Pods/
 *.apk
 *.aab
 
 # ==============================================================================
-# Temporary / Scratch & Error Dumps
+# Temporary / Scratch & Logs
 # ==============================================================================
 fix*.cjs
 fix*.js
@@ -83,8 +131,11 @@ lint.json
 error.txt
 ac.txt
 firebasse
-google-services.json
 *.log
 *.bat.log
-coverage/
-.nyc_output/
+PaperKit_*.docx
+PaperKit_*.xlsx
+PaperKit_*.pptx
+PaperKit_from_*.pdf
+PaperKit_edited_*.pdf
+PaperKit-release.apk
