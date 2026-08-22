@@ -114,9 +114,15 @@
   --shadow-lg:  0 8px 24px rgba(0,0,0,0.12);
   --shadow-fab: 0 4px 16px rgba(37,99,235,0.40);
 
+  /* ── Safe Area Variables ──────────────────────────────────── */
+  --safe-area-top:    env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left:   env(safe-area-inset-left, 0px);
+  --safe-area-right:  env(safe-area-inset-right, 0px);
+
   /* ── Layout ───────────────────────────────────────────────── */
-  --topbar-height:    56px;
-  --bottomnav-height: 68px;
+  --topbar-height:    calc(56px + env(safe-area-inset-top, 0px));
+  --bottomnav-height: calc(68px + env(safe-area-inset-bottom, 0px));
   --max-content-width: 480px;
 
   /* ── Transitions ──────────────────────────────────────────── */

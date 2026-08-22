@@ -52,9 +52,22 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (email, password) => {
     setError(null);
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const idToken = await userCredential.user.getIdToken();
-    const data = await firebaseLogin(idToken);
+    let idToken;
+    let name = null;
+    if (Capacitor.isNativePlatform()) {
+      const res = await FirebaseAuthentication.signInWithEmailAndPassword({
+        email,
+        password,
+      });
+      name = res.user?.displayName || null;
+      const tokenResult = await FirebaseAuthentication.getIdToken();
+      idToken = tokenResult.token;
+    } else {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      name = userCredential.user.displayName || null;
+      idToken = await userCredential.user.getIdToken();
+    }
+    const data = await firebaseLogin(idToken, name);
     localStorage.setItem('pk_token', data.access_token);
     const me = await getMe();
     setUser(me);
@@ -63,9 +76,28 @@ export function AuthProvider({ children }) {
 
   const register = useCallback(async (name, email, password) => {
     setError(null);
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    await updateProfile(userCredential.user, { displayName: name });
-    const idToken = await userCredential.user.getIdToken();
+    let idToken;
+    if (Capacitor.isNativePlatform()) {
+      await FirebaseAuthentication.createUserWithEmailAndPassword({
+        email,
+        password,
+      });
+      if (name) {
+        try {
+          await FirebaseAuthentication.updateProfile({ displayName: name });
+        } catch (e) {
+          console.warn('Failed to update native profile name:', e);
+        }
+      }
+      const tokenResult = await FirebaseAuthentication.getIdToken();
+      idToken = tokenResult.token;
+    } else {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      if (name) {
+        await updateProfile(userCredential.user, { displayName: name });
+      }
+      idToken = await userCredential.user.getIdToken();
+    }
     const data = await firebaseLogin(idToken, name);
     localStorage.setItem('pk_token', data.access_token);
     const me = await getMe();
@@ -85,19 +117,24 @@ export function AuthProvider({ children }) {
   const loginWithGoogle = useCallback(async () => {
     setError(null);
     let idToken;
-    let _name = null;
+    let name = null;
     
     if (Capacitor.isNativePlatform()) {
-      const _result = await FirebaseAuthentication.signIn({
-        provider: 'google',
-      });
-      // _let let _let _name2 = result.user?.displayName || null;
+      let result;
+      try {
+        result = await FirebaseAuthentication.signInWithGoogle();
+      } catch (nativeErr) {
+        console.warn('Credential manager sign-in failed, trying fallback:', nativeErr);
+        // Fallback to legacy Google Sign-In intent if Credential Manager fails
+        result = await FirebaseAuthentication.signInWithGoogle({ useCredentialManager: false });
+      }
+      name = result.user?.displayName || null;
       const tokenResult = await FirebaseAuthentication.getIdToken();
       idToken = tokenResult.token;
     } else {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      _name = result.user?.displayName || null;
+      name = result.user?.displayName || null;
       idToken = await result.user.getIdToken();
     }
     
@@ -105,7 +142,7 @@ export function AuthProvider({ children }) {
       throw new Error('Failed to retrieve Firebase ID Token');
     }
     
-    const data = await firebaseLogin(idToken, _name);
+    const data = await firebaseLogin(idToken, name);
     localStorage.setItem('pk_token', data.access_token);
     const me = await getMe();
     setUser(me);

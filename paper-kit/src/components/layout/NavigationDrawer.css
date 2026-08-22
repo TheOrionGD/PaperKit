@@ -47,7 +47,10 @@
 
 .nav-drawer__header {
   background: linear-gradient(135deg, var(--gradient-profile-start), var(--gradient-profile-end));
-  padding: var(--space-6) var(--space-4) var(--space-5);
+  padding-top: calc(var(--space-6) + env(safe-area-inset-top, 0px));
+  padding-left: var(--space-4);
+  padding-right: var(--space-4);
+  padding-bottom: var(--space-5);
   color: white;
   display: flex;
   flex-direction: column;

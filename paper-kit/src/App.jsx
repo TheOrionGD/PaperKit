@@ -11,9 +11,18 @@ function ThemeApp() {
 
   useEffect(() => {
     prewarmBackend();
+    import('@capacitor/core').then(({ Capacitor }) => {
+      if (Capacitor.isNativePlatform()) {
+        import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
+          StatusBar.setStyle({ style: Style.Light }).catch(() => {});
+        }).catch(() => {});
+      }
+    }).catch(() => {});
   }, []);
+
   useEffect(() => {
-    if (user?.preferences?.dark_mode) {
+    const isDark = Boolean(user?.preferences?.dark_mode);
+    if (isDark) {
       document.documentElement.setAttribute('data-theme', 'dark');
     } else {
       document.documentElement.removeAttribute('data-theme');
@@ -21,6 +30,13 @@ function ThemeApp() {
     if (user?.preferences?.language) {
       document.documentElement.lang = user.preferences.language;
     }
+    import('@capacitor/core').then(({ Capacitor }) => {
+      if (Capacitor.isNativePlatform()) {
+        import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
+          StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light }).catch(() => {});
+        }).catch(() => {});
+      }
+    }).catch(() => {});
   }, [user]);
 
   return (
