@@ -63,33 +63,16 @@ MANIFEST
 # Environment variables
 .env
 .env.*
-!.env.example
-
-# ==============================================================================
-# Node.js (paper-kit / Frontend)
-# ==============================================================================
-# Dependencies
-node_modules/
-npm-debug.log
-npm-debug.log.*
-yarn-error.log
-yarn-debug.log*
-.pnpm-debug.log
-
-# Build output
-dist/
-dist-ssr/
-*.local
-
-# Environment variables
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+!.env.example
+!*/.env.example
 
-# Android / iOS Capacitor
-/android/
-/ios/
+# Binaries and packages
+*.apk
+*.aab
 
 # ==============================================================================
 # Temporary / Scratch & Error Dumps

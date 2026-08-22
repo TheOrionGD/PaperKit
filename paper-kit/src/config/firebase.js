@@ -2,12 +2,12 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDMpg4289jTFbZD-PjZrRoqzaJXQV0n0ss",
-  authDomain: "paperkit-ai2026.firebaseapp.com",
-  projectId: "paperkit-ai2026",
-  storageBucket: "paperkit-ai2026.firebasestorage.app",
-  messagingSenderId: "370937266250",
-  appId: "1:370937266250:web:fa9bc5b510a5c8523026b3"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);
