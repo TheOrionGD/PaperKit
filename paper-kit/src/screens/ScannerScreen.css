@@ -1,0 +1,274 @@
+.scanner-screen {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  z-index: var(--z-overlay);
+}
+
+.scanner-screen__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: env(safe-area-inset-top, 16px) var(--space-4) var(--space-3);
+  background: rgba(0,0,0,0.5);
+  z-index: 2;
+}
+
+.scanner-screen__title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: white;
+}
+
+.scanner-screen__icon-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: rgba(255,255,255,0.15);
+  transition: background var(--transition-fast);
+}
+
+.scanner-screen__icon-btn:hover { background: rgba(255,255,255,0.25); }
+
+.scanner-screen__camera {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #000;
+}
+
+.scanner-screen__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scanner-screen__error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: rgba(255,255,255,0.7);
+  font-size: var(--font-size-base);
+  text-align: center;
+  padding: var(--space-6);
+}
+
+/* Crop overlay */
+.scanner-screen__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scanner-screen__crop-box {
+  width: 75%;
+  aspect-ratio: 3/4;
+  position: relative;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-radius: 4px;
+}
+
+.scanner-screen__corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-color: white;
+  border-style: solid;
+}
+
+.scanner-screen__corner--tl { top: -2px; left: -2px; border-width: 3px 0 0 3px; border-radius: 3px 0 0 0; }
+.scanner-screen__corner--tr { top: -2px; right: -2px; border-width: 3px 3px 0 0; border-radius: 0 3px 0 0; }
+.scanner-screen__corner--bl { bottom: -2px; left: -2px; border-width: 0 0 3px 3px; border-radius: 0 0 0 3px; }
+.scanner-screen__corner--br { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; border-radius: 0 0 3px 0; }
+
+/* Scan type tabs */
+.scanner-screen__type-row {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(0,0,0,0.7);
+}
+
+.scanner-screen__type-tab {
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: rgba(255,255,255,0.7);
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.scanner-screen__type-tab--active {
+  color: white;
+  border-color: white;
+  font-weight: var(--font-weight-semibold);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  border-color: transparent;
+  background: transparent;
+}
+
+/* Bottom controls */
+.scanner-screen__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: var(--space-4) var(--space-6) env(safe-area-inset-bottom, 24px);
+  background: rgba(0,0,0,0.8);
+}
+
+.scanner-screen__ctrl-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  color: white;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  min-width: 64px;
+  transition: opacity var(--transition-fast);
+}
+
+.scanner-screen__ctrl-btn:active { opacity: 0.7; }
+
+.scanner-screen__capture-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-full);
+  border: 3px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition-fast);
+}
+
+.scanner-screen__capture-btn:active { transform: scale(0.92); }
+
+.scanner-screen__capture-btn:disabled { opacity: 0.5; }
+
+.scanner-screen__capture-inner {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-full);
+  background: white;
+  transition: background var(--transition-fast);
+}
+
+.scanner-screen__capture-btn--capturing .scanner-screen__capture-inner {
+  background: rgba(255,255,255,0.7);
+}
+
+/* Crop Workspace UI classes */
+.scanner-screen--crop {
+  background: #111;
+}
+
+.scanner-screen__crop-container {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  overflow: hidden;
+}
+
+.scanner-screen__image-wrap {
+  position: relative;
+  max-width: 100%;
+  max-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  user-select: none;
+}
+
+.scanner-screen__preview-image {
+  max-width: 100%;
+  max-height: 60vh;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  pointer-events: none;
+}
+
+.scanner-screen__svg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+}
+
+.scanner-screen__loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-base);
+}
+
+.scanner-screen__controls--crop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.scanner-screen__btn {
+  flex: 1;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.scanner-screen__btn--primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.scanner-screen__btn--primary:hover {
+  background: var(--color-primary-pressed);
+}
+
+.scanner-screen__btn--primary:disabled {
+  background: var(--color-disabled);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.scanner-screen__btn--secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.scanner-screen__btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+

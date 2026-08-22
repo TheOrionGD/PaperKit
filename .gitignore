@@ -1,0 +1,107 @@
+# ==============================================================================
+# OS generated files
+# ==============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ==============================================================================
+# IDEs, Editors & AI Agents
+# ==============================================================================
+.idea/
+.vscode/
+*.swp
+*.swo
+.gemini/
+.agents/
+.system_generated/
+
+# ==============================================================================
+# Python (Services)
+# ==============================================================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+venv/
+.venv/
+env/
+.env/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Runtime file uploads and processing cache
+Services/storage/
+storage/
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# ==============================================================================
+# Node.js (paper-kit / Frontend)
+# ==============================================================================
+# Dependencies
+node_modules/
+npm-debug.log
+npm-debug.log.*
+yarn-error.log
+yarn-debug.log*
+.pnpm-debug.log
+
+# Build output
+dist/
+dist-ssr/
+*.local
+
+# Environment variables
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Android / iOS Capacitor
+/android/
+/ios/
+
+# ==============================================================================
+# Temporary / Scratch & Error Dumps
+# ==============================================================================
+fix*.cjs
+fix*.js
+lint.json
+error.txt
+ac.txt
+firebasse
+google-services.json
+*.log
+*.bat.log
+coverage/
+.nyc_output/

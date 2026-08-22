@@ -1,0 +1,175 @@
+/* =============================================================
+   PaperKit Design Tokens
+   Single source of truth for all visual values.
+   All components MUST consume these tokens — no raw values.
+   ============================================================= */
+
+:root {
+  /* ── Brand Colors ─────────────────────────────────────────── */
+  --color-primary:          #2563EB;
+  --color-primary-pressed:  #1D4ED8;
+  --color-primary-soft:     #EEF3FF;
+  --color-primary-soft-hover: #DCE8FF;
+  --color-primary-border:   #BFDBFE;
+
+  /* ── Surfaces ─────────────────────────────────────────────── */
+  --color-background:       #F5F6FA;
+  --color-surface:          #FFFFFF;
+  --color-surface-elevated: #FFFFFF;
+  --color-surface-overlay:  rgba(0, 0, 0, 0.4);
+
+  /* ── Text ─────────────────────────────────────────────────── */
+  --color-text-primary:     #111827;
+  --color-text-secondary:   #6B7280;
+  --color-text-muted:       #9CA3AF;
+  --color-text-inverse:     #FFFFFF;
+  --color-text-link:        #2563EB;
+
+  /* ── Border & Divider ─────────────────────────────────────── */
+  --color-border:           #E5E7EB;
+  --color-divider:          #F3F4F6;
+
+  /* ── Semantic States ──────────────────────────────────────── */
+  --color-success:          #10B981;
+  --color-success-soft:     #D1FAE5;
+  --color-warning:          #F59E0B;
+  --color-warning-soft:     #FEF3C7;
+  --color-warning-hover:    #FDE68A;
+  --color-error:            #EF4444;
+  --color-error-soft:       #FEE2E2;
+  --color-info:             #3B82F6;
+  --color-info-soft:        #DBEAFE;
+
+  /* ── Disabled ─────────────────────────────────────────────── */
+  --color-disabled:         #D1D5DB;
+  --color-disabled-text:    #9CA3AF;
+
+  /* ── Profile Gradient ─────────────────────────────────────── */
+  --gradient-profile-start: #5B21B6;
+  --gradient-profile-end:   #1D4ED8;
+
+  /* ── Tool Icon Colors (categorical) ──────────────────────── */
+  --tool-blue:              #2563EB;
+  --tool-blue-soft:         #DBEAFE;
+  --tool-red:               #EF4444;
+  --tool-red-soft:          #FEE2E2;
+  --tool-green:             #10B981;
+  --tool-green-soft:        #D1FAE5;
+  --tool-orange:            #F59E0B;
+  --tool-orange-soft:       #FEF3C7;
+  --tool-purple:            #8B5CF6;
+  --tool-purple-soft:       #EDE9FE;
+  --tool-teal:              #14B8A6;
+  --tool-teal-soft:         #CCFBF1;
+  --tool-pink:              #EC4899;
+  --tool-pink-soft:         #FCE7F3;
+  --tool-indigo:            #6366F1;
+  --tool-indigo-soft:       #E0E7FF;
+
+  /* ── Typography ───────────────────────────────────────────── */
+  --font-family:            'Inter', system-ui, -apple-system, sans-serif;
+  --font-size-xs:           11px;
+  --font-size-sm:           12px;
+  --font-size-base:         14px;
+  --font-size-md:           15px;
+  --font-size-lg:           16px;
+  --font-size-xl:           18px;
+  --font-size-2xl:          20px;
+  --font-size-3xl:          24px;
+  --font-weight-regular:    400;
+  --font-weight-medium:     500;
+  --font-weight-semibold:   600;
+  --font-weight-bold:       700;
+  --line-height-tight:      1.2;
+  --line-height-base:       1.5;
+  --letter-spacing-tight:   -0.3px;
+  --letter-spacing-normal:  0px;
+  --letter-spacing-wide:    0.5px;
+  --letter-spacing-wider:   1px;
+
+  /* ── Spacing ──────────────────────────────────────────────── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-7:  28px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ── Border Radius ────────────────────────────────────────── */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   14px;
+  --radius-xl:   18px;
+  --radius-2xl:  24px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ──────────────────────────────────────────────── */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.10);
+  --shadow-lg:  0 8px 24px rgba(0,0,0,0.12);
+  --shadow-fab: 0 4px 16px rgba(37,99,235,0.40);
+
+  /* ── Layout ───────────────────────────────────────────────── */
+  --topbar-height:    56px;
+  --bottomnav-height: 68px;
+  --max-content-width: 480px;
+
+  /* ── Transitions ──────────────────────────────────────────── */
+  --transition-fast:   100ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base:   200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow:   300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-micro:  100ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-page:   350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Z-index ──────────────────────────────────────────────── */
+  --z-base:    1;
+  --z-overlay: 100;
+  --z-modal:   200;
+  --z-toast:   300;
+  --z-topbar:  50;
+  --z-bottomnav: 50;
+}
+
+/* =============================================================
+   Dark Theme Overrides
+   ============================================================= */
+[data-theme='dark'] {
+  /* ── Surfaces ─────────────────────────────────────────────── */
+  --color-background:       #121212;
+  --color-surface:          #1E1E1E;
+  --color-surface-elevated: #2C2C2C;
+  --color-surface-overlay:  rgba(0, 0, 0, 0.7);
+
+  /* ── Text ─────────────────────────────────────────────────── */
+  --color-text-primary:     #F9FAFB;
+  --color-text-secondary:   #9CA3AF;
+  --color-text-muted:       #6B7280;
+  --color-text-inverse:     #111827;
+
+  /* ── Border & Divider ─────────────────────────────────────── */
+  --color-border:           #374151;
+  --color-divider:          #2D3748;
+
+  /* ── Tool Icon Colors (categorical) - Muted for Dark Mode ── */
+  --tool-blue-soft:         rgba(37, 99, 235, 0.2);
+  --tool-red-soft:          rgba(239, 68, 68, 0.2);
+  --tool-green-soft:        rgba(16, 185, 129, 0.2);
+  --tool-orange-soft:       rgba(245, 158, 11, 0.2);
+  --tool-purple-soft:       rgba(139, 92, 246, 0.2);
+  --tool-teal-soft:         rgba(20, 184, 166, 0.2);
+  --tool-pink-soft:         rgba(236, 72, 153, 0.2);
+  --tool-indigo-soft:       rgba(99, 102, 241, 0.2);
+  
+  /* ── Semantic States - Dark mode adjustments ──────────────── */
+  --color-primary-soft:     rgba(37, 99, 235, 0.15);
+  --color-primary-soft-hover: rgba(37, 99, 235, 0.25);
+  
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.5);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.6);
+  --shadow-lg:  0 8px 24px rgba(0,0,0,0.7);
+}

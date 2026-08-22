@@ -1,0 +1,73 @@
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--max-content-width);
+  height: var(--bottomnav-height);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-divider);
+  z-index: var(--z-bottomnav);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 var(--space-2);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.bottom-nav__item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: var(--space-1) 0;
+  min-height: 44px;
+  transition: opacity var(--transition-micro), transform var(--transition-micro);
+  will-change: transform;
+}
+
+.bottom-nav__item:active {
+  opacity: 0.85;
+  transform: scale(0.95);
+}
+
+.bottom-nav__label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+  line-height: 1;
+}
+
+.bottom-nav__item--active .bottom-nav__label {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Centered camera FAB */
+.bottom-nav__fab {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-fab);
+  flex-shrink: 0;
+  margin-bottom: 8px;
+  transition: transform var(--transition-micro), background var(--transition-micro), box-shadow var(--transition-micro);
+  will-change: transform;
+}
+
+.bottom-nav__fab:hover {
+  transform: translateY(-2px) scale(1.06);
+  box-shadow: 0 6px 20px rgba(37,99,235,0.50);
+}
+
+.bottom-nav__fab:active {
+  transform: translateY(0) scale(0.92);
+  background: var(--color-primary-pressed);
+}

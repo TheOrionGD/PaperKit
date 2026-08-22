@@ -1,0 +1,1058 @@
+
+# PAPERKIT — CLIENT UI SOURCE-OF-TRUTH DEVELOPMENT CONTRACT
+
+## MASTER RULE
+
+The uploaded PaperKit client design (o:\PROJECTS\College\PaperKit\UI.jpeg
+)reference is the **single source of truth for the application's visual design and UX direction**.
+
+The existing reference image must be studied before implementing each UI-related phase.
+
+Do NOT redesign the application according to your own preferences.
+
+Do NOT introduce:
+
+* animated illustrations
+* animated character illustrations
+* decorative AI-generated illustrations
+* unnecessary gradients
+* glassmorphism
+* excessive shadows
+* unrelated colors
+* generic dashboard layouts
+* generic admin-panel layouts
+* unrelated navigation patterns
+* arbitrary UI components
+
+The final application must visually and structurally reproduce the client's PaperKit design language.
+
+The reference image establishes the visual direction for:
+
+* layout
+* spacing
+* typography hierarchy
+* card structure
+* tool grids
+* icon presentation
+* navigation
+* bottom navigation
+* headers
+* buttons
+* file cards
+* tool categories
+* scanner interface
+* editor interface
+* profile interface
+* AI tools interface
+* visual density
+* mobile-first interaction
+
+The UI must be implemented as real React components, NOT as a screenshot.
+
+---
+
+# CORE TECHNOLOGY
+
+Frontend:(o:\PROJECTS\College\PaperKit\paper-kit)
+
+* React
+* JavaScript
+* Vite
+* Capacitor
+* responsive web support
+* mobile-first architecture
+
+Backend:(o:\PROJECTS\College\PaperKit\Services)
+
+* Python
+* FastAPI
+* Pydantic
+
+Database:
+
+* MongoDB Atlas
+
+Storage:
+
+* Cloudinary where cloud storage is required
+* device/local filesystem where appropriate
+
+Processing:
+
+* PyMuPDF
+* LibreOffice
+* OpenCV
+* FFmpeg
+* Tesseract OCR
+* appropriate open-source/native processing engines
+
+AI:
+
+* backend-mediated AI service
+* no API keys exposed to frontend
+
+---
+
+# ABSOLUTE DATA RULE
+
+There must be:
+
+NO mock data
+NO fake data
+NO demo data
+NO placeholder processing
+NO simulated results
+NO fake progress
+NO hardcoded user information
+NO hardcoded file history
+NO hardcoded storage values
+NO hardcoded processing results
+NO fake API responses
+NO fake AI responses
+
+Every dynamic value must come from:
+
+* authenticated user
+* backend API
+* MongoDB
+* actual uploaded file
+* actual processing engine
+* actual device filesystem
+* actual Cloudinary response
+* actual configuration
+* actual runtime capability
+
+If no data exists:
+
+show a genuine empty state.
+
+If data is loading:
+
+show a genuine loading state.
+
+If processing fails:
+
+show a genuine error state.
+
+Never invent data to make the UI look populated.
+
+---
+
+# VISUAL SOURCE-OF-TRUTH RULE
+
+Before modifying or creating a screen:
+
+1. inspect the reference image
+2. identify its layout
+3. identify hierarchy
+4. identify spacing
+5. identify colors
+6. identify typography
+7. identify icon style
+8. identify component structure
+9. identify navigation placement
+10. implement the same visual language
+
+Do not copy the screenshot as a bitmap.
+
+Reconstruct it using reusable React components.
+
+The reference image has priority over generic UI conventions.
+
+---
+
+# COLOR RULE
+
+Use the client's supplied color palette as the authoritative palette.
+
+Do not independently invent replacement colors.
+
+Centralize all colors into design tokens.
+
+Create semantic tokens such as:
+
+primary
+primaryPressed
+primarySoft
+secondary
+background
+surface
+surfaceElevated
+textPrimary
+textSecondary
+textMuted
+border
+divider
+success
+warning
+error
+info
+disabled
+
+All components must consume semantic tokens.
+
+Do not scatter raw color values throughout JSX/CSS.
+
+If the client palette changes later, the entire application should be changeable from the centralized theme system.
+
+---
+
+# DESIGN CHARACTERISTICS TO PRESERVE
+
+The reference demonstrates a:
+
+* clean mobile-first interface
+* white/light surface-oriented design
+* compact top headers
+* rounded cards
+* categorized tool grids
+* colorful tool icons
+* strong primary action buttons
+* restrained visual decoration
+* clear typography hierarchy
+* bottom navigation
+* prominent central camera/action control
+* compact file cards
+* list/grid switching where appropriate
+* functional rather than decorative UI
+
+Preserve these characteristics throughout the entire system.
+
+---
+
+# COMPONENT ARCHITECTURE
+
+Create reusable components rather than implementing each screen independently.
+
+Examples:
+
+AppShell
+TopBar
+BackHeader
+BottomNavigation
+PrimaryActionButton
+SecondaryButton
+ToolCard
+ToolGrid
+ToolCategory
+FileCard
+FileList
+FileThumbnail
+RecentFileCard
+UploadArea
+ProcessingStatus
+ProgressIndicator
+EmptyState
+ErrorState
+LoadingState
+SearchBar
+FilterTabs
+SegmentedControl
+Toggle
+RadioOption
+SelectField
+Modal
+BottomSheet
+ConfirmationDialog
+Toast
+Snackbar
+PageHeader
+SectionHeader
+ScannerControls
+PDFPageThumbnail
+EditorToolbar
+Timeline
+AIActionCard
+ProfileCard
+
+Every component should use the centralized design tokens.
+
+---
+
+# RESPONSIVE RULE
+
+The primary visual reference is mobile.
+
+However, implement responsive behavior for:
+
+* Android phones
+* iPhones
+* tablets
+* iPads
+* desktop browsers
+
+Do not simply stretch the mobile interface across desktop.
+
+Preserve the same PaperKit visual language while adapting layout intelligently.
+
+---
+
+# NAVIGATION RULE
+
+Implement the navigation pattern shown by the reference.
+
+The main mobile navigation must include the appropriate:
+
+Home
+Tools
+central action/camera
+Files
+Settings/Profile
+
+Do not replace this with a generic sidebar.
+
+The central action button must remain visually prominent.
+
+Navigation state must be dynamic.
+
+No screen should manually fake active navigation state.
+
+---
+
+# 20 DEVELOPMENT PHASES
+
+## PHASE 1 — REPOSITORY AND UI AUDIT
+
+Before coding:
+
+Inspect the entire existing repository.
+
+Identify:
+
+* existing React/Vite application
+* existing screens
+* components
+* routes
+* CSS
+* theme
+* state management
+* API layer
+* backend
+* authentication
+* file handling
+* processing modules
+* database
+* existing UI implementation
+
+Search for:
+
+mock
+dummy
+fake
+sample
+placeholder
+hardcoded
+simulation
+fake progress
+static data
+TODO
+FIXME
+
+Create a gap analysis.
+
+Do not rewrite functioning code unnecessarily.
+
+Do not redesign the existing client UI.
+
+Deliver:
+
+* architecture map
+* UI implementation map
+* missing functionality list
+* technical debt list
+* hardcoded/mock-data list
+* recommended implementation order
+
+Do not declare completion yet.
+
+## PHASE 2 — REBUILD THE DESIGN SYSTEM FROM THE CLIENT REFERENCE
+
+Check for properly createsd the centralized PaperKit design system.
+
+Extract the visual rules from the supplied reference.\UI.jpeg
+
+Implement:
+
+* colors
+* typography
+* spacing
+* radii
+* shadows
+* borders
+* button states
+* card states
+* icon containers
+* navigation states
+* form controls
+* responsive breakpoints
+
+Create a single theme source.
+
+Do not create unrelated visual styles.
+
+Verify that the UI components visually follow the reference.
+
+No animations or decorative illustrations.but page transition..
+
+## PHASE 3 — APPLICATION SHELL AND NAVIGATION
+
+Implement the global application shell.
+
+Reproduce the client's navigation architecture.
+
+Create:
+
+* Home
+* Tools
+* central action/camera
+* Files
+* Settings/Profile
+
+Implement:
+
+* routing
+* active states
+* back navigation
+* nested tool navigation
+* route guards
+* responsive navigation
+
+The bottom navigation must be reusable.
+
+Do not duplicate navigation markup across screens.
+
+## PHASE 4 — HOME SCREEN REPLICATION
+
+Reconstruct the Home screen from the reference.
+
+Implement:
+
+* PaperKit branding
+* top navigation
+* search
+* Quick Tools
+* categorized tools
+* Recent Files
+* bottom navigation
+* central action
+
+All displayed files and user information must come from APIs.
+
+The Home screen must dynamically load:
+
+* authenticated user
+* available tools
+* recent files
+* processing history
+
+If there are no recent files:
+
+show an empty state matching the design language.
+
+Do not insert sample files.
+
+## PHASE 5 — ALL TOOLS SCREEN
+
+Recreate the All Tools screen.
+
+Implement the categorized tool grid.
+
+Categories must be dynamically driven by a tool registry.
+
+Do not hardcode every tool directly into JSX.
+
+Create a dynamic tool configuration containing:
+
+toolId
+name
+description
+icon
+category
+supportedFormats
+route
+availability
+capabilities
+
+The UI should render the categories from the registry.
+
+Implement search/filtering.
+
+Tool availability must come from actual application configuration/capabilities.
+
+## PHASE 6 — FILE MANAGEMENT SYSTEM
+
+Recreate the My Files interface.
+
+Implement:
+
+* file search
+* file filtering
+* file categories
+* file cards
+* file metadata
+* recent files
+* file actions
+* sorting
+* pagination
+
+All file information must come from the backend/storage layer.
+
+Show actual:
+
+filename
+size
+type
+timestamp
+status
+thumbnail where available
+
+No fake files.
+
+Implement:
+
+upload
+download
+delete
+rename where supported
+open
+share where platform permits
+
+## PHASE 7 — AUTHENTICATION AND PROFILE
+
+Implement real authentication.
+
+Support the authentication mechanisms defined by the project.
+
+Implement:
+
+* login
+* signup
+* session management
+* logout
+* protected routes
+* user profile
+* preferences
+* account state
+
+The profile screen must reproduce the reference structure.
+
+Display actual user information.
+
+Do not use:
+
+"PaperKit User"
+"[username@example.com](mailto:username@example.com)"
+
+unless those values actually belong to the authenticated account.
+
+Implement profile settings dynamically.
+
+## PHASE 8 — SMART SCANNER
+
+Recreate the Smart Scanner shown in the client reference.
+
+Implement:
+
+* camera preview
+* camera permissions
+* document detection
+* edge detection
+* perspective correction
+* crop
+* retake
+* gallery selection
+* document/ID/book/receipt modes where supported
+
+The scanner must operate against the actual device camera.
+
+No simulated camera preview.
+
+No fake document detection.
+
+Implement real OpenCV/native processing where appropriate.
+
+Captured documents must become real file assets.
+
+## PHASE 9 — PDF TOOL WORKFLOWS
+
+Implement the core PDF tools visible in the reference.
+
+Include:
+
+Merge PDF
+Split PDF
+Compress PDF
+Scan to PDF
+PDF to Word
+Word to PDF
+PDF to Image
+Image to PDF
+Rotate PDF
+Extract Pages
+Remove Pages
+Reorder Pages
+Watermark
+Organize Pages
+
+Every tool must be a real processing workflow.
+
+The UI should match the client reference.
+
+Use real backend/local processors.
+
+No fake processing completion.
+
+## PHASE 10 — MERGE PDF SCREEN
+
+Reproduce the Merge PDF screen.
+
+Implement:
+
+* Add Files
+* Add Folder where supported
+* file list
+* drag/reorder
+* remove file
+* page information
+* page size configuration
+* margin configuration
+* merge action
+
+The file list must come from actual user selection.
+
+Display actual:
+
+filename
+size
+page count
+
+Merge using a real PDF processor.
+
+After completion:
+
+create a real output asset
+store/register it
+show real result
+add real history record
+
+## PHASE 11 — PDF CONVERSION SCREENS
+
+Recreate conversion screens such as:
+
+PDF to Word
+Word to PDF
+PDF to Excel
+PDF to PPT
+PDF to Image
+PDF to TXT
+PDF to HTML
+PDF to Markdown
+
+Implement a reusable ConversionScreen architecture.
+
+The screen should dynamically determine:
+
+input type
+output type
+available options
+processing engine
+validation rules
+
+based on the tool registry.
+
+Do not create one-off duplicated implementations.
+
+Results must be actual converted files.
+
+## PHASE 12 — COMPRESS PDF
+
+Recreate the Compress PDF screen.
+
+Implement the client's compression selection pattern.
+
+Compression options must map to real processor parameters.
+
+Do not display fabricated:
+
+"Estimated Size"
+"72%"
+"5.8 MB → 1.6 MB"
+
+Calculate these values from the actual input and actual generated output.
+
+Display:
+
+actual input size
+actual output size
+actual compression ratio
+
+Only show the result after real processing.
+
+## PHASE 13 — PDF EDITOR
+
+Recreate the Edit PDF interface.
+
+Implement:
+
+* text editing
+* image editing
+* drawing
+* highlighting
+* erasing
+* annotations
+* page navigation
+* zoom
+* save
+* export
+
+The editor must manipulate the actual PDF.
+
+Do not build a visual-only editor.
+
+Changes must result in an actual PDF output.
+
+Preserve page coordinates and document structure wherever the processing engine supports it.
+
+## PHASE 14 — AI TOOLS
+
+Recreate the AI Tools screen shown in the reference.
+
+Implement dynamic AI capabilities such as:
+
+* Summarize PDF
+* Ask PDF
+* Translate PDF
+* PDF to Markdown
+* Extract Tables
+
+The AI tool registry must drive the UI.
+
+AI operations must use real backend AI services.
+
+AI API keys must remain server-side.
+
+No fake AI responses.
+
+No predefined fake summaries.
+
+If AI is unavailable, show a real service-unavailable state.
+
+## PHASE 15 — IMAGE, VIDEO AND ARCHIVE TOOLS
+
+Implement the remaining PaperKit processing modules.
+
+Images:
+
+* convert
+* resize
+* crop
+* rotate
+* flip
+* brightness
+* contrast
+* saturation
+* sharpness
+* background removal
+* watermark
+* vectorization
+
+Video:
+
+* convert
+* transcode
+* trim
+* merge
+* extract audio
+* normalize audio
+* extract frames
+* frames to video
+* frames to GIF
+
+Archives:
+
+* ZIP extraction
+* RAR extraction
+* 7Z extraction
+* ZIP creation
+
+Use real processing engines.
+
+No simulated output.
+
+## PHASE 16 — PROCESSING JOB SYSTEM
+
+Create a unified processing-job architecture.
+
+Every operation must follow:
+
+CREATED
+→ VALIDATING
+→ QUEUED
+→ PROCESSING
+→ COMPLETED
+
+or:
+
+FAILED
+CANCELLED
+
+Create:
+
+jobId
+operation
+inputAssets
+outputAssets
+status
+progress
+createdAt
+startedAt
+completedAt
+error
+
+Progress must reflect actual processing.
+
+Do not use timers to simulate progress.
+
+The UI should dynamically update from real backend/job state.
+
+## PHASE 17 — STORAGE, CLOUDINARY AND HISTORY
+
+Implement real storage integration.
+
+Support:
+
+local/device storage
+backend temporary files
+Cloudinary cloud assets
+
+Implement:
+
+upload
+download
+delete
+metadata
+storage usage
+cloud sync
+history
+
+Every processing operation must create an appropriate history record.
+
+History must contain actual:
+
+operation
+input
+output
+status
+timestamp
+duration
+error where applicable
+
+No hardcoded history.
+
+## PHASE 18 — HYBRID LOCAL/BACKEND PROCESSING
+
+Implement the hybrid architecture.
+
+Create a centralized ProcessingRouter.
+
+Determine:
+
+LOCAL
+BACKEND
+CLOUD
+
+based on:
+
+* platform
+* operation
+* file type
+* file size
+* engine availability
+* device capability
+* network availability
+* configuration
+
+Mobile should use local processing when appropriate.
+
+Resource-intensive operations should use backend processing.
+
+Do not duplicate routing logic across screens.
+
+The UI must clearly show the real execution state.
+
+## PHASE 19 — SECURITY, PERFORMANCE AND COMPLETE DATA AUDIT
+
+Perform a repository-wide audit.
+
+Search for every instance of:
+
+mock
+dummy
+fake
+sample
+placeholder
+hardcoded
+simulation
+fake progress
+static user
+static file
+static history
+fake API
+TODO
+FIXME
+
+Remove all runtime fake/mock behavior.
+
+Security audit:
+
+* authentication
+* authorization
+* file ownership
+* upload validation
+* MIME validation
+* path traversal
+* archive extraction
+* subprocess security
+* FFmpeg security
+* secrets
+* CORS
+* rate limiting
+* API validation
+* database security
+* sensitive logging
+
+Performance audit:
+
+* large files
+* memory usage
+* rendering
+* API calls
+* pagination
+* database indexes
+* processing concurrency
+* cleanup
+
+Run:
+
+frontend build
+backend tests
+frontend tests
+API tests
+integration tests
+security tests
+
+## PHASE 20 — FINAL CLIENT UI + SYSTEM VALIDATION
+
+Perform the final PaperKit validation.
+
+Compare the implementation against the supplied client reference screen-by-screen.
+
+Validate:
+
+HOME
+ALL TOOLS
+SMART SCANNER
+MERGE PDF
+PDF TO WORD
+COMPRESS PDF
+EDIT PDF
+AI TOOLS
+MY FILES
+PROFILE
+
+Check:
+
+* spacing
+* colors
+* typography
+* icons
+* cards
+* navigation
+* buttons
+* borders
+* radii
+* visual hierarchy
+* responsive behavior
+* empty states
+* loading states
+* errors
+* actual data
+
+Do not replace the client design with a generic modern UI.
+
+Do not add animation illustrations.
+
+Do not add decorative visual elements that are absent from the source design.
+
+Then perform complete end-to-end workflows:
+
+LOGIN
+→ HOME
+→ SELECT TOOL
+→ SELECT REAL FILE
+→ PROCESS
+→ VIEW RESULT
+→ DOWNLOAD
+→ HISTORY
+
+Validate PDF workflows.
+
+Validate image workflows.
+
+Validate video workflows.
+
+Validate archive workflows.
+
+Validate scanner workflows.
+
+Validate AI workflows.
+
+Validate cloud storage.
+
+Validate logout/session expiry.
+
+Finally produce:
+
+1. UI replication report
+2. component inventory
+3. route inventory
+4. API inventory
+5. database schema
+6. processing-engine inventory
+7. storage architecture
+8. authentication architecture
+9. AI architecture
+10. security audit
+11. test results
+12. build results
+13. known limitations
+14. deployment requirements
+15. production-readiness assessment
+
+PAPERKIT IS COMPLETE ONLY WHEN:
+
+* the UI follows the client reference
+* all major screens are implemented
+* all dynamic data is real
+* all file operations are real
+* all processing results are real
+* authentication is real
+* storage is real
+* history is real
+* AI responses are real
+* no mock data remains
+* no fake processing remains
+* no fake progress remains
+* no hardcoded user/file/history data remains
+* the application builds successfully
+* tests pass
+* mobile and responsive layouts are functional
+
+The key architectural distinction for PaperKit should now be:
+
+**Client reference = visual truth*o:\PROJECTS\College\PaperKit\UI.jpeg*
+**Project specification = functional truth**
+**Backend/database = data truth**
+**Actual processing engines = result truth**
+
+That gives you a clean separation between reproducing the client's UI and actually building the system behind it. 

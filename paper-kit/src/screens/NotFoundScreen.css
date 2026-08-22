@@ -1,0 +1,228 @@
+/* NotFoundScreen.css — Frosted Glassmorphic 404 UI inspired by modern translucent aesthetic */
+
+.not-found-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: radial-gradient(circle at 30% 20%, #E2E8F0 0%, #EEF2F6 40%, #D8E2ED 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ambient glow blobs in background */
+.not-found-screen__bg-glow {
+  position: absolute;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(147, 197, 253, 0.45) 0%, rgba(199, 210, 254, 0.25) 50%, transparent 70%);
+  filter: blur(50px);
+  top: 15%;
+  left: 20%;
+  pointer-events: none;
+  animation: floatAmbient 8s ease-in-out infinite alternate;
+}
+
+@keyframes floatAmbient {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(30px, 40px) scale(1.1); }
+}
+
+/* Main Frosted Glass Card */
+.not-found-screen__glass-card {
+  width: 100%;
+  max-width: 440px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  border-radius: 28px;
+  padding: var(--space-6) var(--space-5);
+  box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* Top Pill Badge */
+.not-found-screen__pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #334155;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  margin-bottom: var(--space-4);
+  letter-spacing: 0.3px;
+}
+
+/* 404 Visual Number */
+.not-found-screen__code-wrap {
+  position: relative;
+  margin: var(--space-2) 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.not-found-screen__code {
+  font-size: 80px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -4px;
+  background: linear-gradient(135deg, #1E293B 0%, #475569 60%, #94A3B8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  position: relative;
+  z-index: 2;
+}
+
+.not-found-screen__code-blur {
+  position: absolute;
+  font-size: 84px;
+  font-weight: 900;
+  letter-spacing: -4px;
+  color: rgba(37, 99, 235, 0.18);
+  filter: blur(14px);
+  z-index: 1;
+  user-select: none;
+}
+
+.not-found-screen__title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0 0 6px;
+  letter-spacing: -0.5px;
+}
+
+.not-found-screen__subtitle {
+  font-size: 13px;
+  color: #64748B;
+  line-height: 1.5;
+  margin: 0 0 var(--space-5);
+  max-width: 320px;
+}
+
+/* Frosted Search Pill */
+.not-found-screen__search-pill {
+  width: 100%;
+  height: 46px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 9999px;
+  padding: 0 8px 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #64748B;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03), 0 2px 8px rgba(0, 0, 0, 0.02);
+  margin-bottom: var(--space-4);
+  transition: all 0.2s ease;
+}
+
+.not-found-screen__search-pill:hover {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 255, 255, 1);
+  transform: translateY(-1px);
+}
+
+.not-found-screen__search-pill span {
+  flex: 1;
+  text-align: left;
+}
+
+.not-found-screen__search-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #0F172A;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Actions */
+.not-found-screen__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.not-found-screen__btn-primary {
+  width: 100%;
+  height: 48px;
+  background: #0F172A;
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+  transition: all 0.2s ease;
+}
+
+.not-found-screen__btn-primary:hover {
+  background: #1E293B;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.24);
+}
+
+.not-found-screen__btn-secondary {
+  width: 100%;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 9999px;
+  color: #1E293B;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.not-found-screen__btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.not-found-screen__back-link {
+  margin-top: var(--space-4);
+  background: none;
+  border: none;
+  color: #64748B;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.not-found-screen__back-link:hover {
+  color: #0F172A;
+}

@@ -1,0 +1,10 @@
+.all-tools-screen {
+  padding: var(--space-4);
+}
+
+.all-tools-screen .tool-category {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+}

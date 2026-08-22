@@ -1,0 +1,69 @@
+.home-screen {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.home-screen__section {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.home-screen__recent {
+  padding: var(--space-4) 0;
+}
+
+.home-screen__recent .tool-category__header {
+  padding: 0 var(--space-4);
+}
+
+.home-screen__file-list {
+  margin-top: var(--space-2);
+}
+
+.home-screen__sheet-actions {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--space-4) var(--space-4);
+  gap: var(--space-1);
+}
+
+.home-screen__sheet-action {
+  padding: var(--space-4);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  text-align: left;
+  border-radius: var(--radius-lg);
+  transition: background var(--transition-fast);
+}
+
+.home-screen__sheet-action:hover,
+.home-screen__sheet-action:active {
+  background: var(--color-divider);
+}
+
+.home-screen__sheet-action--danger {
+  color: var(--color-error);
+}
+
+.home-screen__header {
+  padding: var(--space-4) var(--space-4) var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.home-screen__greeting {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.home-screen__subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: var(--space-1) 0 0;
+}
