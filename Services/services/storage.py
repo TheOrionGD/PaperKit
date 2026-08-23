@@ -104,3 +104,32 @@ async def get_file_metadata(file_id: str, user_id: str, db) -> dict:
         "createdAt":         doc["created_at"].isoformat() if isinstance(doc.get("created_at"), datetime) else str(doc.get("created_at", "")),
         "updatedAt":         doc["updated_at"].isoformat() if isinstance(doc.get("updated_at"), datetime) else str(doc.get("updated_at", "")),
     }
+
+
+async def cleanup_expired_guest_files(db, max_age_hours: int = 24) -> int:
+    """Delete guest files older than max_age_hours from disk storage and MongoDB."""
+    from datetime import datetime, timezone, timedelta
+    from middleware.auth import GUEST_USER_ID
+
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=max_age_hours)
+    cursor = db.files.find({
+        "user_id": str(GUEST_USER_ID),
+        "created_at": {"$lt": cutoff},
+        "is_deleted": False
+    })
+
+    cleaned_count = 0
+    async for doc in cursor:
+        storage_url = doc.get("storage_url", "")
+        if storage_url:
+            try:
+                await delete_file(storage_url)
+            except Exception:
+                pass
+        await db.files.update_one(
+            {"_id": doc["_id"]},
+            {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc)}}
+        )
+        cleaned_count += 1
+
+    return cleaned_count

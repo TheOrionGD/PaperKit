@@ -130,6 +130,31 @@ export async function hideSplashScreen() {
 }
 
 /**
+ * Exit / Close Application (Native App & Web Window)
+ */
+export async function exitApp() {
+  if (isNative) {
+    try {
+      const { App } = await import('@capacitor/app');
+      await App.exitApp();
+      return;
+    } catch (err) {
+      console.warn('Native exitApp failed:', err);
+    }
+  }
+
+  try {
+    window.close();
+  } catch (err) {
+    console.warn('window.close failed:', err);
+  }
+
+  if (typeof window !== 'undefined') {
+    window.location.href = 'about:blank';
+  }
+}
+
+/**
  * Native Back Button Handler for Android
  */
 export async function setupNativeBackButtonListener(onBack) {
@@ -204,13 +229,57 @@ export async function shareUrl(title, text, url) {
 }
 
 /**
+ * Utility: MIME type lookup by filename extension
+ */
+export function getMimeType(filename = '') {
+  const ext = String(filename).split('.').pop().toLowerCase();
+  switch (ext) {
+    case 'pdf': return 'application/pdf';
+    case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    case 'doc': return 'application/msword';
+    case 'xlsx': return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    case 'xls': return 'application/vnd.ms-excel';
+    case 'pptx': return 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+    case 'ppt': return 'application/vnd.ms-powerpoint';
+    case 'txt': return 'text/plain';
+    case 'html': return 'text/html';
+    case 'jpg':
+    case 'jpeg': return 'image/jpeg';
+    case 'png': return 'image/png';
+    default: return 'application/octet-stream';
+  }
+}
+
+/**
+ * Native Storage Permissions helper for Capacitor Android/iOS
+ */
+export async function requestStoragePermissionsIfNeeded() {
+  if (isNative) {
+    try {
+      const { Filesystem } = await import('@capacitor/filesystem');
+      if (typeof Filesystem.checkPermissions === 'function') {
+        const status = await Filesystem.checkPermissions();
+        if (status.publicStorage !== 'granted') {
+          await Filesystem.requestPermissions();
+        }
+      }
+    } catch (err) {
+      console.warn('Storage permission request warning:', err);
+    }
+  }
+}
+
+/**
  * Native file sharing
  */
 export async function shareFile(fileUrl, filename, mimeType) {
+  const resolvedMime = mimeType || getMimeType(filename);
   if (isNative) {
     try {
       const { Filesystem, Directory } = await import('@capacitor/filesystem');
       const { Share } = await import('@capacitor/share');
+
+      await requestStoragePermissionsIfNeeded();
 
       const response = await fetch(fileUrl);
       const blob = await response.blob();
@@ -228,13 +297,13 @@ export async function shareFile(fileUrl, filename, mimeType) {
       });
     } catch (err) {
       console.error('Failed to share file natively:', err);
-      alert('Error sharing file: ' + err.message);
+      showNativeToast('Error sharing file: ' + err.message);
     }
   } else if (navigator.share) {
     try {
       const response = await fetch(fileUrl);
       const blob = await response.blob();
-      const file = new File([blob], filename, { type: mimeType });
+      const file = new File([blob], filename, { type: resolvedMime });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], title: filename });
       } else {
@@ -249,16 +318,36 @@ export async function shareFile(fileUrl, filename, mimeType) {
 }
 
 /**
- * Download a file and open it using native app wrappers
+ * Download a file and open it using native app wrappers or web blob downloader
  */
-export async function downloadAndOpenFile(fileUrl, filename, mimeType) {
+export async function downloadAndOpenFile(fileUrl, filename = 'document.pdf', mimeType = null) {
+  const { resolveBackendFileUrl } = await import('./api');
+  const fullUrl = resolveBackendFileUrl(fileUrl);
+  const resolvedMime = mimeType || getMimeType(filename);
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('pk_token') || 'guest_access_token' : 'guest_access_token';
+  const fetchHeaders = { Authorization: `Bearer ${token}` };
+
   if (isNative) {
     try {
       const { Filesystem, Directory } = await import('@capacitor/filesystem');
-      const { FileOpener } = await import('@capacitor-community/file-opener');
+      await requestStoragePermissionsIfNeeded();
 
-      const response = await fetch(fileUrl);
+      const response = await fetch(fullUrl, { headers: fetchHeaders });
+      if (!response.ok) {
+        throw new Error(`Server returned status ${response.status} when fetching document.`);
+      }
+
       const blob = await response.blob();
+      
+      // Binary PDF validation check
+      if (filename.toLowerCase().endsWith('.pdf') || resolvedMime === 'application/pdf') {
+        const headerSlice = await blob.slice(0, 10).text();
+        if (!headerSlice.startsWith('%PDF-')) {
+          console.error('[Download Error] Unexpected non-PDF payload received:', headerSlice);
+          throw new Error('Downloaded content is not a valid PDF document (%PDF- header missing).');
+        }
+      }
+
       const base64Data = await blobToBase64(blob);
 
       const result = await Filesystem.writeFile({
@@ -268,21 +357,72 @@ export async function downloadAndOpenFile(fileUrl, filename, mimeType) {
         recursive: true
       });
 
-      await FileOpener.open({
-        filePath: result.uri,
-        contentType: mimeType
-      });
+      try {
+        const { FileOpener } = await import('@capacitor-community/file-opener');
+        await FileOpener.open({
+          filePath: result.uri,
+          contentType: resolvedMime,
+          openWithDefault: true
+        });
+      } catch (openerErr) {
+        console.warn('FileOpener unavailable or failed, falling back to Share:', openerErr);
+        const { Share } = await import('@capacitor/share');
+        await Share.share({
+          title: filename,
+          url: result.uri
+        });
+      }
     } catch (err) {
       console.error('Failed to download and open file natively:', err);
-      alert('Error opening file: ' + err.message);
+      showNativeToast('Error opening file: ' + err.message);
+      if (typeof window !== 'undefined' && window.alert) {
+        window.alert('Download Error: ' + err.message);
+      }
+      throw err;
     }
   } else {
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Web / Browser download with Blob URL fallback
+    try {
+      const response = await fetch(fullUrl, { headers: fetchHeaders });
+      if (!response.ok) {
+        throw new Error(`Server returned HTTP status ${response.status} when fetching document.`);
+      }
+
+      const blob = await response.blob();
+
+      // Binary validation check
+      const lowerName = filename.toLowerCase();
+      if (lowerName.endsWith('.pdf') || resolvedMime === 'application/pdf') {
+        const headerSlice = await blob.slice(0, 10).text();
+        if (!headerSlice.startsWith('%PDF-')) {
+          console.error('[Download Error] Unexpected non-PDF payload received:', headerSlice);
+          throw new Error('Downloaded content is not a valid PDF document (%PDF- header missing).');
+        }
+      } else if (lowerName.endsWith('.docx') || lowerName.endsWith('.xlsx') || lowerName.endsWith('.pptx') || resolvedMime.includes('officedocument')) {
+        const headerSlice = await blob.slice(0, 4).text();
+        if (!headerSlice.startsWith('PK')) {
+          console.error('[Download Error] Unexpected non-Office payload received:', headerSlice);
+          throw new Error('Downloaded content is not a valid Office document (corrupted payload or error response).');
+        }
+      }
+
+      const fileBlob = new Blob([blob], { type: resolvedMime || 'application/octet-stream' });
+      const blobUrl = URL.createObjectURL(fileBlob);
+
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+    } catch (err) {
+      console.error('[Web Download Error]:', err);
+      if (typeof window !== 'undefined' && window.alert) {
+        window.alert('Download Failed: ' + err.message);
+      }
+      throw err;
+    }
   }
 }
 
@@ -338,18 +478,33 @@ export async function getNetworkStatus() {
 }
 
 /**
- * Configure Status Bar style and color
+ * Configure Status Bar style and color for Native and Mobile Web / PWA
  */
 export async function configureStatusBar(isDark) {
+  // Update browser theme-color meta tag for mobile web browsers & PWA titlebar
+  try {
+    let themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (!themeMeta) {
+      themeMeta = document.createElement('meta');
+      themeMeta.setAttribute('name', 'theme-color');
+      document.head.appendChild(themeMeta);
+    }
+    themeMeta.setAttribute('content', isDark ? '#0B1120' : '#FFFFFF');
+  } catch (err) {
+    console.debug('Failed to set theme color meta tag:', err);
+  }
+
   if (isNative) {
     try {
       const { StatusBar, Style } = await import('@capacitor/status-bar');
+      // Ensure proper separation on native devices
+      await StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {});
       await StatusBar.setStyle({
         style: isDark ? Style.Dark : Style.Light
-      });
+      }).catch(() => {});
       await StatusBar.setBackgroundColor({
-        color: isDark ? '#1F2937' : '#FFFFFF'
-      });
+        color: isDark ? '#0B1120' : '#FFFFFF'
+      }).catch(() => {});
     } catch (err) {
       console.warn('Status Bar configuration failed:', err);
     }

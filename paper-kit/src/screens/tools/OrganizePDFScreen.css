@@ -2,22 +2,27 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .organize-screen__body {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-4);
+  padding: clamp(10px, 3vw, var(--space-4));
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .organize-screen__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(clamp(100px, 28vw, 130px), 1fr));
+  gap: clamp(8px, 2.5vw, var(--space-4));
   padding: var(--space-2) 0;
+  width: 100%;
 }
 
 .page-card {

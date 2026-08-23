@@ -265,7 +265,6 @@ PaperKit hosts 28+ native production tools categorized into four modular functio
 | `split-pdf` | **Split PDF** | Client WASM / Local | `.pdf` | Single / Multi `.pdf` | `< 0.8s` | Page index range slicing and buffer extraction |
 | `compress-pdf` | **Compress PDF** | Hybrid (Local / Backend) | `.pdf` | Optimized `.pdf` | `< 2.1s` | DCT stream downsampling & font subsetting |
 | `pdf-to-pdfa` | **PDF to PDF/A** | Backend Worker | `.pdf` | ISO 19005 `.pdf` | `< 2.8s` | PyMuPDF color profile & XMP tag injection |
-| `edit-pdf` | **Edit & Annotate PDF** | Client WASM / Local | `.pdf` | Annotated `.pdf` | `< 0.5s` | Offscreen Canvas overlay & Vector Path baking |
 | `rotate-pdf` | **Rotate PDF** | Client WASM / Local | `.pdf` | Rotated `.pdf` | `< 0.4s` | `/Rotate` metadata dictionary manipulation |
 | `watermark-pdf` | **Watermark PDF** | Client WASM / Local | `.pdf` | Watermarked `.pdf` | `< 0.9s` | Alpha blend text/image layer injection |
 | `organize-pages`| **Organize Pages** | Client WASM / Local | `.pdf` | Reordered `.pdf` | `< 0.6s` | Visual grid reordering & page deletion |
@@ -649,9 +648,23 @@ pip install -r requirements.txt
 
 # Configure environment variables
 cp .env.example .env
+```
 
+**Backend Environment Template (`Services/.env`)**:
+```env
+MONGODB_URL=mongodb+srv://<username>:<password>@cluster.mongodb.net/<database>?retryWrites=true&w=majority
+DATABASE_NAME=paperkit
+SECRET_KEY=<your_generate_jwt_secret_key_here>
+GEMINI_API_KEY=<your_google_gemini_api_key_here>
+GROQ_API_KEY=<your_groq_api_key_here>
+FRONTEND_URL=https://paperkit-web.onrender.com
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=10080
+```
+
+```bash
 # Start FastAPI server
-uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 #### Step 2: Frontend Setup
@@ -660,7 +673,23 @@ cd paper-kit
 
 # Install npm packages
 npm install
+```
 
+**Frontend Environment Template (`paper-kit/.env`)**:
+```env
+VITE_API_URL=https://paperkit-backend.onrender.com
+# For local dev: VITE_API_URL=http://localhost:8000
+
+# Firebase Authentication & Config
+VITE_FIREBASE_API_KEY=<your_firebase_api_key_here>
+VITE_FIREBASE_AUTH_DOMAIN=<your_firebase_auth_domain_here>
+VITE_FIREBASE_PROJECT_ID=<your_firebase_project_id_here>
+VITE_FIREBASE_STORAGE_BUCKET=<your_firebase_storage_bucket_here>
+VITE_FIREBASE_MESSAGING_SENDER_ID=<your_firebase_sender_id_here>
+VITE_FIREBASE_APP_ID=<your_firebase_app_id_here>
+```
+
+```bash
 # Start Vite development server
 npm run dev
 ```
@@ -677,50 +706,39 @@ cd paper-kit
 # 1. Build optimized web assets
 npm run build
 
-# 2. Synchronize assets and plugins to Android project
-npx cap sync android
+# 2. Synchronize assets and native plugins to Android project
+npm run build:android
 
 # 3. Open project in Android Studio
 npx cap open android
 
 # 4. Or compile directly using Gradle wrapper (Windows)
 cd android
-.\gradlew.bat assembleDebug
+.\gradlew.bat assembleRelease
 ```
 *The compiled APK will be located at:*  
-`paper-kit/android/app/build/outputs/apk/debug/app-debug.apk`
+`paper-kit/android/app/build/outputs/apk/release/app-release-unsigned.apk`
 
 ---
 
 ## 10. Production Deployment Guide
 
-### Deploying Backend to Render
+PaperKit includes a pre-configured Infrastructure-as-Code **`render.yaml`** blueprint for 1-click deployment on Render:
 
-1. Create a **Web Service** on [Render.com](https://render.com).
-2. Point to your repository with the following settings:
-   * **Root Directory**: `Services`
-   * **Environment**: `Python 3`
-   * **Build Command**: `./render-build.sh`
-   * **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-3. Add Environment Variables:
-   * `MONGODB_URL`: Your MongoDB Atlas URI
-   * `DATABASE_NAME`: `paperkit`
-   * `SECRET_KEY`: Random 64-character string
+### Live Production Deployment
+* **Live Web App**: [https://paperkit-web.onrender.com](https://paperkit-web.onrender.com)
+* **Live Backend API**: [https://paperkit-backend.onrender.com](https://paperkit-backend.onrender.com)
+
+### 1-Click Render Blueprint Deployment
+
+1. Connect your GitHub repository to [Render.com](https://render.com).
+2. Create a new **Blueprint Instance** pointing to `render.yaml`.
+3. Fill in the required secret environment variables in the Render dashboard:
+   * `MONGODB_URL`: Your MongoDB Atlas URI connection string
+   * `SECRET_KEY`: Random 64-character secret key for JWT signing
    * `GEMINI_API_KEY`: Your Google Gemini API Key
-   * `FRONTEND_URL`: Your production frontend URL (e.g. `https://paperkit.vercel.app`)
-
----
-
-### Deploying Frontend to Vercel / Netlify
-
-1. Connect your repository to [Vercel](https://vercel.com).
-2. Set **Root Directory** to `paper-kit`.
-3. Set **Build Command** to `npm run build`.
-4. Set **Output Directory** to `dist`.
-5. Add Environment Variable:
-   ```env
-   VITE_API_URL=https://your-paperkit-backend.onrender.com/api
-   ```
+   * `GROQ_API_KEY`: Your Groq API Key
+4. Click **Apply**. Render will automatically provision both the `paperkit-backend` Web Service and `paperkit-web` Static Site.
 
 ---
 

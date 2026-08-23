@@ -1,489 +1,644 @@
-/* EditPDFScreen.css — Full PDF editor styles */
+/* EditPDFScreen.css — Styles for 5-step PDF edit pipeline & rich web editor */
 
-/* ─── Layout ─── */
-.edit-screen {
+.edit-pdf-screen {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  background: var(--color-background);
-  overflow: hidden;
+  gap: var(--space-4);
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: var(--space-4);
+  width: 100%;
 }
 
-/* ─── Toolbar ─── */
-.edit-screen__toolbar {
+/* Pipeline Progress Bar */
+.edit-pdf-pipeline-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
   background: var(--color-surface);
-  border-bottom: 1px solid var(--color-divider);
-  gap: 8px;
-  flex-shrink: 0;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-xl);
+  padding: 12px 20px;
+  box-shadow: var(--shadow-sm);
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
-.edit-screen__tool-group {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.edit-screen__tool-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: 6px 8px;
-  border-radius: var(--radius-md);
-  color: var(--color-text-muted);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  min-width: 44px;
-  transition: all var(--transition-fast);
-  white-space: nowrap;
-}
-
-.edit-screen__tool-btn:hover {
-  background: var(--color-divider);
-  color: var(--color-text-secondary);
-}
-
-.edit-screen__tool-btn--active {
-  color: var(--color-primary);
-  background: var(--color-primary-soft);
-}
-
-/* ─── Toolbar right group ─── */
-.edit-screen__toolbar-right {
+.pipeline-step {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
+  opacity: 0.5;
+  transition: all 0.2s ease;
 }
 
-.edit-screen__options-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: var(--radius-md);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  border: 1.5px solid var(--color-border);
-  transition: all var(--transition-fast);
+.pipeline-step.active {
+  opacity: 1;
 }
 
-.edit-screen__options-btn:hover {
-  background: var(--color-divider);
+.pipeline-step.completed {
+  opacity: 0.9;
 }
 
-.edit-screen__color-dot {
-  width: 12px;
-  height: 12px;
+.pipeline-step__num {
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  border: 1.5px solid rgba(0,0,0,0.15);
-  flex-shrink: 0;
-}
-
-.edit-screen__actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.edit-screen__action-btn {
-  width: 32px;
-  height: 32px;
+  background: var(--color-surface-hover);
+  color: var(--color-text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-md);
-  border: 1.5px solid var(--color-border);
-  color: var(--color-text-secondary);
-  transition: all var(--transition-fast);
+  font-weight: 700;
+  font-size: 13px;
 }
 
-.edit-screen__action-btn:hover:not(:disabled) {
-  background: var(--color-divider);
-}
-
-.edit-screen__action-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.edit-screen__action-btn--danger:hover:not(:disabled) {
-  background: #fee2e2;
-  border-color: #fca5a5;
-  color: #dc2626;
-}
-
-.edit-screen__save-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border-radius: var(--radius-md);
+.pipeline-step.active .pipeline-step__num {
   background: var(--color-primary);
   color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  transition: all var(--transition-fast);
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
 }
 
-.edit-screen__save-btn:hover:not(:disabled) {
-  background: var(--color-primary-dark, #1a56db);
-  transform: translateY(-1px);
-}
-
-.edit-screen__save-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.edit-screen__export-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border-radius: var(--radius-md);
+.pipeline-step.completed .pipeline-step__num {
   background: #10b981;
   color: #fff;
+}
+
+.pipeline-step__label {
   font-size: 13px;
-  font-weight: 700;
-  transition: all var(--transition-fast);
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--color-text);
 }
 
-.edit-screen__export-btn:hover {
-  background: #059669;
-  transform: translateY(-1px);
-}
-
-.edit-screen__saving-spinner {
-  width: 14px;
-  height: 14px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* ─── Options panel ─── */
-.edit-screen__options-panel {
-  padding: 10px 14px;
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-divider);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex-shrink: 0;
-  animation: slideDown 0.15s ease-out;
-}
-
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.edit-screen__options-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.edit-screen__options-label {
-  font-size: 11px;
-  font-weight: 700;
+.pipeline-arrow {
   color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  width: 40px;
   flex-shrink: 0;
+  margin: 0 4px;
 }
 
-.edit-screen__color-swatches {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.edit-screen__color-swatch {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  transition: all 0.15s;
-}
-
-.edit-screen__color-swatch:hover {
-  transform: scale(1.15);
-}
-
-.edit-screen__color-swatch--active {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px var(--color-primary-soft);
-}
-
-.edit-screen__color-input {
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: 50%;
-  padding: 0;
-  cursor: pointer;
-  background: none;
-}
-
-.edit-screen__stroke-btns,
-.edit-screen__font-btns {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.edit-screen__stroke-btn,
-.edit-screen__font-btn {
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid var(--color-border);
-  font-size: 12px;
-  color: var(--color-text-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s;
-}
-
-.edit-screen__stroke-btn.active,
-.edit-screen__font-btn.active {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  background: var(--color-primary-soft);
-}
-
-/* ─── Canvas area ─── */
-.edit-screen__canvas-area {
-  flex: 1;
-  overflow: auto;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 20px;
-  background: #d1d5db;
-  position: relative;
-}
-
-/* ─── Empty pick state ─── */
-.edit-screen__pick {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  min-height: 300px;
-}
-
-.edit-screen__pick-card {
+/* Step Container */
+.edit-pdf-step-container {
   background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-md);
+}
+
+.edit-pdf-step-header {
+  margin-bottom: var(--space-6);
+}
+
+.edit-pdf-step-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: var(--color-text);
+}
+
+.edit-pdf-step-header p {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.edit-pdf-file-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-divider);
   border-radius: var(--radius-xl);
-  padding: 40px 32px;
+  margin-bottom: 20px;
+}
+
+.edit-pdf-file-name {
+  font-weight: 600;
+  font-size: 15px;
+  margin: 0 0 4px;
+}
+
+.edit-pdf-file-meta {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.edit-pdf-tool-call-banner {
+  margin: 16px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.tool-call-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  color: #475569;
+}
+
+.tool-call-chip code {
+  background: #e2e8f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #0f172a;
+  font-family: monospace;
+}
+
+.edit-pdf-footer {
+  margin-top: 24px;
+}
+
+/* Loading Card */
+.edit-pdf-loading-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-2xl);
+  padding: 48px 24px;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 16px;
   box-shadow: var(--shadow-md);
-  max-width: 320px;
-  width: 100%;
 }
 
-.edit-screen__pick-title {
+.edit-pdf-loading-card h3 {
   font-size: 18px;
   font-weight: 700;
-  color: var(--color-text-primary);
   margin: 0;
 }
 
-.edit-screen__pick-sub {
+.edit-pdf-loading-card p {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.loading-bar-track {
+  width: 100%;
+  max-width: 400px;
+  height: 8px;
+  background: var(--color-divider);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.loading-bar-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 4px;
+}
+
+/* Web Editor Workspace */
+.edit-pdf-editor-workspace {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.edit-pdf-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--color-divider);
+  background: var(--color-surface);
+}
+
+.edit-pdf-editor-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.edit-pdf-editor-header p {
   font-size: 13px;
   color: var(--color-text-muted);
   margin: 0;
 }
 
-.edit-screen__choose-btn {
-  margin-top: 8px;
-  padding: 12px 28px;
-  background: var(--color-primary);
-  color: #fff;
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  font-weight: 700;
-  transition: all var(--transition-fast);
-}
-
-.edit-screen__choose-btn:hover {
-  background: var(--color-primary-dark, #1a56db);
-  transform: translateY(-1px);
-}
-
-/* ─── PDF canvas wrapper ─── */
-.edit-screen__canvas {
-  display: block;
-}
-
-.edit-screen__overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: block;
-}
-
-/* ─── Text input overlay ─── */
-.edit-screen__text-input-wrap {
-  position: absolute;
+.edit-pdf-editor-actions {
   display: flex;
-  align-items: flex-start;
+  gap: 12px;
+}
+
+/* Rich Toolbar */
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--color-surface-hover);
+  border-bottom: 1px solid var(--color-divider);
+  flex-wrap: wrap;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
   gap: 4px;
-  z-index: 10;
 }
 
-.edit-screen__text-input {
-  background: rgba(255, 255, 255, 0.92);
-  border: 2px solid var(--color-primary);
-  border-radius: 4px;
-  padding: 4px 6px;
-  outline: none;
-  font-family: inherit;
-  min-width: 120px;
-  max-width: 260px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--color-divider);
+  margin: 0 4px;
 }
 
-.edit-screen__text-input-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.edit-screen__text-input-actions button {
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
+.toolbar-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.edit-screen__text-input-actions button:first-child {
-  background: var(--color-primary);
-  color: #fff;
+.toolbar-btn:hover {
+  background: var(--color-surface);
+  border-color: var(--color-divider);
+  color: var(--color-primary);
 }
 
-.edit-screen__text-input-actions button:last-child {
-  background: var(--color-divider);
-  color: var(--color-text-secondary);
+.toolbar-select {
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
 }
 
-/* ─── Bottom nav bar ─── */
-.edit-screen__nav {
+/* Paper Sheet Canvas — Multi-Page Concurrent A4 Sheets */
+.editor-canvas-container {
+  background: #cbd5e1;
+  padding: 36px 16px;
+  min-height: 540px;
+  max-height: 780px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 36px;
+}
+
+.editor-page-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 210mm;
+}
+
+.editor-page-card-header {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 14px;
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-divider);
-  flex-shrink: 0;
-  gap: 8px;
-}
-
-.edit-screen__ops-badge {
-  font-size: 11px;
-  color: var(--color-text-muted);
-  min-width: 100px;
-}
-
-.edit-screen__ops-badge span {
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
-  padding: 2px 8px;
-  border-radius: 20px;
+  padding: 6px 14px;
+  background: #1e293b;
+  color: #ffffff;
+  border-radius: 6px 6px 0 0;
+  font-size: 12px;
   font-weight: 600;
+  box-sizing: border-box;
 }
 
-.edit-screen__nav-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.page-card-badge {
+  background: rgba(255, 255, 255, 0.18);
+  padding: 2px 8px;
+  border-radius: 12px;
 }
 
-.edit-screen__nav-btn {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-md);
-  border: 1.5px solid var(--color-border);
-  color: var(--color-text-secondary);
-  transition: all var(--transition-fast);
+.page-card-meta {
+  opacity: 0.8;
 }
 
-.edit-screen__nav-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.edit-screen__nav-btn:not(:disabled):hover {
-  background: var(--color-divider);
-}
-
-.edit-screen__page-info {
+.page-card-delete-btn {
+  background: transparent;
+  border: none;
+  color: #f87171;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 14px;
-  color: var(--color-text-primary);
-  font-weight: 600;
-  min-width: 60px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.page-card-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+.editor-paper-sheet {
+  background: #ffffff;
+  width: 210mm;
+  max-width: 100%;
+  min-height: 297mm;
+  padding: 20mm 24mm;
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08);
+  color: #0f172a;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  outline: none;
+  box-sizing: border-box;
+  position: relative;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.editor-add-page-bar {
+  margin-top: 12px;
+  display: flex;
   justify-content: center;
 }
 
-.edit-screen__page-sep {
+.editor-add-page-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: #ffffff;
+  color: var(--color-primary);
+  border: 1px dashed var(--color-primary);
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.editor-add-page-btn:hover {
+  background: var(--color-primary);
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+}
+
+.editor-paper-sheet:focus {
+  box-shadow: 0 12px 36px rgba(37, 99, 235, 0.2), 0 0 0 2px var(--color-primary);
+}
+
+.editor-paper-sheet table {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  table-layout: fixed;
+}
+
+.editor-paper-sheet th,
+.editor-paper-sheet td {
+  border: 1px solid #cbd5e1;
+  padding: 8px 12px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  vertical-align: top;
+  outline: none;
+  cursor: text;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.editor-paper-sheet th:focus,
+.editor-paper-sheet td:focus {
+  background-color: rgba(37, 99, 235, 0.06);
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.editor-paper-sheet th {
+  background-color: #f1f5f9;
+  font-weight: 600;
+}
+
+.editor-paper-sheet img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 12px auto;
+}
+
+.editor-paper-sheet h1 {
+  font-size: 24px;
+  font-weight: 800;
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #0f172a;
+}
+
+.editor-paper-sheet h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-top: 16px;
+  margin-bottom: 10px;
+  color: #1e293b;
+}
+
+.editor-paper-sheet h3 {
+  font-size: 17px;
+  font-weight: 600;
+  margin-top: 14px;
+  margin-bottom: 8px;
+  color: #334155;
+}
+
+.editor-paper-sheet p {
+  margin-bottom: 12px;
+}
+
+/* A4 Page Separation & Page Break Indicators */
+.editor-paper-sheet hr.page-break,
+.editor-paper-sheet .page-break-indicator {
+  border: none;
+  height: 24px;
+  background: repeating-linear-gradient(
+    -45deg,
+    #cbd5e1,
+    #cbd5e1 10px,
+    #e2e8f0 10px,
+    #e2e8f0 20px
+  );
+  margin: 36px -24mm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.editor-stats-bar {
+  display: flex;
+  gap: 20px;
+  padding: 10px 24px;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-divider);
+  font-size: 12px;
   color: var(--color-text-muted);
 }
 
-.edit-screen__zoom {
+/* Step 5 Auto Download Banner */
+.edit-pdf-success__banner {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  color: #ffffff;
+  border-radius: var(--radius-2xl);
+  padding: 24px 28px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--color-text-secondary);
-  font-weight: 600;
+  gap: 20px;
+  box-shadow: 0 12px 30px rgba(49, 46, 129, 0.3);
 }
 
-.edit-screen__zoom button {
-  width: 26px;
-  height: 26px;
+.edit-pdf-success__badge {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.edit-pdf-success__timer-ring {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 4px solid #6366f1;
+  border-top-color: #a855f7;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid var(--color-border);
-  color: var(--color-text-secondary);
-  transition: background var(--transition-fast);
+  flex-shrink: 0;
+  animation: spin 3s linear infinite;
 }
 
-.edit-screen__zoom button:hover {
-  background: var(--color-divider);
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+.edit-pdf-success__timer-num {
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+  animation: none;
+}
+
+.edit-pdf-success__banner-text h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: #ffffff;
+}
+
+.edit-pdf-success__banner-text p {
+  font-size: 13px;
+  margin: 0;
+  opacity: 0.85;
+}
+
+/* Mobile Responsive Design */
+@media (max-width: 640px) {
+  .edit-pdf-screen {
+    padding: var(--space-2);
+  }
+
+  .edit-pdf-editor-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .edit-pdf-editor-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .edit-pdf-editor-actions button {
+    flex: 1;
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+
+  .editor-toolbar {
+    padding: 8px 10px;
+    gap: 6px;
+    justify-content: flex-start;
+  }
+
+  .toolbar-group {
+    gap: 2px;
+  }
+
+  .toolbar-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  .toolbar-select {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  .toolbar-divider {
+    height: 18px;
+    margin: 0 2px;
+  }
+
+  .editor-canvas-container {
+    padding: 12px 8px;
+    min-height: 380px;
+    max-height: 520px;
+  }
+
+  .editor-paper-sheet {
+    padding: 24px 18px;
+    min-height: 420px;
+    font-size: 14px;
+  }
+
+  .editor-stats-bar {
+    padding: 8px 12px;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 11px;
+  }
+
+  .edit-pdf-success__banner {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px 16px;
+    gap: 14px;
+  }
+
+  .edit-pdf-success__banner button {
+    width: 100%;
+  }
 }

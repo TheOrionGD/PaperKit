@@ -2,15 +2,19 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .compress-screen__body {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-4);
+  padding: clamp(10px, 3vw, var(--space-4));
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .compress-screen__pick-btn {
@@ -19,12 +23,14 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  padding: var(--space-8) var(--space-4);
+  padding: clamp(20px, 5vw, var(--space-8)) var(--space-4);
   border: 2px dashed var(--color-primary-border);
   border-radius: var(--radius-xl);
   background: var(--color-primary-soft);
   cursor: pointer;
   transition: background var(--transition-base);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .compress-screen__pick-btn:hover { background: #dce8ff; }
@@ -55,11 +61,13 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-4);
+  padding: clamp(10px, 3vw, var(--space-4));
   background: var(--color-surface);
   border-radius: var(--radius-xl);
   cursor: pointer;
   border: 1.5px solid var(--color-primary-border);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .compress-screen__file-info { flex: 1; min-width: 0; }
@@ -81,7 +89,9 @@
 .compress-screen__section {
   background: var(--color-surface);
   border-radius: var(--radius-xl);
-  padding: var(--space-4);
+  padding: clamp(10px, 3vw, var(--space-4));
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .compress-screen__section-title {
@@ -100,10 +110,14 @@
 .compress-screen__estimate {
   background: var(--color-surface);
   border-radius: var(--radius-xl);
-  padding: var(--space-4);
+  padding: clamp(10px, 3vw, var(--space-4));
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .compress-screen__estimate-label {
@@ -140,7 +154,9 @@
 }
 
 .compress-screen__footer {
-  padding: var(--space-4);
+  padding: clamp(10px, 3vw, var(--space-4));
   background: var(--color-surface);
   border-top: 1px solid var(--color-divider);
+  width: 100%;
+  box-sizing: border-box;
 }

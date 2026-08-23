@@ -25,42 +25,44 @@ export default function BottomNavigation() {
 
   return (
     <nav className="bottom-nav" role="navigation" aria-label="Main navigation">
-      {NAV_ITEMS.map(item => {
-        const Icon = item.icon;
-        const active = isActive(item);
+      <div className="bottom-nav__inner">
+        {NAV_ITEMS.map(item => {
+          const Icon = item.icon;
+          const active = isActive(item);
 
-        if (item.isFab) {
+          if (item.isFab) {
+            return (
+              <button
+                key={item.id}
+                className="bottom-nav__fab"
+                onClick={() => navigate(item.path)}
+                aria-label="Open Smart Scanner"
+                id={`bottom-nav-${item.id}`}
+              >
+                <Icon size={26} color="white" strokeWidth={2} />
+              </button>
+            );
+          }
+
           return (
             <button
               key={item.id}
-              className="bottom-nav__fab"
+              className={`bottom-nav__item ${active ? 'bottom-nav__item--active' : ''}`}
               onClick={() => navigate(item.path)}
-              aria-label="Open Smart Scanner"
+              aria-label={item.label}
+              aria-current={active ? 'page' : undefined}
               id={`bottom-nav-${item.id}`}
             >
-              <Icon size={26} color="white" strokeWidth={2} />
+              <Icon
+                size={22}
+                color={active ? 'var(--color-primary)' : 'var(--color-text-muted)'}
+                strokeWidth={active ? 2.5 : 2}
+              />
+              <span className="bottom-nav__label">{item.label}</span>
             </button>
           );
-        }
-
-        return (
-          <button
-            key={item.id}
-            className={`bottom-nav__item ${active ? 'bottom-nav__item--active' : ''}`}
-            onClick={() => navigate(item.path)}
-            aria-label={item.label}
-            aria-current={active ? 'page' : undefined}
-            id={`bottom-nav-${item.id}`}
-          >
-            <Icon
-              size={22}
-              color={active ? 'var(--color-primary)' : 'var(--color-text-muted)'}
-              strokeWidth={active ? 2.5 : 2}
-            />
-            <span className="bottom-nav__label">{item.label}</span>
-          </button>
-        );
-      })}
+        })}
+      </div>
     </nav>
   );
 }

@@ -1,17 +1,20 @@
-/* ConvertScreen — dynamic, registry-driven converter for all conversion tools matching the reference */
+/* ConvertScreen — Full Bi-Directional Document Converter & Smart Workflow Chaining */
 import { useState, useRef, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { ArrowRight, Cpu, Eye, Download, CheckCircle, Loader2 } from 'lucide-react';
+import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
+import { ArrowRight, Cpu, Loader2, Layers, FileCode } from 'lucide-react';
 import { FileTypeIcon } from '../../components/icons/ToolIcons';
 import Toggle from '../../components/ui/Toggle';
+import SelectField from '../../components/ui/SelectField';
 import { PrimaryButton } from '../../components/ui/Button';
 import Toast from '../../components/ui/Toast';
 import LoadingState from '../../components/ui/LoadingState';
 import FileUploader from '../../components/common/FileUploader';
 import FilePreviewModal from '../../components/ui/FilePreviewModal';
+import CommonResultScreen, { ACTION_PRESETS } from '../../components/common/CommonResultScreen';
 import { useUpload } from '../../hooks/useUpload';
 import { useToast } from '../../hooks/useToast';
 import { convertFile, getToolsRegistry } from '../../services/tools';
+import { downloadAndOpenFile } from '../../services/native';
 import './ConvertScreen.css';
 
 const FORMAT_META = {
@@ -26,6 +29,8 @@ const FORMAT_META = {
 };
 
 export default function ConvertScreen() {
+  const _navigate = useNavigate();
+  const location = useLocation();
   const [params] = useSearchParams();
   const from = params.get('from') || 'pdf';
   const to = params.get('to') || 'word';
@@ -36,20 +41,38 @@ export default function ConvertScreen() {
   const [loadingRegistry, setLoadingRegistry] = useState(true);
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadedId, setUploadedId] = useState(null);
-  const [convertedResult, setConvertedResult] = useState(null); // { download_url, filename }
+  const [convertedResult, setConvertedResult] = useState(null); // { download_url, filename, name, size }
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   
   // Options state
   const [ocr, setOcr] = useState(false);
   const [keepFormatting, setKeepFormatting] = useState(true);
   const [dpi, setDpi] = useState('150');
+  const [pageSize, setPageSize] = useState('a4');
+  const [orientation, setOrientation] = useState('portrait');
+  const [imageFormat, setImageFormat] = useState('jpg');
 
   const [converting, setConverting] = useState(false);
   const fileInputRef = useRef(null);
   const { upload, uploading } = useUpload();
   const { toast, showToast, dismissToast } = useToast();
 
-  // Load registry on mount
+  useEffect(() => {
+    // Load incoming file from Smart Workflow Chaining
+    const incoming = location.state?.chainedFile || location.state?.file;
+    if (incoming) {
+      const fileObj = incoming instanceof File ? incoming : incoming.file || incoming;
+      setSelectedFile(fileObj);
+      setConvertedResult(null);
+      upload(fileObj).then(doc => {
+        setUploadedId(doc._id || doc.id);
+        showToast(`Loaded ${fileObj.name || 'document'} for conversion`, 'info');
+      }).catch(err => {
+        console.error('Auto upload error:', err);
+      });
+    }
+  }, [location.state, showToast, upload]);
+
   useEffect(() => {
     getToolsRegistry()
       .then(data => {
@@ -62,21 +85,16 @@ export default function ConvertScreen() {
       });
   }, [showToast]);
 
-  // Find active tool from registry
   const currentTool = registry.find(t => 
     t.route.includes(`from=${from}`) && t.route.includes(`to=${to}`)
   );
 
-  // Derive accepted extensions
   const acceptedExts = currentTool?.supportedFormats || [fromMeta.ext];
   const acceptAttr = acceptedExts.join(',');
-
-  // Derive active engine
   const activeEngineKey = currentTool?.defaultEngine || 'python';
   const engineInfo = currentTool?.engines?.[activeEngineKey] || {};
-  const engineName = engineInfo.name || 'Auto Engine';
+  const engineName = engineInfo.name || 'PaperKit High-Fidelity Engine';
 
-  // Handle file select
   async function handleFileSelect(fileOrEvent) {
     const file = fileOrEvent?.target?.files?.[0] || fileOrEvent;
     if (!file) return;
@@ -91,7 +109,6 @@ export default function ConvertScreen() {
     }
   }
 
-  // Trigger conversion
   async function handleConvert() {
     if (!selectedFile) {
       fileInputRef.current?.click();
@@ -107,7 +124,11 @@ export default function ConvertScreen() {
         setUploadedId(activeId);
       }
 
-      const options = {};
+      const options = {
+        page_size: pageSize,
+        orientation,
+        image_format: imageFormat,
+      };
       if (currentTool?.capabilities?.includes('ocr')) {
         options.ocr = ocr;
       }
@@ -119,13 +140,20 @@ export default function ConvertScreen() {
       }
 
       const result = await convertFile(activeId, from, to, options);
-      showToast('Conversion complete!', 'success');
-      
-      const resFilename = result.filename || `converted_doc${toMeta.ext}`;
+      const outExt = to === 'image' ? `.${imageFormat}` : toMeta.ext;
+      const stem = selectedFile.name ? selectedFile.name.rsplit?.('.', 1)?.[0] || selectedFile.name.split('.')[0] : 'document';
+      const resFilename = result.filename || `${stem}_converted${outExt}`;
+
       setConvertedResult({
         download_url: result.download_url,
+        name: resFilename,
         filename: resFilename,
+        size: result.size || selectedFile.size || 0,
+        mimeType: to === 'pdf' ? 'application/pdf' : to === 'word' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : 'application/octet-stream',
+        rawFile: null,
       });
+
+      showToast('Conversion Completed ✓', 'success');
     } catch (err) {
       showToast('Conversion failed: ' + err.message, 'error');
     } finally {
@@ -133,15 +161,110 @@ export default function ConvertScreen() {
     }
   }
 
-  const handleDownload = () => {
-    if (!convertedResult?.download_url) return;
-    const a = document.createElement('a');
-    a.href = convertedResult.download_url;
-    a.download = convertedResult.filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
+  // Derive dynamic next actions tailored specifically to the conversion pair:
+  function getDynamicNextActions() {
+    // Feature 6: PDF -> Word (spec: Download Word, Edit Document, Convert Back to PDF, AI Summary, OCR, Exit)
+    if (from === 'pdf' && to === 'word') {
+      return [
+        {
+          id: 'edit-doc',
+          label: 'Edit Document in Web Editor',
+          desc: 'Edit text live & save back to PDF',
+          icon: FileCode,
+          route: '/tools/edit',
+        },
+        {
+          id: 'convert-back',
+          label: 'Convert Back to PDF',
+          desc: 'Turn Word file back to PDF',
+          icon: FileCode,
+          route: '/tools/convert?from=word&to=pdf',
+        },
+        ACTION_PRESETS.aiSummary,
+        ACTION_PRESETS.ocr,
+      ];
+    }
+
+    // Feature 7: Word -> PDF (spec: Download PDF, Compress, Password Protect, Add Watermark, Split PDF, Edit PDF, Exit)
+    if (from === 'word' && to === 'pdf') {
+      return [
+        ACTION_PRESETS.compress,
+        ACTION_PRESETS.protect,
+        ACTION_PRESETS.watermark,
+        ACTION_PRESETS.split,
+      ];
+    }
+
+    // Feature 8: JPG / PNG -> PDF (spec: Download, Merge with Another PDF, Compress, OCR, AI Summary, Password Protect, Exit)
+    if (from === 'image' && to === 'pdf') {
+      return [
+        ACTION_PRESETS.merge,
+        ACTION_PRESETS.compress,
+        ACTION_PRESETS.ocr,
+        ACTION_PRESETS.aiSummary,
+        ACTION_PRESETS.protect,
+      ];
+    }
+
+    // Feature 9: PDF -> JPG / PNG (spec: Download All, Create PDF, OCR, Convert Again, Exit)
+    if (from === 'pdf' && to === 'image') {
+      return [
+        {
+          id: 'create-pdf',
+          label: 'Create PDF from Images',
+          desc: 'Re-assemble images into PDF',
+          icon: Layers,
+          route: '/tools/convert?from=image&to=pdf',
+        },
+        ACTION_PRESETS.ocr,
+        ACTION_PRESETS.compress,
+      ];
+    }
+
+    // Default actions
+    return [
+      ACTION_PRESETS.compress,
+      ACTION_PRESETS.protect,
+      ACTION_PRESETS.aiSummary,
+    ];
+  }
+
+  if (convertedResult) {
+    return (
+      <div className="convert-screen">
+        <CommonResultScreen
+          title="Conversion Completed ✓"
+          subtitle={`Successfully converted ${fromMeta.label} to ${toMeta.label}`}
+          file={convertedResult}
+          metrics={[
+            { label: 'Source Format', value: fromMeta.label },
+            { label: 'Target Format', value: toMeta.label, badge: 'Converted' },
+            { label: 'Engine', value: 'High-Fidelity' },
+          ]}
+          nextActions={getDynamicNextActions()}
+          primaryAction={{
+            label: `Download ${toMeta.label} File`,
+            onClick: () => {
+              if (convertedResult?.download_url) {
+                downloadAndOpenFile(
+                  convertedResult.download_url,
+                  convertedResult.filename || convertedResult.name || `converted_file.${toMeta.ext}`,
+                  convertedResult.mimeType
+                );
+              }
+            }
+          }}
+          onReset={() => {
+            setConvertedResult(null);
+            setSelectedFile(null);
+            setUploadedId(null);
+          }}
+          sourceWorkflow={`convert-${from}-to-${to}`}
+        />
+        <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
+      </div>
+    );
+  }
 
   if (loadingRegistry) {
     return <LoadingState text="Loading tool settings..." />;
@@ -164,35 +287,33 @@ export default function ConvertScreen() {
         </div>
 
         <p className="convert-screen__caption">
-          Convert {fromMeta.label} to editable {toMeta.label} document
+          Convert {fromMeta.label} to editable {toMeta.label} format
         </p>
 
         {/* Engine Banner */}
-        {currentTool && (
-          <div className="convert-screen__engine-badge" style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: 'var(--color-primary-soft)',
-            padding: '8px 16px',
-            borderRadius: '20px',
-            fontSize: '12px',
-            fontWeight: '600',
-            color: 'var(--color-primary)',
-            marginTop: '8px',
-            marginBottom: '16px'
-          }}>
-            <Cpu size={14} />
-            <span>Engine: {engineName}</span>
-          </div>
-        )}
+        <div className="convert-screen__engine-badge" style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          background: 'var(--color-primary-soft)',
+          padding: '8px 16px',
+          borderRadius: '20px',
+          fontSize: '12px',
+          fontWeight: '600',
+          color: 'var(--color-primary)',
+          marginTop: '8px',
+          marginBottom: '16px'
+        }}>
+          <Cpu size={14} />
+          <span>Engine: {engineName}</span>
+        </div>
 
         {/* File picker / Drag & Drop Uploader */}
         {!selectedFile ? (
           <FileUploader
             accept={acceptAttr}
             onFileSelect={handleFileSelect}
-            title={`Select ${fromMeta.label} Document`}
+            title={`Select ${fromMeta.label} File`}
             subtitle={`Choose a ${fromMeta.ext} file to convert to ${toMeta.label}`}
             icon={fromMeta.iconType}
           />
@@ -243,98 +364,78 @@ export default function ConvertScreen() {
             <Loader2 className="animate-spin" size={24} color="var(--color-primary)" />
             <div>
               <p style={{ fontWeight: '600', fontSize: '14px', margin: 0 }}>Converting document...</p>
-              <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', margin: '2px 0 0' }}>Engine: {engineName}</p>
+              <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', margin: '2px 0 0' }}>Extracting structure & formatting</p>
             </div>
           </div>
         )}
 
-        {/* Converted Document Success & Actions Container */}
-        {convertedResult && (
-          <div className="convert-screen__result-box" style={{
-            marginTop: '20px',
-            padding: '20px',
-            background: 'color-mix(in srgb, var(--color-success) 8%, transparent)',
-            borderRadius: 'var(--radius-xl)',
-            border: '1px solid color-mix(in srgb, var(--color-success) 30%, transparent)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <CheckCircle size={24} color="var(--color-success)" />
-              <div>
-                <h4 style={{ margin: 0, fontWeight: '700', fontSize: '15px' }}>Conversion Complete!</h4>
-                <p style={{ margin: '2px 0 0', fontSize: '13px', color: 'var(--color-text-muted)' }}>
-                  {convertedResult.filename}
-                </p>
-              </div>
+        {/* Dynamic Options based on Conversion Type */}
+        <div className="convert-screen__options" style={{ marginTop: '16px' }}>
+          <h3 className="convert-screen__options-title">Conversion Settings</h3>
+          
+          {from === 'image' && to === 'pdf' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+              <SelectField
+                label="Page Size"
+                value={pageSize}
+                onChange={setPageSize}
+                options={[
+                  { value: 'a4', label: 'A4 (210 × 297 mm)' },
+                  { value: 'letter', label: 'Letter (8.5 × 11 in)' },
+                  { value: 'original', label: 'Fit to Image' }
+                ]}
+              />
+              <SelectField
+                label="Orientation"
+                value={orientation}
+                onChange={setOrientation}
+                options={[
+                  { value: 'portrait', label: 'Portrait' },
+                  { value: 'landscape', label: 'Landscape' },
+                  { value: 'auto', label: 'Auto Detect' }
+                ]}
+              />
             </div>
+          )}
 
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              <button
-                className="btn-secondary"
-                onClick={() => setIsPreviewOpen(true)}
-                style={{ flex: 1, minWidth: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-              >
-                <Eye size={18} />
-                <span>Preview Document</span>
-              </button>
-              
-              <button
-                className="btn-primary"
-                onClick={handleDownload}
-                style={{ flex: 1, minWidth: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-              >
-                <Download size={18} />
-                <span>Download File</span>
-              </button>
+          {from === 'pdf' && to === 'image' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+              <SelectField
+                label="Image Format"
+                value={imageFormat}
+                onChange={setImageFormat}
+                options={[
+                  { value: 'jpg', label: 'JPG (Compressed)' },
+                  { value: 'png', label: 'PNG (Lossless High-Res)' },
+                ]}
+              />
+              <SelectField
+                label="Resolution"
+                value={dpi}
+                onChange={setDpi}
+                options={[
+                  { value: '75', label: '75 DPI (Compact)' },
+                  { value: '150', label: '150 DPI (Balanced)' },
+                  { value: '300', label: '300 DPI (High-Res)' },
+                ]}
+              />
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Dynamic Options based on Capabilities */}
-        {currentTool && (
-          <div className="convert-screen__options" style={{ marginTop: '16px' }}>
-            <h3 className="convert-screen__options-title">Options</h3>
-            
-            {currentTool.capabilities?.includes('ocr') && (
-              <div className="convert-screen__option-row">
-                <span className="convert-screen__option-label">OCR (Text Recognition)</span>
-                <Toggle checked={ocr} onChange={setOcr} id="convert-ocr" label="OCR" />
-              </div>
-            )}
-            
-            {(currentTool.capabilities?.includes('layout-preservation') || currentTool.capabilities?.includes('high-fidelity-layout')) && (
-              <div className="convert-screen__option-row">
-                <span className="convert-screen__option-label">Keep Formatting</span>
-                <Toggle checked={keepFormatting} onChange={setKeepFormatting} id="convert-keep-formatting" label="Keep Formatting" />
-              </div>
-            )}
-            
-            {currentTool.capabilities?.includes('dpi-selection') && (
-              <div className="convert-screen__option-row" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
-                <span className="convert-screen__option-label">Image Resolution (DPI)</span>
-                <select 
-                  value={dpi} 
-                  onChange={(e) => setDpi(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: 'var(--radius-lg)',
-                    border: '1px solid var(--color-divider)',
-                    background: 'var(--color-surface)',
-                    color: 'var(--color-text-primary)'
-                  }}
-                  id="convert-dpi-select"
-                >
-                  <option value="75">75 DPI (Low Size)</option>
-                  <option value="150">150 DPI (Balanced)</option>
-                  <option value="300">300 DPI (High Quality)</option>
-                </select>
-              </div>
-            )}
-          </div>
-        )}
+          {currentTool?.capabilities?.includes('ocr') && (
+            <div className="convert-screen__option-row">
+              <span className="convert-screen__option-label">Enable OCR (Text Recognition)</span>
+              <Toggle checked={ocr} onChange={setOcr} id="convert-ocr" label="OCR" />
+            </div>
+          )}
+          
+          {(currentTool?.capabilities?.includes('layout-preservation') || currentTool?.capabilities?.includes('high-fidelity-layout')) && (
+            <div className="convert-screen__option-row">
+              <span className="convert-screen__option-label">Preserve Exact Document Layout</span>
+              <Toggle checked={keepFormatting} onChange={setKeepFormatting} id="convert-keep-formatting" label="Keep Formatting" />
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="convert-screen__footer">
@@ -344,7 +445,7 @@ export default function ConvertScreen() {
           disabled={converting || uploading}
           id="convert-submit-btn"
         >
-          {selectedFile ? 'CONVERT' : 'SELECT FILE TO CONVERT'}
+          {selectedFile ? `CONVERT TO ${toMeta.label.toUpperCase()}` : 'SELECT FILE TO CONVERT'}
         </PrimaryButton>
       </div>
 
@@ -353,7 +454,6 @@ export default function ConvertScreen() {
         onClose={() => setIsPreviewOpen(false)}
         fileUrl={convertedResult?.download_url}
         fileName={convertedResult?.filename}
-        mimeType={to === 'pdf' ? 'application/pdf' : 'application/octet-stream'}
       />
 
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />

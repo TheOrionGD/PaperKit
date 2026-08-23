@@ -3,16 +3,15 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Files, Clock, Star, Trash2,
-  Settings, HelpCircle, Share2, Info, ChevronRight, X, HardDrive,
-  Crown, ShieldCheck, Globe, Lock, User, LogOut, Zap, Mail
+  Settings, HelpCircle, Share2, Info, ChevronRight, X, HardDrive, ShieldCheck, Globe, User, Zap, LogOut
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useI18n, SUPPORTED_LANGUAGES } from '../context/I18nContext';
-import { updateMe, deleteAccount } from '../services/auth';
+import { updateMe } from '../services/auth';
 import { getStorageUsage } from '../services/jobs';
 import { getProcessingHistory } from '../services/tools';
 import LoadingState from '../components/ui/LoadingState';
-import { shareUrl } from '../services/native';
+import { shareUrl, exitApp } from '../services/native';
 import { formatFileTimestamp } from '../utils/dateUtils';
 import './ProfileScreen.css';
 
@@ -23,14 +22,12 @@ export default function ProfileScreen() {
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [name, setName] = useState('');
-  const [password, setPassword] = useState('');
   const [darkMode, setDarkMode] = useState(false);
   const [defaultView, setDefaultView] = useState('list');
   const [selectedLang, setSelectedLang] = useState(lang);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState('');
-  const [confirmDelete, setConfirmDelete] = useState(false);
   
   // Real dynamic stats
   const [storageStats, setStorageStats] = useState({ totalMB: '0.00', fileCount: 0 });
@@ -119,7 +116,7 @@ export default function ProfileScreen() {
 
   function handleItem(item) {
     if (item.action === 'share') {
-      shareUrl('PaperKit', 'Check out PaperKit — All-in-One PDF & Media Solution!', window.location.origin);
+      shareUrl('PaperKit', 'Check out PaperKit — All-in-One Open-Source PDF Suite!', 'https://paperkit-web.onrender.com');
       return;
     }
     if (item.isSettings || item.id === 'settings') {
@@ -127,11 +124,6 @@ export default function ProfileScreen() {
       return;
     }
     if (item.path) navigate(item.path);
-  }
-
-  async function handleLogout() {
-    await logout();
-    navigate('/login', { replace: true });
   }
 
   async function handleLanguageChange(newLang) {
@@ -143,7 +135,7 @@ export default function ProfileScreen() {
       const updatedUser = await updateMe({ preferences: newPreferences });
       if (setUser && updatedUser) setUser(updatedUser);
     } catch (err) {
-      console.warn('Preferences save on server failed:', err);
+      console.warn('Preferences save failed:', err);
     }
   }
 
@@ -168,12 +160,8 @@ export default function ProfileScreen() {
     setSaveSuccess('');
     try {
       const payload = { name };
-      if (password) {
-        payload.password = password;
-      }
       const updatedUser = await updateMe(payload);
       if (setUser && updatedUser) setUser(updatedUser);
-      setPassword('');
       setSaveSuccess(t('save_changes') + ' ✓');
     } catch (err) {
       setSaveError(err.message || 'Failed to update profile');
@@ -182,13 +170,20 @@ export default function ProfileScreen() {
     }
   }
 
-  async function handleDeleteAccount() {
-    try {
-      await deleteAccount();
+  async function handleLogout() {
+    await logout();
+    await exitApp();
+  }
+
+  async function handleResetPreferences() {
+    if (window.confirm('Reset local workspace preferences and cache to default?')) {
       await logout();
-      navigate('/login', { replace: true });
-    } catch (err) {
-      alert(err.message || 'Failed to delete account');
+      setName('Open Source User');
+      setDarkMode(false);
+      setDefaultView('list');
+      setSelectedLang('en');
+      setLang('en');
+      setSaveSuccess('Workspace reset to defaults ✓');
     }
   }
 
@@ -302,12 +297,21 @@ export default function ProfileScreen() {
         ))}
 
         <button
+          className="profile-screen__settings-btn"
+          onClick={() => setSettingsOpen(true)}
+          id="profile-settings-btn"
+        >
+          <Settings size={18} />
+          <span>{t('settings')}</span>
+        </button>
+
+        <button
           className="profile-screen__logout-btn"
           onClick={handleLogout}
           id="profile-logout-btn"
         >
           <LogOut size={18} />
-          <span>{t('logout')}</span>
+          <span>{t('logout') || 'Log Out'}</span>
         </button>
       </div>
 
@@ -333,7 +337,7 @@ export default function ProfileScreen() {
                 {saveSuccess && <div className="profile-screen__alert profile-screen__alert--success">{saveSuccess}</div>}
 
                 <div className="profile-screen__field">
-                  <label className="profile-screen__label">Name</label>
+                  <label className="profile-screen__label">Display Name</label>
                   <div className="profile-screen__input-wrap">
                     <User size={16} className="profile-screen__input-icon" />
                     <input
@@ -341,35 +345,8 @@ export default function ProfileScreen() {
                       className="profile-screen__input"
                       value={name}
                       onChange={e => setName(e.target.value)}
-                      placeholder="Your Full Name"
+                      placeholder="Your Name"
                       required
-                    />
-                  </div>
-                </div>
-
-                <div className="profile-screen__field">
-                  <label className="profile-screen__label">Email Address</label>
-                  <div className="profile-screen__input-wrap">
-                    <Mail size={16} className="profile-screen__input-icon" />
-                    <input
-                      type="email"
-                      className="profile-screen__input profile-screen__input--disabled"
-                      value={user?.email || ''}
-                      disabled
-                    />
-                  </div>
-                </div>
-
-                <div className="profile-screen__field">
-                  <label className="profile-screen__label">{t('change_password')} (Optional)</label>
-                  <div className="profile-screen__input-wrap">
-                    <Lock size={16} className="profile-screen__input-icon" />
-                    <input
-                      type="password"
-                      className="profile-screen__input"
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      placeholder="Enter new password"
                     />
                   </div>
                 </div>
@@ -433,38 +410,21 @@ export default function ProfileScreen() {
                     <option value="grid">{t('grid_view')}</option>
                   </select>
                 </div>
-              </div>
 
-              <div className="profile-screen__section-title" style={{ marginTop: 'var(--space-6)' }}>{t('account_management')}</div>
-              <div className="profile-screen__account-details">
-                <p className="profile-screen__registered">Registered: <strong>{registeredDate}</strong></p>
-                
-                {confirmDelete ? (
-                  <div className="profile-screen__delete-box">
-                    <p className="profile-screen__delete-warning">Warning: Deleting your account will permanently purge all cloud files and processing history.</p>
-                    <div className="profile-screen__delete-actions">
-                      <button 
-                        className="profile-screen__btn profile-screen__btn--danger"
-                        onClick={handleDeleteAccount}
-                      >
-                        {t('delete_account')}
-                      </button>
-                      <button 
-                        className="profile-screen__btn profile-screen__btn--secondary"
-                        onClick={() => setConfirmDelete(false)}
-                      >
-                        Cancel
-                      </button>
-                    </div>
+                <div className="profile-screen__pref-row" style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--color-divider)' }}>
+                  <div className="profile-screen__pref-info">
+                    <span className="profile-screen__pref-name">Reset Workspace</span>
+                    <span className="profile-screen__pref-desc">Reset local preferences and cache</span>
                   </div>
-                ) : (
                   <button 
-                    className="profile-screen__btn profile-screen__btn--danger-outline"
-                    onClick={() => setConfirmDelete(true)}
+                    type="button" 
+                    className="profile-screen__btn profile-screen__btn--danger"
+                    onClick={handleResetPreferences}
+                    style={{ background: 'var(--color-error-light)', color: 'var(--color-error)', border: '1px solid var(--color-error-border)', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer' }}
                   >
-                    {t('delete_account')}
+                    Reset Defaults
                   </button>
-                )}
+                </div>
               </div>
             </div>
           </div>

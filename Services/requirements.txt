@@ -19,6 +19,7 @@ python-docx
 openpyxl
 python-pptx
 reportlab
+beautifulsoup4
 # Archive tools
 py7zr>=0.20.0
 rarfile>=4.0

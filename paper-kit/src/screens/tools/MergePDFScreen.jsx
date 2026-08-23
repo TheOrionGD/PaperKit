@@ -1,15 +1,18 @@
-/* MergePDFScreen — matches the reference: Add Files/Add Folder tabs, file list, reorderable drag/drop, options, MERGE PDF */
-import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { GripVertical, X, Plus, FolderOpen } from 'lucide-react';
+/* MergePDFScreen — PDF Merge Flow & Smart Workflow Chaining */
+import { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { GripVertical, X, Plus, FolderOpen, Eye } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
 import { FileTypeIcon } from '../../components/icons/ToolIcons';
 import { PrimaryButton } from '../../components/ui/Button';
 import SegmentedControl from '../../components/ui/SegmentedControl';
 import SelectField from '../../components/ui/SelectField';
+import FilePreviewModal from '../../components/ui/FilePreviewModal';
+import CommonResultScreen, { ACTION_PRESETS } from '../../components/common/CommonResultScreen';
 import { useToast } from '../../hooks/useToast';
 import Toast from '../../components/ui/Toast';
 import { useProcessing } from '../../context/ProcessingContext';
+import { downloadAndOpenFile } from '../../services/native';
 import './MergePDFScreen.css';
 
 const PAGE_SIZES = [
@@ -28,19 +31,54 @@ const MARGINS = [
 ];
 
 export default function MergePDFScreen() {
-  const navigate = useNavigate();
+  const location = useLocation();
   const [addMode, setAddMode] = useState('files');
-  const [files, setFiles] = useState([]); // Array of { id, file, pageCount }
+  const [files, setFiles] = useState([]); // Array of { id, file, pageCount, download_url }
   const [pageSize, setPageSize] = useState('a4');
   const [margin, setMargin] = useState('normal');
   const [merging, setMerging] = useState(false);
   const [mergeError, setMergeError] = useState('');
   const [draggedIndex, setDraggedIndex] = useState(null);
+  const [mergeResult, setMergeResult] = useState(null);
+
+  // Individual file preview state
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [previewTarget, setPreviewTarget] = useState(null);
 
   const fileInputRef = useRef(null);
   const folderInputRef = useRef(null);
   const { runProcessing } = useProcessing();
   const { toast, showToast, dismissToast } = useToast();
+
+  useEffect(() => {
+    // Handle workflow chaining from Split, Extract, Convert, or Scanner
+    const incomingFiles = location.state?.chainedFiles || (location.state?.chainedFile ? [location.state.chainedFile] : null) || location.state?.files;
+    if (incomingFiles && Array.isArray(incomingFiles) && incomingFiles.length > 0) {
+      async function loadIncoming() {
+        const processed = [];
+        for (const item of incomingFiles) {
+          const fileObj = item instanceof File ? item : item.file || item;
+          if (fileObj) {
+            let count = null;
+            if (fileObj instanceof Blob) {
+              count = await getPdfPageCount(fileObj);
+            }
+            processed.push({
+              file: fileObj,
+              id: `${fileObj.name || 'doc'}-${Date.now()}-${Math.random()}`,
+              pageCount: count || item.pageCount || 1,
+              download_url: item.download_url,
+            });
+          }
+        }
+        if (processed.length > 0) {
+          setFiles(processed);
+          showToast(`Loaded ${processed.length} document(s) into Merge module`, 'success');
+        }
+      }
+      loadIncoming();
+    }
+  }, [location.state, showToast]);
 
   async function getPdfPageCount(file) {
     try {
@@ -70,7 +108,7 @@ export default function MergePDFScreen() {
       });
     }
     setFiles(prev => [...prev, ...processed]);
-    // Reset input
+    setMergeResult(null);
     if (e.target) e.target.value = '';
   }
 
@@ -92,7 +130,7 @@ export default function MergePDFScreen() {
       });
     }
     setFiles(prev => [...prev, ...processed]);
-    // Reset input
+    setMergeResult(null);
     if (e.target) e.target.value = '';
   }
 
@@ -101,6 +139,7 @@ export default function MergePDFScreen() {
   }
 
   function formatSize(bytes) {
+    if (!bytes) return '—';
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
@@ -113,11 +152,9 @@ export default function MergePDFScreen() {
     }
   }
 
-  // HTML5 Drag and Drop handlers for reordering
   const handleDragStart = (e, index) => {
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
-    // Make the drag experience nice on some browsers
     e.dataTransfer.setData('text/plain', index.toString());
   };
 
@@ -149,18 +186,65 @@ export default function MergePDFScreen() {
       const fileObjects = files.map(f => f.file);
       const result = await runProcessing('merge-pdf', { files: fileObjects }, { page_size: pageSize, margin });
       
-      if (result.download_url) {
-        const url = result.download_url.startsWith('http') || result.download_url.startsWith('blob:')
-          ? result.download_url
-          : `${import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'}${result.download_url}`;
-        window.open(url, '_blank');
-      }
-      navigate('/files', { replace: true });
+      const totalCombinedPages = files.reduce((acc, f) => acc + (f.pageCount || 1), 0);
+      const outputFilename = files[0]?.file?.name 
+        ? `${files[0].file.name.replace(/\.pdf$/i, '')}_merged.pdf`
+        : 'PaperKit_Merged.pdf';
+
+      setMergeResult({
+        download_url: result.download_url,
+        name: outputFilename,
+        size: result.size || 0,
+        pageCount: totalCombinedPages,
+        rawFile: null,
+      });
+
+      showToast('PDFs merged successfully!', 'success');
     } catch (err) {
       setMergeError(err.message || 'Merge failed');
+      showToast(err.message || 'Merge failed', 'error');
     } finally {
       setMerging(false);
     }
+  }
+
+  // If merged, show CommonResultScreen with contextual action cards matching spec:
+  // Options: Download PDF, Edit PDF, Compress PDF, Split PDF, Convert PDF, Password Protect, Merge Another PDF, Exit
+  if (mergeResult) {
+    return (
+      <div className="merge-screen">
+        <CommonResultScreen
+          title="Merge Completed ✓"
+          subtitle="Your combined PDF document is ready!"
+          file={mergeResult}
+          metrics={[
+            { label: 'Combined Files', value: `${files.length} PDFs` },
+            { label: 'Total Pages', value: `${mergeResult.pageCount} Pages` },
+            { label: 'Page Format', value: pageSize.toUpperCase(), badge: 'Ready' },
+          ]}
+          nextActions={[
+            ACTION_PRESETS.compress,
+            ACTION_PRESETS.split,
+            ACTION_PRESETS.convert,
+            ACTION_PRESETS.protect,
+          ]}
+          primaryAction={{
+            label: 'Download Merged PDF',
+            onClick: () => {
+              if (mergeResult?.download_url) {
+                downloadAndOpenFile(mergeResult.download_url, mergeResult.name || 'merged.pdf', 'application/pdf');
+              }
+            }
+          }}
+          onReset={() => {
+            setMergeResult(null);
+            setFiles([]);
+          }}
+          sourceWorkflow="merge-pdf"
+        />
+        <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
+      </div>
+    );
   }
 
   return (
@@ -180,7 +264,7 @@ export default function MergePDFScreen() {
               <p>No files added yet</p>
             </div>
           )}
-          {files.map(({ file, id, pageCount }, index) => (
+          {files.map(({ file, id, pageCount, download_url }, index) => (
             <div
               key={id}
               className={`merge-screen__file-row ${draggedIndex === index ? 'merge-screen__file-row--dragging' : ''}`}
@@ -194,18 +278,36 @@ export default function MergePDFScreen() {
               </div>
               <FileTypeIcon type="pdf" size={36} />
               <div className="merge-screen__file-info">
-                <p className="merge-screen__file-name">{file.name}</p>
+                <p className="merge-screen__file-name">{file.name || 'Document.pdf'}</p>
                 <p className="merge-screen__file-meta">
-                  {formatSize(file.size)} • {pageCount !== null ? `${pageCount} pages` : 'Reading page count...'}
+                  {file.size ? formatSize(file.size) : 'Ready'} • {pageCount !== null ? `${pageCount} pages` : 'Reading page count...'}
                 </p>
               </div>
-              <button
-                className="merge-screen__remove"
-                onClick={() => removeFile(id)}
-                aria-label={`Remove ${file.name}`}
-              >
-                <X size={16} color="var(--color-text-muted)" />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPreviewTarget({
+                      rawFile: file instanceof Blob ? file : null,
+                      download_url: download_url || (file instanceof Blob ? URL.createObjectURL(file) : null),
+                      name: file.name,
+                      size: file.size,
+                    });
+                    setPreviewModalOpen(true);
+                  }}
+                  title="Preview PDF"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', color: 'var(--color-primary)' }}
+                >
+                  <Eye size={16} />
+                </button>
+                <button
+                  className="merge-screen__remove"
+                  onClick={() => removeFile(id)}
+                  aria-label={`Remove ${file.name}`}
+                >
+                  <X size={16} color="var(--color-text-muted)" />
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -274,6 +376,15 @@ export default function MergePDFScreen() {
           {files.length >= 2 ? 'MERGE PDF' : files.length === 1 ? 'ADD MORE FILES TO MERGE' : 'ADD PDF FILES TO MERGE'}
         </PrimaryButton>
       </div>
+
+      <FilePreviewModal
+        isOpen={previewModalOpen}
+        onClose={() => setPreviewModalOpen(false)}
+        fileUrl={previewTarget?.download_url}
+        fileName={previewTarget?.name}
+        fileSize={previewTarget?.size}
+        rawFile={previewTarget?.rawFile}
+      />
 
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>

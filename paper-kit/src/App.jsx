@@ -3,6 +3,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { I18nProvider } from './context/I18nContext';
 import { prewarmBackend } from './services/api';
+import { configureStatusBar } from './services/native';
 import AppRouter from './router/index';
 import './index.css';
 
@@ -11,13 +12,7 @@ function ThemeApp() {
 
   useEffect(() => {
     prewarmBackend();
-    import('@capacitor/core').then(({ Capacitor }) => {
-      if (Capacitor.isNativePlatform()) {
-        import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
-          StatusBar.setStyle({ style: Style.Light }).catch(() => {});
-        }).catch(() => {});
-      }
-    }).catch(() => {});
+    configureStatusBar(false);
   }, []);
 
   useEffect(() => {
@@ -30,13 +25,7 @@ function ThemeApp() {
     if (user?.preferences?.language) {
       document.documentElement.lang = user.preferences.language;
     }
-    import('@capacitor/core').then(({ Capacitor }) => {
-      if (Capacitor.isNativePlatform()) {
-        import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
-          StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light }).catch(() => {});
-        }).catch(() => {});
-      }
-    }).catch(() => {});
+    configureStatusBar(isDark);
   }, [user]);
 
   return (

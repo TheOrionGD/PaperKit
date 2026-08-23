@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Files, Clock, Star, Trash2, Settings, 
-  HelpCircle, Share2, Info, X, LogOut, ChevronRight, Crown
+  Home, Files, Clock, Star, Trash2, Settings, 
+  HelpCircle, Share2, Info, X, ChevronRight, ShieldCheck, Sparkles
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useI18n } from '../../context/I18nContext';
@@ -11,7 +11,7 @@ import './NavigationDrawer.css';
 
 export default function NavigationDrawer({ isOpen, onClose }) {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { t } = useI18n();
 
   useEffect(() => {
@@ -32,6 +32,8 @@ export default function NavigationDrawer({ isOpen, onClose }) {
     : 'PK';
 
   const menuItems = [
+    { id: 'home',         label: t('home') || 'Home Dashboard',    icon: Home,       path: '/' },
+    { id: 'welcome',      label: 'Welcome & Feature Tour', icon: Sparkles,   path: '/welcome', highlight: true },
     { id: 'my-files',     label: t('files') || 'My Files',         icon: Files,      path: '/files' },
     { id: 'recent',       label: t('recent') || 'Recent Files',    icon: Clock,      path: '/files?filter=recent' },
     { id: 'favorites',    label: t('favorites') || 'Favorites',    icon: Star,       path: '/files?filter=favorites' },
@@ -45,18 +47,12 @@ export default function NavigationDrawer({ isOpen, onClose }) {
   function handleItemClick(item) {
     onClose();
     if (item.action === 'share') {
-      shareUrl('PaperKit', 'Check out PaperKit — All-in-One PDF & Media Solution!', window.location.origin);
+      shareUrl('PaperKit', 'Check out PaperKit — All-in-One Open-Source PDF Suite!', 'https://paperkit-web.onrender.com');
       return;
     }
     if (item.path) {
       navigate(item.path);
     }
-  }
-
-  async function handleLogout() {
-    onClose();
-    await logout();
-    navigate('/login', { replace: true });
   }
 
   return (
@@ -79,7 +75,7 @@ export default function NavigationDrawer({ isOpen, onClose }) {
               <p className="nav-drawer__user-email">{user?.email || 'PaperKit Studio'}</p>
               <div className="nav-drawer__workspace-badge">
                 <ShieldCheck size={11} style={{ marginRight: '3px' }} />
-                <span>UNRESTRICTED STUDIO</span>
+                <span>OPEN SOURCE STUDIO</span>
               </div>
             </div>
           </div>
@@ -105,26 +101,11 @@ export default function NavigationDrawer({ isOpen, onClose }) {
               </button>
             );
           })}
-
-          <div className="nav-drawer__divider" />
-
-          <button
-            className="nav-drawer__menu-item nav-drawer__menu-item--logout"
-            onClick={handleLogout}
-            id="drawer-logout-btn"
-          >
-            <div className="nav-drawer__menu-icon-wrapper nav-drawer__menu-icon-wrapper--logout">
-              <LogOut size={18} color="var(--color-error)" />
-            </div>
-            <span className="nav-drawer__menu-label" style={{ color: 'var(--color-error)', fontWeight: 600 }}>
-              {t('logout') || 'Sign Out'}
-            </span>
-          </button>
         </nav>
 
         {/* Footer info */}
         <div className="nav-drawer__footer">
-          <span>PaperKit v1.0.0</span>
+          <span>PaperKit Open-Source PDF Suite</span>
         </div>
       </div>
     </div>

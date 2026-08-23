@@ -63,9 +63,9 @@ class TestMergePDF:
         }, headers=auth_headers)
         assert resp.status_code in (400, 422)
 
-    async def test_merge_unauthenticated(self, client):
-        """Merge without auth should return 401."""
-        resp = await client.post("/tools/merge", json={"file_ids": ["fake"]})
+    async def test_merge_invalid_token(self, client):
+        """Merge with invalid token should return 401."""
+        resp = await client.post("/tools/merge", json={"file_ids": ["fake"]}, headers={"Authorization": "Bearer bad-token"})
         assert resp.status_code == 401
 
 
@@ -138,7 +138,7 @@ class TestToolsAuth:
     """Cross-cutting auth tests for tool endpoints."""
 
     async def test_tools_require_auth(self, client):
-        """All tool endpoints should require authentication."""
+        """All tool endpoints should reject invalid authorization tokens."""
         endpoints = [
             ("/tools/merge", {"file_ids": []}),
             ("/tools/split", {"file_id": "x", "ranges": "1"}),
@@ -147,5 +147,10 @@ class TestToolsAuth:
             ("/tools/watermark", {"file_id": "x", "text": "test"}),
         ]
         for url, body in endpoints:
-            resp = await client.post(url, json=body)
-            assert resp.status_code == 401, f"{url} should require auth"
+            resp = await client.post(url, json=body, headers={"Authorization": "Bearer bad-token"})
+            assert resp.status_code == 401, f"{url} should reject invalid auth token"
+
+    async def test_tools_guest_execution_allowed(self, client):
+        """Guest users should be able to execute tools without auth headers."""
+        resp = await client.post("/tools/merge", json={"file_ids": []})
+        assert resp.status_code in (400, 422)

@@ -264,13 +264,6 @@ export const PDFToMarkdownIcon = ({ size }) => (
   </Icon>
 );
 
-export const EditPDFIcon = ({ size }) => (
-  <Icon color="blue" size={size}>
-    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-  </Icon>
-);
-
 export const WatermarkIcon = ({ size }) => (
   <Icon color="teal" size={size}>
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -313,85 +306,111 @@ export const ExtractTablesIcon = ({ size }) => (
   </Icon>
 );
 
-/* --- Additional Missing Icons (Images, Videos, Archives) --- */
-
-export const ImageEditIcon = ({ size }) => (
-  <Icon color="pink" size={size}>
-    <rect x={3} y={3} width={18} height={18} rx={2} ry={2} />
-    <circle cx={8.5} cy={8.5} r={1.5} />
-    <path d="M21 15l-5-5L5 21" />
+export const OCRIcon = ({ size }) => (
+  <Icon color="blue" size={size}>
+    <path d="M4 7V4h16v3M9 20h6M12 4v16" />
+    <circle cx={19} cy={19} r={2} />
   </Icon>
 );
 
-export const ImageResizeIcon = ({ size }) => (
-  <Icon color="teal" size={size}>
-    <path d="M21 3l-6 6" />
-    <path d="M21 3v6" />
-    <path d="M21 3h-6" />
-    <path d="M3 21l6-6" />
-    <path d="M3 21v-6" />
-    <path d="M3 21h6" />
-  </Icon>
-);
-
-export const ImageCropIcon = ({ size }) => (
+export const CompareIcon = ({ size }) => (
   <Icon color="purple" size={size}>
-    <path d="M6 2v14a2 2 0 0 0 2 2h14" />
-    <path d="M18 22V8a2 2 0 0 0-2-2H2" />
+    <path d="M16 3h5v5M4 20L21 3" />
+    <path d="M21 16v5h-5" />
+    <path d="M15 15l5 5" />
+    <path d="M4 4l5 5" />
   </Icon>
 );
 
-export const ImageRotateIcon = ({ size }) => (
-  <Icon color="blue" size={size}>
-    <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
-    <path d="M21 3v5h-5" />
-  </Icon>
-);
-
-export const ImageFlipIcon = ({ size }) => (
+export const SimilarityIcon = ({ size }) => (
   <Icon color="indigo" size={size}>
-    <path d="M12 2v20" />
-    <path d="M4 8l-2 4 2 4" />
-    <path d="M20 8l2 4-2 4" />
-  </Icon>
-);
-
-export const ImageEffectsIcon = ({ size }) => (
-  <Icon color="orange" size={size}>
     <circle cx={12} cy={12} r={10} />
-    <path d="M12 2v20" />
-    <path d="M12 12a10 10 0 0 1 0-20" />
+    <path d="m4.93 4.93 4.24 4.24M14.83 14.83l4.24 4.24M14.83 9.17l4.24-4.24M4.93 19.07l4.24-4.24" />
   </Icon>
 );
 
-export const VideoEditIcon = ({ size }) => (
-  <Icon color="red" size={size}>
-    <rect x={2} y={2} width={20} height={20} rx={2} ry={2} />
-    <line x1={2} y1={7} x2={22} y2={7} />
-    <line x1={2} y1={17} x2={22} y2={17} />
-    <line x1={7} y1={2} x2={7} y2={22} />
-    <line x1={17} y1={2} x2={17} y2={22} />
+export const SemanticSearchIcon = ({ size }) => (
+  <Icon color="teal" size={size}>
+    <circle cx={11} cy={11} r={8} />
+    <line x1={21} y1={21} x2={16.65} y2={16.65} />
+    <path d="m11 8 2 3-2 3" />
   </Icon>
 );
 
-export const VideoAudioIcon = ({ size }) => (
-  <Icon color="blue" size={size}>
-    <path d="M9 18V5l12-2v13" />
-    <circle cx={6} cy={18} r={3} />
-    <circle cx={18} cy={16} r={3} />
-  </Icon>
-);
-
-export const ArchiveIcon = ({ size }) => (
+export const ClassifyIcon = ({ size }) => (
   <Icon color="orange" size={size}>
-    <polyline points="21 8 21 21 3 21 3 8" />
-    <rect x={1} y={3} width={22} height={5} />
-    <line x1={10} y1={12} x2={14} y2={12} />
+    <rect x={3} y={3} width={7} height={7} rx={1} />
+    <rect x={14} y={3} width={7} height={7} rx={1} />
+    <rect x={14} y={14} width={7} height={7} rx={1} />
+    <rect x={3} y={14} width={7} height={7} rx={1} />
+  </Icon>
+);
+
+export const ExtractInfoIcon = ({ size }) => (
+  <Icon color="pink" size={size}>
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <circle cx={10} cy={13} r={1} />
+    <circle cx={10} cy={17} r={1} />
+    <line x1={14} y1={13} x2={16} y2={13} />
+    <line x1={14} y1={17} x2={16} y2={17} />
+  </Icon>
+);
+
+export const WritingAssistIcon = ({ size }) => (
+  <Icon color="green" size={size}>
+    <path d="m18 2 4 4-10 10H8v-4L18 2z" />
+    <path d="m14 6 4 4" />
+    <path d="M3 22h18" />
+  </Icon>
+);
+
+export const QualityCheckerIcon = ({ size }) => (
+  <Icon color="teal" size={size}>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    <path d="m9 12 2 2 4-4" />
+  </Icon>
+);
+
+export const ProtectPDFIcon = ({ size }) => (
+  <Icon color="red" size={size}>
+    <rect x={3} y={11} width={18} height={11} rx={2} ry={2} />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </Icon>
+);
+
+export const RedactIcon = ({ size }) => (
+  <Icon color="orange" size={size}>
+    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+    <line x1={2} y1={2} x2={22} y2={22} />
+  </Icon>
+);
+
+export const SignIcon = ({ size }) => (
+  <Icon color="indigo" size={size}>
+    <path d="M20 19.5c-2.5 0-4-1-6.5-1s-4.5 1.5-7 1.5-3.5-1-4.5-1.5" />
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+  </Icon>
+);
+
+export const MetadataIcon = ({ size }) => (
+  <Icon color="blue" size={size}>
+    <circle cx={12} cy={12} r={10} />
+    <line x1={12} y1={16} x2={12} y2={12} />
+    <line x1={12} y1={8} x2={12.01} y2={8} />
+  </Icon>
+);
+
+export const EditPDFIcon = ({ size }) => (
+  <Icon color="indigo" size={size}>
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
   </Icon>
 );
 
 /* Map from tool key to icon component */
 export const TOOL_ICON_MAP = {
+  'edit-pdf':         EditPDFIcon,
   'merge-pdf':        MergeIcon,
   'split-pdf':        SplitIcon,
   'extract-pages':    ExtractPagesIcon,
@@ -402,7 +421,6 @@ export const TOOL_ICON_MAP = {
   'pdf-to-pdfa':      PDFAIcon,
   'compress-pdf':     CompressIcon,
   'scan-to-pdf':      ScanIcon,
-  'edit-pdf':         EditPDFIcon,
   'watermark':        WatermarkIcon,
   'organize-pages':   OrganizePagesIcon,
   'word-to-pdf':      WordToPDFIcon,
@@ -422,33 +440,18 @@ export const TOOL_ICON_MAP = {
   'ask-pdf':          AskPDFIcon,
   'translate-pdf':    TranslatePDFIcon,
   'extract-tables':   ExtractTablesIcon,
-
-  // Image Tools
-  'image-convert':    ImageEditIcon,
-  'image-resize':     ImageResizeIcon,
-  'image-crop':       ImageCropIcon,
-  'image-rotate':     ImageRotateIcon,
-  'image-flip':       ImageFlipIcon,
-  'image-brightness': ImageEffectsIcon,
-  'image-contrast':   ImageEffectsIcon,
-  'image-saturation': ImageEffectsIcon,
-  'image-sharpness':  ImageEffectsIcon,
-  'image-bg-remove':  ImageEditIcon,
-  'image-watermark':  WatermarkIcon,
-  'image-vectorize':  ImageEditIcon,
-
-  // Video Tools
-  'video-convert':    VideoEditIcon,
-  'video-transcode':  VideoEditIcon,
-  'video-trim':       SplitIcon,
-  'video-merge':      MergeIcon,
-  'video-extract-audio': VideoAudioIcon,
-  'video-normalize':  VideoAudioIcon,
-  'video-frames':     ImageEditIcon,
-  'video-to-video':   VideoEditIcon,
-  'video-to-gif':     ImageEditIcon,
-
-  // Archive Tools
-  'archive-extract':  ArchiveIcon,
-  'archive-zip':      ArchiveIcon,
+  'ai-ocr':           OCRIcon,
+  'ocr':              OCRIcon,
+  'semantic-compare': CompareIcon,
+  'similarity-matrix': SimilarityIcon,
+  'semantic-search':  SemanticSearchIcon,
+  'classify-pdf':     ClassifyIcon,
+  'extract-info':     ExtractInfoIcon,
+  'writing-assistant': WritingAssistIcon,
+  'quality-checker':  QualityCheckerIcon,
+  'protect-pdf':      ProtectPDFIcon,
+  'smart-redaction':  RedactIcon,
+  'digital-sign':     SignIcon,
+  'metadata-manager': MetadataIcon,
 };
+

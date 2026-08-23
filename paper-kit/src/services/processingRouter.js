@@ -3,12 +3,11 @@ import api from './api';
 import { getFileDownloadUrl, uploadFile } from './files';
 import * as toolsService from './tools';
 import * as aiService from './ai';
-import * as jobsService from './jobs';
 
 // Default config
 export const DEFAULT_ROUTER_CONFIG = {
   mode: 'auto', // auto | local | backend | cloud
-  maxLocalSizeMB: 10,
+  maxLocalSizeMB: 1000,
   deviceCapability: 'high', // high | low
   networkSim: 'default', // default | offline | online
   engineSim: 'available', // available | unavailable
@@ -29,9 +28,6 @@ const OP_CAPABILITIES = {
   'extract-tables': { local: false, type: 'ai', intensive: true },
   'pdf-to-markdown': { local: false, type: 'ai', intensive: true },
   'convert': { local: false, type: 'convert', intensive: true },
-  'image-ops': { local: false, type: 'image', intensive: false },
-  'video-ops': { local: false, type: 'video', intensive: true },
-  'archive-ops': { local: false, type: 'archive', intensive: true },
 };
 
 /**
@@ -140,7 +136,7 @@ async function fetchFileArrayBuffer(fileOrId) {
   if (fileOrId instanceof File) {
     return await fileOrId.arrayBuffer();
   }
-  
+
   // It's a fileId string, download it
   const fileId = fileOrId;
   const downloadUrl = await getFileDownloadUrl(fileId);
@@ -155,13 +151,13 @@ async function fetchFileArrayBuffer(fileOrId) {
 /**
  * Local implementation of PDF tools
  */
-export async function executeLocal(operationId, inputs, _options = {}, onProgress = () => {}) {
+export async function executeLocal(operationId, inputs, _options = {}, onProgress = () => { }) {
   onProgress(10);
-  
+
   if (operationId === 'merge-pdf') {
     const { files } = inputs; // Array of File objects or fileId strings
     const mergedPdf = await PDFDocument.create();
-    
+
     let current = 0;
     for (const file of files) {
       onProgress(Math.round(10 + (current / files.length) * 80));
@@ -171,7 +167,7 @@ export async function executeLocal(operationId, inputs, _options = {}, onProgres
       copiedPages.forEach(page => mergedPdf.addPage(page));
       current++;
     }
-    
+
     onProgress(90);
     const bytes = await mergedPdf.save();
     const blob = new Blob([bytes], { type: 'application/pdf' });
@@ -186,41 +182,86 @@ export async function executeLocal(operationId, inputs, _options = {}, onProgres
     const srcPdf = await PDFDocument.load(arrayBuffer);
     const total = srcPdf.getPageCount();
 
-    let targetIndices = [];
+    const partsList = [];
 
-    if (mode === 'range' || mode === 'extract') {
-      const rangeStr = mode === 'range' ? pageRange : pages;
-      targetIndices = parsePageRange(rangeStr, total);
-    } else if (mode === 'every') {
-      // split first N pages as demo
-      const n = Number(everyN) || 1;
-      for (let i = 0; i < Math.min(n, total); i++) {
-        targetIndices.push(i);
+    if (mode === 'every') {
+      const n = Math.max(1, Number(everyN) || 1);
+      let partIdx = 1;
+      for (let start = 0; start < total; start += n) {
+        const end = Math.min(start + n, total);
+        const indices = [];
+        for (let i = start; i < end; i++) indices.push(i);
+
+        const newPdf = await PDFDocument.create();
+        const copied = await newPdf.copyPages(srcPdf, indices);
+        copied.forEach(p => newPdf.addPage(p));
+        const bytes = await newPdf.save();
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        const partName = `part_${partIdx}_pages_${start + 1}-${end}.pdf`;
+        const partFile = new File([blob], partName, { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        partsList.push({ filename: partName, download_url: url, file: partFile, size: bytes.length, pageCount: indices.length });
+        partIdx++;
+        onProgress(Math.round(20 + (start / total) * 70));
+      }
+    } else if (mode === 'single' || mode === 'individual') {
+      for (let i = 0; i < total; i++) {
+        const newPdf = await PDFDocument.create();
+        const copied = await newPdf.copyPages(srcPdf, [i]);
+        copied.forEach(p => newPdf.addPage(p));
+        const bytes = await newPdf.save();
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        const partName = `page_${i + 1}.pdf`;
+        const partFile = new File([blob], partName, { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        partsList.push({ filename: partName, download_url: url, file: partFile, size: bytes.length, pageCount: 1 });
+        onProgress(Math.round(20 + (i / total) * 70));
+      }
+    } else {
+      // Range or Extract
+      const rangeStr = mode === 'range' ? (pageRange || `1-${total}`) : (pages || pageRange || `1-${total}`);
+      const groups = rangeStr.includes(';') ? rangeStr.split(';') : (rangeStr.includes(',') && rangeStr.includes('-') ? rangeStr.split(',') : [rangeStr]);
+
+      let partIdx = 1;
+      for (const g of groups) {
+        const trimmed = g.trim();
+        if (!trimmed) continue;
+        const indices = parsePageRange(trimmed, total);
+        if (indices.length === 0) continue;
+
+        const newPdf = await PDFDocument.create();
+        const copied = await newPdf.copyPages(srcPdf, indices);
+        copied.forEach(p => newPdf.addPage(p));
+        const bytes = await newPdf.save();
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        const partName = groups.length > 1 ? `part_${partIdx}_${trimmed.replace(/[^0-9-]/g, '_')}.pdf` : 'split.pdf';
+        const partFile = new File([blob], partName, { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        partsList.push({ filename: partName, download_url: url, file: partFile, size: bytes.length, pageCount: indices.length });
+        partIdx++;
       }
     }
 
-    if (targetIndices.length === 0) {
+    if (partsList.length === 0) {
       throw new Error('No valid pages selected for split');
     }
 
-    const newPdf = await PDFDocument.create();
-    const copiedPages = await newPdf.copyPages(srcPdf, targetIndices);
-    copiedPages.forEach(p => newPdf.addPage(p));
-    
-    onProgress(80);
-    const bytes = await newPdf.save();
-    const blob = new Blob([bytes], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
     onProgress(100);
-    return { download_url: url, size: bytes.length, filename: 'split.pdf' };
+    return {
+      download_url: partsList[0].download_url,
+      size: partsList[0].size,
+      filename: partsList[0].filename,
+      parts: partsList,
+    };
   }
+
 
   if (operationId === 'rotate-pdf') {
     const { file, degrees: rotDeg, targetPages } = inputs;
     const arrayBuffer = await fetchFileArrayBuffer(file);
     const pdfDoc = await PDFDocument.load(arrayBuffer);
     const pages = pdfDoc.getPages();
-    
+
     const indices = targetPages || pages.map((_, i) => i);
     for (const idx of indices) {
       if (idx >= 0 && idx < pages.length) {
@@ -229,7 +270,7 @@ export async function executeLocal(operationId, inputs, _options = {}, onProgres
         page.setRotation(degrees((currentRot + rotDeg) % 360));
       }
     }
-    
+
     onProgress(80);
     const bytes = await pdfDoc.save();
     const blob = new Blob([bytes], { type: 'application/pdf' });
@@ -244,7 +285,7 @@ export async function executeLocal(operationId, inputs, _options = {}, onProgres
     const pdfDoc = await PDFDocument.load(arrayBuffer);
     const pages = pdfDoc.getPages();
     const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    
+
     for (const page of pages) {
       const { width, height } = page.getSize();
       // Draw standard semi-transparent overlay in the center
@@ -258,7 +299,7 @@ export async function executeLocal(operationId, inputs, _options = {}, onProgres
         rotate: degrees(Number(rotation)),
       });
     }
-    
+
     onProgress(80);
     const bytes = await pdfDoc.save();
     const blob = new Blob([bytes], { type: 'application/pdf' });
@@ -271,7 +312,7 @@ export async function executeLocal(operationId, inputs, _options = {}, onProgres
     const { file, pageIndices, rotations } = inputs; // pageIndices is array of indices (0-based) in new order, rotations matches indexes
     const arrayBuffer = await fetchFileArrayBuffer(file);
     const srcPdf = await PDFDocument.load(arrayBuffer);
-    
+
     const newPdf = await PDFDocument.create();
     const copiedPages = await newPdf.copyPages(srcPdf, pageIndices);
     copiedPages.forEach((p, idx) => {
@@ -281,7 +322,7 @@ export async function executeLocal(operationId, inputs, _options = {}, onProgres
       }
       newPdf.addPage(p);
     });
-    
+
     onProgress(80);
     const bytes = await newPdf.save();
     const blob = new Blob([bytes], { type: 'application/pdf' });
@@ -324,11 +365,11 @@ function parsePageRange(rangeStr, maxPages) {
 /**
  * Execute server side operation, automatically uploading local files first if necessary
  */
-async function executeRemote(route, operationId, inputs, options = {}, onProgress = () => {}, onStatus = () => {}) {
+async function executeRemote(route, operationId, inputs, options = {}, onProgress = () => { }, onStatus = () => { }) {
   // 1. Find if we have any raw File objects in inputs
   // If so, we need to upload them first!
   const fileParams = {};
-  
+
   onStatus('Uploading resources to server...');
   onProgress(5);
 
@@ -338,6 +379,10 @@ async function executeRemote(route, operationId, inputs, options = {}, onProgres
       const uploadRes = await uploadFile(val, pct => {
         onProgress(Math.round(5 + (pct * 0.45))); // uploads occupy up to 50% of process
       });
+      if (uploadRes.is_local || (uploadRes._id && String(uploadRes._id).startsWith('loc_'))) {
+        console.warn('Remote file upload fell back to local workspace. Executing operation using local engine...');
+        return await executeLocal(operationId, inputs, options, onProgress);
+      }
       fileParams[key] = uploadRes._id || uploadRes.id;
     } else if (Array.isArray(val) && val.length > 0 && val[0] instanceof File) {
       const uploadedIds = [];
@@ -347,6 +392,10 @@ async function executeRemote(route, operationId, inputs, options = {}, onProgres
           const stepPct = (currentIdx + (pct / 100)) / val.length;
           onProgress(Math.round(5 + (stepPct * 45)));
         });
+        if (uploadRes.is_local || (uploadRes._id && String(uploadRes._id).startsWith('loc_'))) {
+          console.warn('Remote file upload fell back to local workspace. Executing operation using local engine...');
+          return await executeLocal(operationId, inputs, options, onProgress);
+        }
         uploadedIds.push(uploadRes._id || uploadRes.id);
         currentIdx++;
       }
@@ -360,7 +409,7 @@ async function executeRemote(route, operationId, inputs, options = {}, onProgres
   onProgress(55);
 
   let result;
-  
+
   // Call the appropriate API
   if (operationId === 'merge-pdf') {
     result = await toolsService.mergePDF(fileParams.files, options);
@@ -397,12 +446,6 @@ async function executeRemote(route, operationId, inputs, options = {}, onProgres
   } else if (operationId === 'convert') {
     const { file, fromFormat, toFormat } = fileParams;
     result = await toolsService.convertFile(file, fromFormat, toFormat, options);
-  } else if (operationId.startsWith('image-')) {
-    result = await jobsService.runImageOp(operationId.replace('image-', ''), fileParams.file, options);
-  } else if (operationId.startsWith('video-')) {
-    result = await jobsService.runVideoOp(operationId.replace('video-', ''), fileParams.file || fileParams.files, options);
-  } else if (operationId.startsWith('archive-')) {
-    result = await jobsService.runArchiveOp(operationId.replace('archive-', ''), fileParams.file || fileParams.files, options);
   } else {
     throw new Error(`Unsupported remote operation: ${operationId}`);
   }
@@ -417,7 +460,7 @@ async function executeRemote(route, operationId, inputs, options = {}, onProgres
 /**
  * Unified execution entrypoint. Orchestrates route decision and runner selection.
  */
-export async function execute(operationId, inputs, options = {}, onProgress = () => {}, onStatus = () => {}, userConfig = {}) {
+export async function execute(operationId, inputs, options = {}, onProgress = () => { }, onStatus = () => { }, userConfig = {}) {
   // Collect files to measure size
   const filesList = [];
   for (const val of Object.values(inputs)) {
@@ -432,13 +475,13 @@ export async function execute(operationId, inputs, options = {}, onProgress = ()
 
   onStatus('Analyzing resources & determining route...');
   const routing = determineRoute(operationId, filesList, userConfig);
-  
+
   if (routing.route === 'LOCAL' && !routing.allowed) {
     throw new Error(`Routing Failure: ${routing.reason}`);
   }
 
   onStatus(`Executing operation on ${routing.route} Engine...`);
-  
+
   const executionDetails = {
     route: routing.route,
     reason: routing.reason
@@ -451,7 +494,7 @@ export async function execute(operationId, inputs, options = {}, onProgress = ()
     } else {
       result = await executeRemote(routing.route, operationId, inputs, options, onProgress, onStatus);
     }
-    
+
     return {
       ...result,
       _routing: executionDetails

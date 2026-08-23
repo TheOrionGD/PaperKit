@@ -5,18 +5,19 @@ from database import get_db
 from middleware.auth import get_current_user
 from services.storage import upload_file, get_file_bytes
 from services.processing import (
-    merge_pdfs, split_pdf, compress_pdf,
+    merge_pdfs, split_pdf, compress_pdf, estimate_compression,
     rotate_pdf, add_watermark, pdf_to_images, images_to_pdf,
     organize_pdf_pages, get_page_count,
     pdf_to_txt, pdf_to_html, pdf_to_word_fallback, pdf_to_excel_fallback, pdf_to_ppt_fallback,
-    word_to_pdf_fallback, excel_to_pdf_fallback, ppt_to_pdf_fallback,
-    apply_pdf_edits,
+    word_to_pdf_fallback, excel_to_pdf_fallback, ppt_to_pdf_fallback, html_to_word_bytes,
+    protect_pdf, sign_pdf, manage_metadata, redact_pdf_text,
 )
 from services.scanner import detect_document_corners, warp_perspective_and_enhance
 from config import get_settings
 from bson import ObjectId
 from datetime import timezone, datetime
 import io
+import pymupdf as fitz
 
 settings = get_settings()
 router = APIRouter(prefix="/tools", tags=["tools"])
@@ -24,29 +25,40 @@ router = APIRouter(prefix="/tools", tags=["tools"])
 
 async def _get_file_bytes(file_id: str, user_id: str, db) -> tuple[bytes, dict]:
     """Fetch file bytes + metadata for authenticated user."""
+    if not ObjectId.is_valid(file_id):
+        raise HTTPException(status_code=404, detail=f"File {file_id} not found")
     f = await db.files.find_one({"_id": ObjectId(file_id), "user_id": user_id, "is_deleted": False})
     if not f:
         raise HTTPException(status_code=404, detail=f"File {file_id} not found")
     return get_file_bytes(f["storage_url"]), f
 
 
-async def _save_result(result_bytes: bytes, filename: str, content_type: str, user_id: str, db) -> str:
-    """Save processing result to storage and DB."""
+async def _save_result(result_bytes: bytes, filename: str, content_type: str, user_id: str, db) -> tuple[str, str]:
+    """Save processing result to storage and DB, validating PDF structure and returning (storage_url, sha256_hash)."""
+    import hashlib
+    
+    # Binary PDF Validation
+    if content_type == "application/pdf" or filename.lower().endswith(".pdf"):
+        if not result_bytes.startswith(b"%PDF-"):
+            raise HTTPException(status_code=422, detail="Generated output is not a valid PDF binary.")
+        try:
+            val_doc = fitz.open("pdf", result_bytes)
+            page_count = val_doc.page_count
+            val_doc.close()
+        except Exception as err:
+            raise HTTPException(status_code=422, detail=f"Generated PDF failed structural validation: {err}")
+    else:
+        page_count = None
+
+    sha256_hash = hashlib.sha256(result_bytes).hexdigest()
     storage = await upload_file(result_bytes, filename, content_type)
     
-    # Calculate page count for output PDF if application/pdf
-    page_count = None
-    if content_type == "application/pdf":
-        try:
-            page_count = get_page_count(result_bytes)
-        except Exception:
-            pass
-            
     doc = {
         "user_id": user_id,
         "original_filename": filename,
         "content_type": content_type,
         "size": len(result_bytes),
+        "sha256": sha256_hash,
         "page_count": page_count,
         "storage_url": storage["storage_url"],
         "is_deleted": False,
@@ -54,7 +66,7 @@ async def _save_result(result_bytes: bytes, filename: str, content_type: str, us
         "updated_at": datetime.now(timezone.utc),
     }
     await db.files.insert_one(doc)
-    return storage["storage_url"]
+    return storage["storage_url"], str(doc["_id"])
 
 
 async def _log_history(
@@ -126,7 +138,7 @@ async def merge(body: dict, current_user: dict = Depends(get_current_user)):
         base_stem = input_filenames[0].rsplit(".", 1)[0]
         output_filename = f"{base_stem}_merged.pdf"
         
-    url = await _save_result(result, output_filename, "application/pdf", user_id, db)
+    url, _ = await _save_result(result, output_filename, "application/pdf", user_id, db)
     await _log_history(user_id, "merge-pdf", f"Merged {len(file_ids)} files into {output_filename}", input_filenames, url, {"page_size": page_size, "margin": margin}, db)
     
     return {"download_url": url, "size": len(result)}
@@ -153,7 +165,7 @@ async def organize(body: dict, current_user: dict = Depends(get_current_user)):
     stem = old_filename.rsplit(".", 1)[0]
     output_filename = f"{stem}_organized.pdf"
     
-    url = await _save_result(result, output_filename, "application/pdf", user_id, db)
+    url, _ = await _save_result(result, output_filename, "application/pdf", user_id, db)
     await _log_history(user_id, tool_id, f"Organized pages of {old_filename}", [old_filename], url, {"pages_count": len(pages)}, db)
     
     return {"download_url": url, "size": len(result)}
@@ -180,13 +192,13 @@ async def split(body: dict, current_user: dict = Depends(get_current_user)):
     stem = original_name.rsplit(".", 1)[0]
 
     if len(parts) == 1:
-        url = await _save_result(parts[0], f"{stem}_split.pdf", "application/pdf", user_id, db)
+        url, _ = await _save_result(parts[0], f"{stem}_split.pdf", "application/pdf", user_id, db)
         await _log_history(user_id, tool_id, f"Split {original_name}", [original_name], url, {"mode": mode}, db)
         return {"download_url": url, "parts": 1}
 
     urls = []
     for i, part in enumerate(parts):
-        url = await _save_result(part, f"{stem}_split_part_{i+1}.pdf", "application/pdf", user_id, db)
+        url, _ = await _save_result(part, f"{stem}_split_part_{i+1}.pdf", "application/pdf", user_id, db)
         urls.append(url)
     
     # Log history for first part
@@ -212,7 +224,7 @@ async def compress(body: dict, current_user: dict = Depends(get_current_user)):
     result = compress_pdf(pdf_bytes, quality)
     original_name = meta.get("original_filename", "file.pdf")
     stem = original_name.rsplit(".", 1)[0]
-    url = await _save_result(result, f"{stem}_compressed.pdf", "application/pdf", user_id, db)
+    url, _ = await _save_result(result, f"{stem}_compressed.pdf", "application/pdf", user_id, db)
     await _log_history(
         user_id, 
         "compress-pdf", 
@@ -223,6 +235,19 @@ async def compress(body: dict, current_user: dict = Depends(get_current_user)):
         db
     )
     return {"download_url": url, "original_size": len(pdf_bytes), "compressed_size": len(result)}
+
+
+@router.post("/compress/estimate")
+async def estimate_compression_route(body: dict, current_user: dict = Depends(get_current_user)):
+    file_id = body.get("file_id")
+    quality = body.get("quality", "balanced")
+    if not file_id:
+        raise HTTPException(status_code=400, detail="file_id required")
+
+    db = get_db()
+    user_id = str(current_user["_id"])
+    pdf_bytes, _ = await _get_file_bytes(file_id, user_id, db)
+    return estimate_compression(pdf_bytes, quality)
 
 
 # ── Convert ────────────────────────────────────────────────────────────────────
@@ -345,7 +370,8 @@ async def convert(body: dict, current_user: dict = Depends(get_current_user)):
 
     mime = MIME_MAP.get(to_ext, "application/octet-stream")
     stem = meta.get("original_filename", "file").rsplit(".", 1)[0]
-    url = await _save_result(result_bytes, f"{stem}.{to_ext}", mime, user_id, db)
+    res_filename = f"{stem}.{to_ext}"
+    url, res_file_id = await _save_result(result_bytes, res_filename, mime, user_id, db)
     
     tool_id = f"{from_fmt}-to-{to_fmt}"
     await _log_history(
@@ -357,7 +383,42 @@ async def convert(body: dict, current_user: dict = Depends(get_current_user)):
         {"from_format": from_fmt, "to_format": to_fmt}, 
         db
     )
-    return {"download_url": url, "size": len(result_bytes)}
+
+    html_content = ""
+    text_content = ""
+    if from_fmt == "pdf":
+        try:
+            html_content = pdf_to_html(src_bytes).decode("utf-8", errors="ignore")
+            text_content = pdf_to_txt(src_bytes).decode("utf-8", errors="ignore")
+        except Exception:
+            pass
+
+    return {
+        "file_id": res_file_id,
+        "download_url": url,
+        "filename": res_filename,
+        "size": len(result_bytes),
+        "html_content": html_content,
+        "text_content": text_content
+    }
+
+
+@router.post("/html-to-word")
+async def convert_html_to_word(body: dict, current_user: dict = Depends(get_current_user)):
+    """Convert Web Editor HTML or text content directly into Word DOCX format for step-by-step editing pipeline."""
+    html_content = body.get("html_content") or body.get("text_content") or ""
+    filename = body.get("filename", "edited_document.docx")
+    if not html_content.strip():
+        raise HTTPException(status_code=400, detail="html_content or text_content required")
+
+    db = get_db()
+    user_id = str(current_user["_id"])
+    
+    docx_bytes = html_to_word_bytes(html_content)
+    mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    url, doc_id = await _save_result(docx_bytes, filename, mime, user_id, db)
+    return {"file_id": doc_id, "download_url": url, "filename": filename, "size": len(docx_bytes)}
+
 
 
 # ── Rotate ─────────────────────────────────────────────────────────────────────
@@ -376,7 +437,7 @@ async def rotate(body: dict, current_user: dict = Depends(get_current_user)):
 
     result = rotate_pdf(pdf_bytes, degrees, pages)
     stem = meta.get("original_filename", "file.pdf").rsplit(".", 1)[0]
-    url = await _save_result(result, f"{stem}_rotated.pdf", "application/pdf", user_id, db)
+    url, _ = await _save_result(result, f"{stem}_rotated.pdf", "application/pdf", user_id, db)
     await _log_history(
         user_id, 
         "rotate-pdf", 
@@ -405,7 +466,7 @@ async def watermark(body: dict, current_user: dict = Depends(get_current_user)):
 
     result = add_watermark(pdf_bytes, text, opacity)
     stem = meta.get("original_filename", "file.pdf").rsplit(".", 1)[0]
-    url = await _save_result(result, f"{stem}_watermarked.pdf", "application/pdf", user_id, db)
+    url, _ = await _save_result(result, f"{stem}_watermarked.pdf", "application/pdf", user_id, db)
     await _log_history(
         user_id, 
         "watermark", 
@@ -418,42 +479,132 @@ async def watermark(body: dict, current_user: dict = Depends(get_current_user)):
     return {"download_url": url}
 
 
-# ── Edit PDF ───────────────────────────────────────────────────────────────────
 
-@router.post("/edit/apply")
-async def edit_apply(body: dict, current_user: dict = Depends(get_current_user)):
-    """Apply annotation/edit operations to a PDF and return a new saved PDF."""
+
+
+
+
+
+# ── PDF Security, Signatures, Metadata, and Redaction ─────────────────────────
+
+@router.post("/protect")
+async def protect_pdf_route(body: dict, current_user: dict = Depends(get_current_user)):
+    """Encrypt and password-protect PDF with permission settings."""
     file_id = body.get("file_id")
-    operations = body.get("operations", [])
+    password = body.get("password")
+    owner_password = body.get("owner_password")
+    allow_print = body.get("allow_print", True)
+    allow_copy = body.get("allow_copy", True)
+    allow_edit = body.get("allow_edit", True)
 
-    if not file_id:
-        raise HTTPException(status_code=400, detail="file_id is required")
-    if not operations:
-        raise HTTPException(status_code=400, detail="operations list is required")
+    if not file_id or not password:
+        raise HTTPException(status_code=400, detail="file_id and password are required")
 
     db = get_db()
     user_id = str(current_user["_id"])
     pdf_bytes, meta = await _get_file_bytes(file_id, user_id, db)
 
-    try:
-        result = apply_pdf_edits(pdf_bytes, operations)
-    except Exception as e:
-        raise HTTPException(status_code=422, detail=f"Failed to apply edits: {str(e)}")
+    result = protect_pdf(
+        pdf_bytes,
+        user_password=password,
+        owner_password=owner_password,
+        allow_print=allow_print,
+        allow_copy=allow_copy,
+        allow_edit=allow_edit,
+    )
 
     old_filename = meta.get("original_filename", "file.pdf")
     stem = old_filename.rsplit(".", 1)[0]
-    output_filename = f"{stem}_edited.pdf"
+    url, _ = await _save_result(result, f"{stem}_protected.pdf", "application/pdf", user_id, db)
+    await _log_history(user_id, "protect-pdf", f"Password protected {old_filename}", [old_filename], url, {"allow_print": allow_print, "allow_copy": allow_copy}, db)
+    return {"download_url": url, "size": len(result)}
 
-    url = await _save_result(result, output_filename, "application/pdf", user_id, db)
-    await _log_history(
-        user_id,
-        "edit-pdf",
-        f"Edited {old_filename} ({len(operations)} operation(s))",
-        [old_filename],
-        url,
-        {"operation_count": len(operations)},
-        db,
-    )
+
+@router.post("/sign")
+async def sign_pdf_route(body: dict, current_user: dict = Depends(get_current_user)):
+    """Place visual digital signatures on PDF pages."""
+    file_id = body.get("file_id")
+    signatures = body.get("signatures", [])
+
+    if not file_id or not signatures:
+        raise HTTPException(status_code=400, detail="file_id and signatures list are required")
+
+    db = get_db()
+    user_id = str(current_user["_id"])
+    pdf_bytes, meta = await _get_file_bytes(file_id, user_id, db)
+
+    result = sign_pdf(pdf_bytes, signatures)
+    old_filename = meta.get("original_filename", "file.pdf")
+    stem = old_filename.rsplit(".", 1)[0]
+    url, _ = await _save_result(result, f"{stem}_signed.pdf", "application/pdf", user_id, db)
+    await _log_history(user_id, "digital-signature", f"Digitally signed {old_filename}", [old_filename], url, {"signature_count": len(signatures)}, db)
+    return {"download_url": url, "size": len(result)}
+
+
+@router.get("/geometry/{file_id}")
+async def get_pdf_geometry_route(file_id: str, current_user: dict = Depends(get_current_user)):
+    """Calculate and return exact real-time page geometry metadata (width_pt, height_pt, width_mm, height_mm, orientation) for a PDF."""
+    from services.processing import get_pdf_geometry
+    db = get_db()
+    user_id = str(current_user["_id"])
+    pdf_bytes, meta = await _get_file_bytes(file_id, user_id, db)
+    geometry = get_pdf_geometry(pdf_bytes)
+    geometry["filename"] = meta.get("original_filename", "document.pdf")
+    return geometry
+
+
+@router.get("/metadata/{file_id}")
+async def get_metadata_route(file_id: str, current_user: dict = Depends(get_current_user)):
+    """Inspect PDF metadata."""
+    db = get_db()
+    user_id = str(current_user["_id"])
+    pdf_bytes, _ = await _get_file_bytes(file_id, user_id, db)
+    _, meta = manage_metadata(pdf_bytes)
+    return {"metadata": meta}
+
+
+@router.post("/metadata")
+async def update_metadata_route(body: dict, current_user: dict = Depends(get_current_user)):
+    """Update or wipe PDF metadata for privacy."""
+    file_id = body.get("file_id")
+    updates = body.get("updates", {})
+    wipe_all = body.get("wipe_all", False)
+
+    if not file_id:
+        raise HTTPException(status_code=400, detail="file_id is required")
+
+    db = get_db()
+    user_id = str(current_user["_id"])
+    pdf_bytes, meta = await _get_file_bytes(file_id, user_id, db)
+
+    result, updated_meta = manage_metadata(pdf_bytes, updates=updates, wipe_all=wipe_all)
+    old_filename = meta.get("original_filename", "file.pdf")
+    stem = old_filename.rsplit(".", 1)[0]
+    out_name = f"{stem}_sanitized.pdf" if wipe_all else f"{stem}_metadata.pdf"
+    url, _ = await _save_result(result, out_name, "application/pdf", user_id, db)
+    action_msg = f"Sanitized metadata in {old_filename}" if wipe_all else f"Updated metadata in {old_filename}"
+    await _log_history(user_id, "metadata-manager", action_msg, [old_filename], url, {"wipe_all": wipe_all}, db)
+    return {"download_url": url, "metadata": updated_meta, "size": len(result)}
+
+
+@router.post("/redact")
+async def redact_pdf_route(body: dict, current_user: dict = Depends(get_current_user)):
+    """Apply irreversible blackouts / redactions to PDF text."""
+    file_id = body.get("file_id")
+    terms = body.get("terms", [])
+
+    if not file_id or not terms:
+        raise HTTPException(status_code=400, detail="file_id and terms list are required")
+
+    db = get_db()
+    user_id = str(current_user["_id"])
+    pdf_bytes, meta = await _get_file_bytes(file_id, user_id, db)
+
+    result = redact_pdf_text(pdf_bytes, terms)
+    old_filename = meta.get("original_filename", "file.pdf")
+    stem = old_filename.rsplit(".", 1)[0]
+    url, _ = await _save_result(result, f"{stem}_redacted.pdf", "application/pdf", user_id, db)
+    await _log_history(user_id, "smart-redaction", f"Redacted {len(terms)} items in {old_filename}", [old_filename], url, {"terms_count": len(terms)}, db)
     return {"download_url": url, "size": len(result)}
 
 
@@ -738,17 +889,7 @@ async def get_tools_registry():
             "availability": {"available": True, "reason": ""},
             "capabilities": ["camera-scan", "pdf-output"]
         },
-        {
-            "toolId": "edit-pdf",
-            "name": "Edit PDF",
-            "description": "Add, remove, or modify content within a PDF.",
-            "icon": "edit-pdf",
-            "category": "Optimize PDF",
-            "supportedFormats": [".pdf"],
-            "route": "/tools/edit",
-            "availability": {"available": True, "reason": ""},
-            "capabilities": ["text-annotations", "drawing-shapes", "signatures"]
-        },
+
         {
             "toolId": "watermark",
             "name": "Watermark",
@@ -816,32 +957,6 @@ async def get_tools_registry():
             "availability": {"available": ai_available, "reason": "" if ai_available else "Gemini API key is not configured on the server"},
             "capabilities": ["smart-detection", "csv-download"]
         },
-        # Image Tools Category
-        {"toolId": "image-convert",    "name": "Convert Image",       "description": "Convert between JPEG, PNG, WebP, BMP, TIFF, GIF.",   "icon": "image-convert",    "category": "Image Tools", "supportedFormats": [".jpg",".jpeg",".png",".webp",".bmp",".tiff",".gif"], "route": "/tools/images?op=convert",            "availability": {"available": True, "reason": ""}, "capabilities": ["format-conversion"]},
-        {"toolId": "image-resize",     "name": "Resize Image",        "description": "Resize images to exact or proportional dimensions.", "icon": "image-resize",     "category": "Image Tools", "supportedFormats": [".jpg",".jpeg",".png",".webp",".bmp",".tiff"],        "route": "/tools/images?op=resize",             "availability": {"available": True, "reason": ""}, "capabilities": ["keep-aspect-ratio"]},
-        {"toolId": "image-crop",       "name": "Crop Image",          "description": "Crop image to a specific region.",                  "icon": "image-crop",       "category": "Image Tools", "supportedFormats": [".jpg",".jpeg",".png",".webp",".bmp"],                "route": "/tools/images?op=crop",               "availability": {"available": True, "reason": ""}, "capabilities": ["precise-crop"]},
-        {"toolId": "image-rotate",     "name": "Rotate Image",        "description": "Rotate image by any angle.",                       "icon": "image-rotate",     "category": "Image Tools", "supportedFormats": [".jpg",".jpeg",".png",".webp",".bmp"],                "route": "/tools/images?op=rotate",             "availability": {"available": True, "reason": ""}, "capabilities": ["arbitrary-angle"]},
-        {"toolId": "image-flip",       "name": "Flip Image",          "description": "Flip image horizontally or vertically.",           "icon": "image-flip",       "category": "Image Tools", "supportedFormats": [".jpg",".jpeg",".png",".webp",".bmp"],                "route": "/tools/images?op=flip",               "availability": {"available": True, "reason": ""}, "capabilities": ["horizontal","vertical"]},
-        {"toolId": "image-brightness", "name": "Adjust Brightness",   "description": "Brighten or darken your images.",                  "icon": "image-brightness", "category": "Image Tools", "supportedFormats": [".jpg",".jpeg",".png",".webp",".bmp"],                "route": "/tools/images?op=brightness",         "availability": {"available": True, "reason": ""}, "capabilities": ["brightness-control"]},
-        {"toolId": "image-contrast",   "name": "Adjust Contrast",     "description": "Fine-tune image contrast.",                        "icon": "image-contrast",   "category": "Image Tools", "supportedFormats": [".jpg",".jpeg",".png",".webp",".bmp"],                "route": "/tools/images?op=contrast",           "availability": {"available": True, "reason": ""}, "capabilities": ["contrast-control"]},
-        {"toolId": "image-saturation", "name": "Adjust Saturation",   "description": "Boost or reduce color saturation.",                "icon": "image-saturation", "category": "Image Tools", "supportedFormats": [".jpg",".jpeg",".png",".webp",".bmp"],                "route": "/tools/images?op=saturation",         "availability": {"available": True, "reason": ""}, "capabilities": ["color-control"]},
-        {"toolId": "image-sharpness",  "name": "Sharpen Image",       "description": "Sharpen or blur images.",                          "icon": "image-sharpness",  "category": "Image Tools", "supportedFormats": [".jpg",".jpeg",".png",".webp",".bmp"],                "route": "/tools/images?op=sharpness",          "availability": {"available": True, "reason": ""}, "capabilities": ["sharpen","blur"]},
-        {"toolId": "image-bg-remove",  "name": "Remove Background",   "description": "Automatically remove image background.",           "icon": "image-bg-remove",  "category": "Image Tools", "supportedFormats": [".jpg",".jpeg",".png",".webp"],                       "route": "/tools/images?op=background_removal", "availability": {"available": True, "reason": ""}, "capabilities": ["ai-removal","threshold-removal"]},
-        {"toolId": "image-watermark",  "name": "Watermark Image",     "description": "Add text or image watermarks to photos.",          "icon": "image-watermark",  "category": "Image Tools", "supportedFormats": [".jpg",".jpeg",".png",".webp"],                       "route": "/tools/images?op=watermark",          "availability": {"available": True, "reason": ""}, "capabilities": ["text-watermark","image-watermark"]},
-        {"toolId": "image-vectorize",  "name": "Vectorize Image",     "description": "Convert raster images to SVG vectors.",            "icon": "image-vectorize",  "category": "Image Tools", "supportedFormats": [".jpg",".jpeg",".png",".bmp"],                        "route": "/tools/images?op=vectorize",          "availability": {"available": True, "reason": ""}, "capabilities": ["svg-output"]},
-        # Video Tools Category
-        {"toolId": "video-convert",        "name": "Convert Video",       "description": "Convert between MP4, AVI, MKV, MOV, WebM.",     "icon": "video-convert",        "category": "Video Tools", "supportedFormats": [".mp4",".avi",".mkv",".mov",".webm"],    "route": "/tools/video?op=convert",        "availability": {"available": True, "reason": ""}, "capabilities": ["format-conversion"]},
-        {"toolId": "video-transcode",      "name": "Transcode Video",     "description": "Re-encode with custom codecs and quality.",     "icon": "video-transcode",      "category": "Video Tools", "supportedFormats": [".mp4",".avi",".mkv",".mov"],            "route": "/tools/video?op=transcode",      "availability": {"available": True, "reason": ""}, "capabilities": ["codec-selection","crf-control"]},
-        {"toolId": "video-trim",           "name": "Trim Video",          "description": "Cut video to a specific time range.",           "icon": "video-trim",           "category": "Video Tools", "supportedFormats": [".mp4",".avi",".mkv",".mov",".webm"],    "route": "/tools/video?op=trim",           "availability": {"available": True, "reason": ""}, "capabilities": ["precise-trim"]},
-        {"toolId": "video-merge",          "name": "Merge Videos",        "description": "Concatenate multiple videos into one.",         "icon": "video-merge",          "category": "Video Tools", "supportedFormats": [".mp4",".avi",".mkv",".mov"],            "route": "/tools/video?op=merge",          "availability": {"available": True, "reason": ""}, "capabilities": ["multi-file-merge"]},
-        {"toolId": "video-extract-audio",  "name": "Extract Audio",       "description": "Extract audio track from video.",              "icon": "video-extract-audio",  "category": "Video Tools", "supportedFormats": [".mp4",".avi",".mkv",".mov",".webm"],    "route": "/tools/video?op=extract_audio",  "availability": {"available": True, "reason": ""}, "capabilities": ["mp3-output","aac-output"]},
-        {"toolId": "video-normalize",      "name": "Normalize Audio",     "description": "Normalize audio loudness in video/audio.",     "icon": "video-normalize",      "category": "Video Tools", "supportedFormats": [".mp4",".mp3",".wav",".aac"],            "route": "/tools/video?op=normalize_audio","availability": {"available": True, "reason": ""}, "capabilities": ["loudnorm-filter"]},
-        {"toolId": "video-frames",         "name": "Extract Frames",      "description": "Extract frames from video as images.",         "icon": "video-frames",         "category": "Video Tools", "supportedFormats": [".mp4",".avi",".mkv",".mov",".webm"],    "route": "/tools/video?op=extract_frames", "availability": {"available": True, "reason": ""}, "capabilities": ["fps-control","max-frames"]},
-        {"toolId": "video-to-video",       "name": "Frames to Video",     "description": "Assemble image frames into a video.",          "icon": "video-to-video",       "category": "Video Tools", "supportedFormats": [".jpg",".jpeg",".png"],                  "route": "/tools/video?op=frames_to_video","availability": {"available": True, "reason": ""}, "capabilities": ["custom-fps"]},
-        {"toolId": "video-to-gif",         "name": "Frames to GIF",       "description": "Create an animated GIF from image frames.",    "icon": "video-to-gif",         "category": "Video Tools", "supportedFormats": [".jpg",".jpeg",".png"],                  "route": "/tools/video?op=frames_to_gif",  "availability": {"available": True, "reason": ""}, "capabilities": ["gif-output","palette-optimization"]},
-        # Archive Tools Category
-        {"toolId": "archive-extract", "name": "Extract Archive", "description": "Extract ZIP, RAR, or 7Z archives.", "icon": "archive-extract", "category": "Archive Tools", "supportedFormats": [".zip",".rar",".7z"], "route": "/tools/archive?op=extract",    "availability": {"available": True, "reason": ""}, "capabilities": ["zip","rar","7z"]},
-        {"toolId": "archive-zip",     "name": "Create ZIP",     "description": "Compress multiple files into a ZIP.", "icon": "archive-zip",     "category": "Archive Tools", "supportedFormats": ["*"],                  "route": "/tools/archive?op=create_zip", "availability": {"available": True, "reason": ""}, "capabilities": ["deflate-compression"]},
     ]
     return tools
 

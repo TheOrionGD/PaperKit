@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Sparkles, ArrowRight, ShieldCheck, Zap, Star, 
   ChevronDown, ChevronUp, FileText, Upload, CheckCircle2,
-  Lock, Globe, HardDrive, Cpu, Search, Sliders, Play,
+  Lock, Globe, Cpu, Search, Sliders, Play,
   ArrowLeft, MoreHorizontal, User
 } from 'lucide-react';
 import { useI18n } from '../../context/I18nContext';
@@ -22,7 +22,7 @@ export default function LandingScreen() {
   const stats = [
     { value: '50,000+', label: t('files_processed_stat'), icon: FileText, color: '#2563EB' },
     { value: '< 2.4s', label: t('avg_latency_stat'), icon: Zap, color: '#059669' },
-    { value: '28+', label: t('native_tools_stat'), icon: Cpu, color: '#7C3AED' },
+    { value: '20+', label: 'PDF Tools', icon: Cpu, color: '#7C3AED' },
     { value: '100%', label: t('private_wasm_stat'), icon: Lock, color: '#D97706' },
   ];
 
@@ -30,7 +30,7 @@ export default function LandingScreen() {
     { id: 'merge-pdf', name: 'Merge PDF', category: 'PDF', desc: 'Combine multiple files', path: '/tools/merge' },
     { id: 'compress-pdf', name: 'Compress PDF', category: 'PDF', desc: 'Reduce file size', path: '/tools/compress' },
     { id: 'ai-ask', name: 'Ask PDF AI', category: 'AI Intelligence', desc: 'Instant QA on docs', path: '/ai/ask' },
-    { id: 'remove-bg', name: 'Remove BG', category: 'Media', desc: 'AI subject isolation', path: '/tools/remove-bg' },
+    { id: 'split-pdf', name: 'Split PDF', category: 'PDF', desc: 'Extract or split pages', path: '/tools/split' },
   ];
 
   const filteredShowcase = activeCategory === 'All' 
@@ -53,7 +53,7 @@ export default function LandingScreen() {
     { 
       name: 'Mithrajit', 
       role: 'Engineering Student', 
-      content: '100% private client-side processing with zero paywalls or subscriptions. Everything from ISO PDF/A conversion to audio extraction works seamlessly.', 
+      content: '100% private client-side processing with zero paywalls or subscriptions. Everything from ISO PDF/A conversion to document editing works seamlessly.', 
       rating: 5 
     }
   ];
@@ -85,9 +85,9 @@ export default function LandingScreen() {
   }
 
   function handleDemoAction(action) {
-    if (action === 'compress') navigate('/register?action=compress');
-    else if (action === 'convert') navigate('/register?action=convert');
-    else navigate('/register');
+    if (action === 'compress') navigate('/tools/compress');
+    else if (action === 'convert') navigate('/tools/convert');
+    else navigate('/tools');
   }
 
   const currentLanguageObj = supportedLanguages.find(l => l.code === lang) || supportedLanguages[0];
@@ -103,7 +103,7 @@ export default function LandingScreen() {
         <div className="landing-screen__brand-pill">
           <img src="/icon-48.png" alt="PaperKit Logo" width="24" height="24" style={{ borderRadius: '6px' }} />
           <span className="landing-screen__brand-name">PaperKit</span>
-          <span className="landing-screen__brand-tag">28 Tools</span>
+          <span className="landing-screen__brand-tag">PDF Suite</span>
         </div>
 
         <div className="landing-screen__top-actions">
@@ -127,24 +127,24 @@ export default function LandingScreen() {
           <button
             type="button"
             className="landing-screen__signin-btn"
-            onClick={() => navigate('/login')}
+            onClick={() => navigate('/')}
           >
-            {t('sign_in')}
+            Open Studio
           </button>
         </div>
       </header>
 
-      {/* Hero 3-Card Glassmorphic Suite (Direct Reference to User Image) */}
+      {/* Hero 3-Card Glassmorphic Suite */}
       <section className="landing-screen__suite-showcase">
         {/* Left Hero Card */}
         <div className="landing-glass-card landing-glass-card--left">
           <div className="landing-glass-card__top-pill">
-            <span>{t('just_in_tag')}</span>
+            <span>Open Source PDF Studio ✦</span>
           </div>
 
           <div className="landing-glass-card__media-box">
             <img src="/landing-hero.jpg" alt="Calm Document Studio" className="landing-glass-card__bg-img" />
-            <div className="landing-glass-card__play-btn" onClick={() => navigate('/register')}>
+            <div className="landing-glass-card__play-btn" onClick={() => navigate('/')}>
               <Play size={18} fill="#0F172A" color="#0F172A" style={{ marginLeft: '2px' }} />
             </div>
           </div>
@@ -185,7 +185,6 @@ export default function LandingScreen() {
               { id: 'All', label: t('tab_all') },
               { id: 'PDF', label: t('tab_pdf') },
               { id: 'AI Intelligence', label: t('tab_ai') },
-              { id: 'Media', label: t('tab_media') }
             ].map((cat) => (
               <button
                 key={cat.id}
@@ -209,7 +208,6 @@ export default function LandingScreen() {
                 <div className="landing-glass-card__item-icon">
                   {tool.category === 'PDF' && <FileText size={20} color="#2563EB" />}
                   {tool.category === 'AI Intelligence' && <Sparkles size={20} color="#7C3AED" />}
-                  {tool.category === 'Media' && <HardDrive size={20} color="#EC4899" />}
                 </div>
                 <span className="landing-glass-card__item-name">{tool.name}</span>
                 <span className="landing-glass-card__item-tag">{tool.desc}</span>
@@ -218,7 +216,7 @@ export default function LandingScreen() {
           </div>
 
           <div className="landing-glass-card__bottom-badge">
-            <span>{t('tools_ready_badge')}</span>
+            <span>20+ PDF Tools Ready ✦</span>
           </div>
         </div>
 
@@ -266,9 +264,9 @@ export default function LandingScreen() {
             <button
               type="button"
               className="landing-glass-card__cta-button"
-              onClick={() => navigate('/register')}
+              onClick={() => navigate('/')}
             >
-              <span>{t('get_started_free')}</span>
+              <span>Launch Studio</span>
               <ArrowRight size={16} />
             </button>
           </div>
@@ -347,7 +345,7 @@ export default function LandingScreen() {
         </div>
       </section>
 
-      {/* Testimonials with TheOrionGD, Aadhi, Mithrajit */}
+      {/* Testimonials */}
       <section className="landing-screen__reviews-section">
         <div className="landing-screen__reviews-header">
           <div className="landing-screen__stars">
@@ -399,9 +397,9 @@ export default function LandingScreen() {
         <button
           type="button"
           className="landing-screen__floating-cta"
-          onClick={() => navigate('/register')}
+          onClick={() => navigate('/')}
         >
-          <span>{t('get_started_free')}</span>
+          <span>Launch Studio</span>
           <ArrowRight size={16} />
         </button>
       </div>

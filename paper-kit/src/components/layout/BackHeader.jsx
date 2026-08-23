@@ -60,18 +60,20 @@ export default function BackHeader({
 
   return (
     <header className="back-header" role="banner">
-      <button
-        className="back-header__back-btn"
-        onClick={handleBack}
-        aria-label="Go back"
-        id="back-header-back-btn"
-      >
-        <ChevronLeft size={22} color="var(--color-text-primary)" />
-      </button>
+      <div className="back-header__inner">
+        <button
+          className="back-header__back-btn"
+          onClick={handleBack}
+          aria-label="Go back"
+          id="back-header-back-btn"
+        >
+          <ChevronLeft size={22} color="var(--color-text-primary)" />
+        </button>
 
-      <h1 className="back-header__title">{title}</h1>
+        <h1 className="back-header__title">{title}</h1>
 
-      {renderRight()}
+        {renderRight()}
+      </div>
     </header>
   );
 }

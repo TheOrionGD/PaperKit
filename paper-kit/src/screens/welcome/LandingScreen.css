@@ -40,8 +40,8 @@
   align-items: center;
   justify-content: space-between;
   padding-top: calc(12px + env(safe-area-inset-top, 0px));
-  padding-left: var(--space-4);
-  padding-right: var(--space-4);
+  padding-left: clamp(8px, 2.5vw, var(--space-4));
+  padding-right: clamp(8px, 2.5vw, var(--space-4));
   padding-bottom: var(--space-3);
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(24px) saturate(180%);
@@ -50,6 +50,10 @@
   position: sticky;
   top: 0;
   z-index: 50;
+  width: 100%;
+  box-sizing: border-box;
+  max-width: var(--max-content-width, 100%);
+  margin: 0 auto;
 }
 
 .landing-screen__brand-pill {
@@ -784,13 +788,15 @@
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: var(--max-content-width);
-  padding: var(--space-3) var(--space-4);
+  max-width: var(--max-content-width, 100%);
+  padding: var(--space-3) clamp(10px, 3vw, var(--space-4));
+  padding-bottom: max(var(--space-3), env(safe-area-inset-bottom, 12px));
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid rgba(255, 255, 255, 0.85);
   z-index: 60;
+  box-sizing: border-box;
 }
 
 .landing-screen__floating-cta {

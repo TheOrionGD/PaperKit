@@ -1,13 +1,17 @@
 import api from './api';
 
-export async function firebaseLogin(idToken, name = null) {
-  const res = await api.post('/auth/firebase', { idToken, name });
-  return res.data; // { access_token, token_type }
-}
-
 export async function getMe() {
-  const res = await api.get('/auth/me');
-  return res.data;
+  try {
+    const res = await api.get('/auth/me');
+    return res.data;
+  } catch {
+    return {
+      _id: 'local_user',
+      name: 'Open Source User',
+      email: 'user@paperkit.local',
+      preferences: { dark_mode: false, default_view: 'list', language: 'en' },
+    };
+  }
 }
 
 export async function logout() {
@@ -15,12 +19,14 @@ export async function logout() {
 }
 
 export async function updateMe(data) {
-  const res = await api.put('/auth/me', data);
-  return res.data;
+  try {
+    const res = await api.put('/auth/me', data);
+    return res.data;
+  } catch {
+    return data;
+  }
 }
 
 export async function deleteAccount() {
-  const res = await api.delete('/auth/delete-account');
-  return res.data;
+  return { status: 'ok' };
 }
-

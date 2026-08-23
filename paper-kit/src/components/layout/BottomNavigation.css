@@ -1,73 +1,139 @@
 .bottom-nav {
   position: fixed;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
   width: 100%;
-  max-width: var(--max-content-width);
-  height: var(--bottomnav-height);
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-divider);
+  max-width: 100%;
+  height: var(--bottomnav-height, 66px);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid rgba(37, 99, 235, 0.15);
   z-index: var(--z-bottomnav);
+  padding: 4px var(--space-2) calc(4px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+  box-shadow: 0 -4px 22px rgba(37, 99, 235, 0.12);
+}
+
+.bottom-nav__inner {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: 0 var(--space-2);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  width: 100%;
+  max-width: var(--max-content-width, 1200px);
+  margin: 0 auto;
+}
+
+[data-theme='dark'] .bottom-nav {
+  background: rgba(15, 23, 42, 0.85);
+  border-top-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.35);
 }
 
 .bottom-nav__item {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 3px;
-  padding: var(--space-1) 0;
+  padding: var(--space-1) 2px;
   min-height: 44px;
-  transition: opacity var(--transition-micro), transform var(--transition-micro);
+  transition: all var(--transition-spring);
   will-change: transform;
+  touch-action: manipulation;
+  position: relative;
+}
+
+.bottom-nav__item:hover {
+  transform: translateY(-2px);
 }
 
 .bottom-nav__item:active {
-  opacity: 0.85;
-  transform: scale(0.95);
+  transform: scale(0.92);
+}
+
+.bottom-nav__item svg {
+  transition: transform 0.25s var(--ease-elastic), color 0.2s ease;
+}
+
+.bottom-nav__item--active svg {
+  transform: scale(1.12);
+  color: var(--color-primary);
 }
 
 .bottom-nav__label {
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-muted);
-  line-height: 1;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: center;
+  transition: color 0.2s ease, font-weight 0.2s ease;
 }
 
 .bottom-nav__item--active .bottom-nav__label {
   color: var(--color-primary);
-  font-weight: var(--font-weight-semibold);
+  font-weight: 700;
 }
 
-/* Centered camera FAB */
+/* Centered camera FAB with Ambient Breathing Glow */
 .bottom-nav__fab {
-  width: 56px;
-  height: 56px;
+  width: clamp(48px, 12vw, 56px);
+  height: clamp(48px, 12vw, 56px);
   border-radius: var(--radius-full);
-  background: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary) 0%, #1d4ed8 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-fab);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.45);
   flex-shrink: 0;
   margin-bottom: 8px;
-  transition: transform var(--transition-micro), background var(--transition-micro), box-shadow var(--transition-micro);
+  transition: all var(--transition-spring);
   will-change: transform;
+  touch-action: manipulation;
+  position: relative;
+}
+
+.bottom-nav__fab::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.4) 0%, transparent 70%);
+  animation: fabPulseRing 2.4s ease-out infinite;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes fabPulseRing {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 0.3; }
+  100% { transform: scale(1.3); opacity: 0; }
 }
 
 .bottom-nav__fab:hover {
-  transform: translateY(-2px) scale(1.06);
-  box-shadow: 0 6px 20px rgba(37,99,235,0.50);
+  transform: translateY(-4px) scale(1.08);
+  box-shadow: 0 8px 25px rgba(37, 99, 235, 0.6);
 }
 
 .bottom-nav__fab:active {
   transform: translateY(0) scale(0.92);
   background: var(--color-primary-pressed);
+}
+
+@media (max-width: 359px) {
+  .bottom-nav {
+    padding: 0 2px;
+  }
+  .bottom-nav__item {
+    gap: 2px;
+  }
+  .bottom-nav__label {
+    font-size: 9px;
+  }
 }

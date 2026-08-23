@@ -2,24 +2,33 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .files-screen__toolbar {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-2) clamp(8px, 2.5vw, var(--space-4));
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-divider);
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .files-screen__toolbar .search-bar {
   flex: 1;
+  min-width: 0;
 }
 
 .files-screen__filter-btn {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -43,11 +52,12 @@
 }
 
 .files-screen__upload-btn {
-  height: 40px;
+  height: 38px;
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: 0 var(--space-3);
+  justify-content: center;
+  gap: var(--space-1);
+  padding: 0 clamp(8px, 2vw, var(--space-3));
   border-radius: var(--radius-md);
   background: var(--color-primary);
   color: var(--color-text-inverse);
@@ -55,6 +65,7 @@
   font-weight: var(--font-weight-semibold);
   border: none;
   cursor: pointer;
+  flex-shrink: 0;
   transition: background var(--transition-fast);
 }
 
@@ -65,31 +76,39 @@
 /* Sorting panel under toolbar */
 .files-screen__sort-panel {
   display: flex;
-  gap: var(--space-4);
-  padding: var(--space-3) var(--space-4);
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-2) clamp(8px, 2.5vw, var(--space-4));
   background: var(--color-background);
   border-bottom: 1px solid var(--color-divider);
   font-size: var(--font-size-sm);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .files-screen__sort-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  flex: 1;
+  min-width: 120px;
 }
 
 .files-screen__sort-group label {
   font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
 }
 
 .files-screen__sort-group select {
-  padding: 6px 12px;
+  padding: 6px 10px;
   border-radius: var(--radius-md);
   border: 1.5px solid var(--color-border);
   background: var(--color-surface);
   color: var(--color-text-primary);
   outline: none;
+  font-size: var(--font-size-sm);
+  width: 100%;
 }
 
 /* Upload progress bar */

@@ -1,18 +1,34 @@
 /* api.js — Axios instance with auth interceptor, cold-start retries, and error normalization */
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com';
+export const API_BASE = import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com';
+
+export function resolveBackendFileUrl(fileUrl) {
+  if (!fileUrl || typeof fileUrl !== 'string') return '';
+  const trimmed = fileUrl.trim();
+  if (
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('blob:') ||
+    trimmed.startsWith('data:')
+  ) {
+    return trimmed;
+  }
+  const cleanBase = API_BASE.replace(/\/+$/, '');
+  const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  return `${cleanBase}${cleanPath}`;
+}
 
 const api = axios.create({
-  baseURL: BASE_URL,
+  baseURL: API_BASE,
   timeout: 180000, // 180s (3 minutes) to allow Render free tier wakeups & heavy conversions
   headers: { 'Content-Type': 'application/json' },
 });
 
-/* Attach JWT token from storage */
+/* Attach token or default open-workspace guest authorization */
 api.interceptors.request.use(config => {
-  const token = localStorage.getItem('pk_token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  const token = localStorage.getItem('pk_token') || 'guest_access_token';
+  config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
@@ -37,7 +53,7 @@ api.interceptors.response.use(
 
     if (status === 401) {
       localStorage.removeItem('pk_token');
-      window.dispatchEvent(new CustomEvent('pk:unauthorized'));
+      // In zero-auth mode, silently fall back without interrupting user flow
     }
 
     const normalized = new Error(message);

@@ -1,15 +1,33 @@
+/* SplashScreen.css — Modern Splash Screen with Render Cloud Backend Health Indicator */
+
 .splash-screen {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--color-background, #f9fafb);
+  inset: 0;
+  background-color: var(--color-background, #f8fafc);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
-  animation: splashFadeIn 0.3s ease-out forwards;
+  z-index: 99999;
+  animation: splashFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  overflow: hidden;
+  padding: 24px;
+}
+
+/* Ambient glow */
+.splash-screen__ambient-glow {
+  position: absolute;
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.12) 0%, rgba(124, 58, 237, 0.04) 50%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(40px);
+  animation: ambientPulse 4s ease-in-out infinite alternate;
+}
+
+@keyframes ambientPulse {
+  0% { transform: scale(0.9) translate(-10px, -10px); opacity: 0.7; }
+  100% { transform: scale(1.1) translate(10px, 10px); opacity: 1; }
 }
 
 .splash-screen__content {
@@ -17,75 +35,306 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
+  position: relative;
+  z-index: 2;
+  max-width: 420px;
+  width: 100%;
 }
 
 .splash-screen__logo-container {
-  margin-bottom: var(--space-4, 16px);
-  filter: drop-shadow(0 10px 15px rgba(37, 99, 235, 0.15));
-  animation: logoPulse 2s ease-in-out infinite;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.splash-screen__logo-glow {
+  position: absolute;
+  inset: -8px;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.3) 0%, transparent 70%);
+  border-radius: 28px;
+  animation: logoGlow 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes logoGlow {
+  0% { opacity: 0.4; transform: scale(0.95); }
+  100% { opacity: 0.9; transform: scale(1.08); }
 }
 
 .splash-screen__logo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: logoFloat 3s ease-in-out infinite alternate;
+}
+
+@keyframes logoFloat {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-6px); }
+}
+
+.splash-screen__app-name {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--color-text, #0f172a);
+  margin: 0 0 6px;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #1e293b 0%, #2563eb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.splash-screen__tagline {
+  font-size: 14px;
+  color: var(--color-text-secondary, #64748b);
+  margin: 0 0 28px;
+  font-weight: 500;
+}
+
+/* Status Box */
+.splash-screen__status-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-divider, rgba(226, 232, 240, 0.8));
+  border-radius: 16px;
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.05);
+}
+
+.splash-screen__loader {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.splash-screen__app-name {
-  font-size: var(--font-size-3xl, 30px);
-  font-weight: var(--font-weight-bold, 700);
-  color: var(--color-text-primary, #111827);
-  margin-bottom: var(--space-1, 4px);
-  letter-spacing: -0.025em;
-}
-
-.splash-screen__tagline {
-  font-size: var(--font-size-sm, 14px);
-  color: var(--color-text-secondary, #4b5563);
-  margin-bottom: var(--space-8, 32px);
-  font-weight: var(--font-weight-medium, 500);
-}
-
-.splash-screen__loader {
-  height: 24px;
-}
-
 .splash-screen__spinner {
-  width: 24px;
-  height: 24px;
-  border: 3px solid rgba(37, 99, 235, 0.1);
-  border-top-color: #2563eb;
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(37, 99, 235, 0.15);
+  border-top-color: var(--color-primary, #2563eb);
   border-radius: 50%;
-  animation: splashSpin 0.8s linear infinite;
+  animation: splashSpin 0.75s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
+}
+
+.splash-screen__status-details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.splash-screen__status-msg {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text, #1e293b);
+  margin: 0;
+  min-height: 18px;
+}
+
+.splash-screen__cold-start-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: rgba(234, 88, 12, 0.1);
+  color: #ea580c;
+  font-size: 11px;
+  font-weight: 700;
+  animation: badgeFade 0.3s ease;
+}
+
+@keyframes badgeFade {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.splash-screen__services-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.splash-screen__service-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #64748b);
+  background: var(--color-surface-subtle, rgba(241, 245, 249, 0.8));
+  padding: 3px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border, rgba(226, 232, 240, 0.8));
+  transition: all 0.2s ease;
+}
+
+.splash-screen__service-chip--online {
+  color: #059669;
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.splash-screen__service-chip--syncing {
+  color: #d97706;
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.splash-screen__service-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+  animation: pulseDot 1.8s ease-in-out infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.splash-screen__skip-btn {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(124, 58, 237, 0.08) 100%);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  color: var(--color-primary, #2563eb);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-top: 2px;
+}
+
+.splash-screen__skip-btn:hover {
+  background: var(--color-primary, #2563eb);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.splash-screen__skip-btn:hover .splash-screen__skip-arrow {
+  transform: translateX(2px);
+}
+
+.splash-screen__skip-arrow {
+  transition: transform 0.2s ease;
+}
+
+/* Error Card */
+.splash-screen__error-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #fecaca;
+  border-radius: 18px;
+  padding: 20px;
+  width: 100%;
+  box-shadow: 0 10px 30px rgba(239, 68, 68, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: badgeFade 0.3s ease;
+}
+
+.splash-screen__error-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #fee2e2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.splash-screen__error-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 6px;
+}
+
+.splash-screen__error-desc {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.splash-screen__error-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.splash-screen__action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
+}
+
+.splash-screen__action-btn--primary {
+  background: var(--color-primary, #2563eb);
+  color: #ffffff;
+}
+
+.splash-screen__action-btn--primary:hover {
+  filter: brightness(1.1);
+}
+
+.splash-screen__action-btn--secondary {
+  background: var(--color-surface-subtle, #f1f5f9);
+  color: var(--color-text, #0f172a);
+  border: 1px solid var(--color-divider, #cbd5e1);
+}
+
+.splash-screen__action-btn--secondary:hover {
+  background: var(--color-divider, #e2e8f0);
+}
+
+.splash-screen__footer-brand {
+  margin-top: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted, #94a3b8);
+  letter-spacing: 0.02em;
 }
 
 @keyframes splashSpin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
 @keyframes splashFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes logoPulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* Fade-out transition when splash is dismissed */
 .splash-screen--fade-out {
-  animation: splashFadeOut 0.4s ease-in forwards;
+  animation: splashFadeOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   pointer-events: none;
 }
 
@@ -96,19 +345,47 @@
   }
   to {
     opacity: 0;
-    transform: scale(1.04);
+    transform: scale(1.03);
   }
 }
 
 /* Dark mode support */
 .dark .splash-screen {
-  background-color: var(--color-background, #111827);
+  background-color: var(--color-background, #0b1120);
+}
+
+.dark .splash-screen__ambient-glow {
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.18) 0%, rgba(139, 92, 246, 0.06) 50%, transparent 70%);
 }
 
 .dark .splash-screen__app-name {
-  color: var(--color-text-primary, #f9fafb);
+  background: linear-gradient(135deg, #ffffff 0%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .dark .splash-screen__tagline {
-  color: var(--color-text-secondary, #9ca3af);
+  color: #94a3b8;
+}
+
+.dark .splash-screen__status-box {
+  background: rgba(30, 41, 59, 0.75);
+  border-color: rgba(51, 65, 85, 0.8);
+}
+
+.dark .splash-screen__status-msg {
+  color: #f1f5f9;
+}
+
+.dark .splash-screen__error-card {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: #7f1d1d;
+}
+
+.dark .splash-screen__error-title {
+  color: #f8fafc;
+}
+
+.dark .splash-screen__error-desc {
+  color: #94a3b8;
 }

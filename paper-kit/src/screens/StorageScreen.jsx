@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { HardDrive, Cloud, RefreshCw, Info } from 'lucide-react';
 import { getStorageUsage, getFileMetadata } from '../services/jobs';
 import { listFiles, getFileDownloadUrl } from '../services/files';
+import { downloadAndOpenFile } from '../services/native';
 import LoadingState from '../components/ui/LoadingState';
 import { useProcessing } from '../context/ProcessingContext';
 import { FileTypeIcon } from '../components/icons/ToolIcons';
@@ -58,13 +59,7 @@ export default function StorageScreen() {
   const handleDownload = async (file) => {
     try {
       const downloadUrl = await getFileDownloadUrl(file._id);
-      const url = downloadUrl.startsWith('http') ? downloadUrl : `${import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'}${downloadUrl}`;
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = file.original_filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      await downloadAndOpenFile(downloadUrl, file.original_filename, file.content_type);
     } catch (err) {
       setError(err?.message || 'Download failed');
     }
@@ -83,7 +78,8 @@ export default function StorageScreen() {
     return <LoadingState text="Analyzing storage usage..." />;
   }
 
-  const maxBytes = config.maxLocalSizeMB * 1024 * 1024;
+  const targetMB = (config.maxLocalSizeMB && config.maxLocalSizeMB !== 10) ? config.maxLocalSizeMB : 100;
+  const maxBytes = targetMB * 1024 * 1024;
   const localPercent = usage ? Math.min((usage.localBytes / maxBytes) * 100, 100) : 0;
   const cloudPercent = 0; // Fixed since cloud sync is removed in UI
 
@@ -118,7 +114,7 @@ export default function StorageScreen() {
             <div className="storage-screen__progress-bar">
               <div className="storage-screen__progress-fill storage-screen__progress-fill--local" style={{ width: `${localPercent}%` }} />
             </div>
-            <span className="storage-screen__subtext">{localPercent.toFixed(1)}% of allocation threshold ({config.maxLocalSizeMB} MB)</span>
+            <span className="storage-screen__subtext">{localPercent.toFixed(1)}% of allocation threshold ({targetMB} MB)</span>
           </div>
 
           <div className="storage-screen__card storage-screen__card--cloud">
@@ -170,14 +166,14 @@ export default function StorageScreen() {
             <div className="routing-form-group">
               <div className="routing-form-field">
                 <label htmlFor="max-local-size-slider">
-                  Max Local File Size: <strong>{config.maxLocalSizeMB} MB</strong>
+                  Max Local File Size: <strong>{config.maxLocalSizeMB || 100} MB</strong>
                 </label>
                 <input
                   id="max-local-size-slider"
                   type="range"
                   min="1"
-                  max="50"
-                  value={config.maxLocalSizeMB}
+                  max="200"
+                  value={config.maxLocalSizeMB || 100}
                   onChange={e => updateConfig({ maxLocalSizeMB: Number(e.target.value) })}
                 />
               </div>
@@ -194,76 +190,10 @@ export default function StorageScreen() {
               </div>
             </div>
           </div>
-
-          {/* Simulation Tools */}
-          <div className="routing-config-card">
-            <h3>Simulation Sandbox</h3>
-            <div className="routing-form-group">
-              <div className="routing-form-field">
-                <label htmlFor="network-sim-select">Network Simulation State:</label>
-                <select
-                  id="network-sim-select"
-                  value={config.networkSim}
-                  onChange={e => updateConfig({ networkSim: e.target.value })}
-                >
-                  <option value="default">Default (System Connection)</option>
-                  <option value="online">Simulate Online</option>
-                  <option value="offline">Simulate Offline (Force Local Fallback)</option>
-                </select>
-              </div>
-              <div className="routing-form-field">
-                <label htmlFor="engine-sim-select">Client Local Engines:</label>
-                <select
-                  id="engine-sim-select"
-                  value={config.engineSim}
-                  onChange={e => updateConfig({ engineSim: e.target.value })}
-                >
-                  <option value="available">Engines Loaded (pdf-lib ready)</option>
-                  <option value="unavailable">Engines Disabled (Simulate missing libs)</option>
-                </select>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
       <div className="storage-screen__content">
-        <div className="storage-screen__files-section">
-          <h2>File Storage List</h2>
-          <div className="storage-screen__file-list">
-            {files.length === 0 ? (
-              <p className="storage-screen__empty">No files in storage.</p>
-            ) : (
-              files.map(file => {
-                const _isCloud = !!file.thumbnail_url?.startsWith('http') || (file.content_type && file.thumbnail_url); // Or check if synced
-                // Let's check status or format
-                return (
-                  <div key={file._id} className="storage-file-item">
-                    <div className="storage-file-item__info">
-                      <FileTypeIcon type={getFileType(file.original_filename)} size={32} />
-                      <div className="storage-file-item__text">
-                        <span className="storage-file-item__name">{file.original_filename}</span>
-                        <span className="storage-file-item__size">{(file.size / 1024 / 1024).toFixed(3)} MB · {formatFileTimestamp(file.created_at || file.updated_at)}</span>
-                      </div>
-                    </div>
-                    <div className="storage-file-item__actions">
-                      <button className="storage-file-item__meta-btn" onClick={() => handleShowMeta(file._id)} title="View Metadata">
-                        <Info size={16} /> Metadata
-                      </button>
-                      <button className="storage-file-item__sync-btn" onClick={() => handlePreview(file)} title="Preview File">
-                        Preview
-                      </button>
-                      <button className="storage-file-item__sync-btn" onClick={() => handleDownload(file)} title="Download File" style={{ background: 'var(--color-primary)', color: 'white' }}>
-                        Download
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-
         {selectedFileMeta && (
           <div className="storage-screen__meta-section">
             <div className="storage-screen__meta-header">

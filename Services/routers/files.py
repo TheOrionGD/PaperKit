@@ -18,20 +18,10 @@ ALLOWED_TYPES = {
     "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     "image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "image/tiff",
     "image/svg+xml",
-    "text/plain", "text/html",
-    # Video
-    "video/mp4", "video/x-msvideo", "video/x-matroska", "video/quicktime",
-    "video/webm", "video/mpeg", "video/3gpp",
-    # Audio
-    "audio/mpeg", "audio/wav", "audio/aac", "audio/ogg", "audio/flac",
-    # Archives
-    "application/zip", "application/x-zip-compressed",
-    "application/x-rar-compressed", "application/vnd.rar",
-    "application/x-7z-compressed",
-    "application/octet-stream",
+    "text/plain", "text/html", "text/markdown",
 }
 
-MAX_FILE_SIZE = 500 * 1024 * 1024  # 500 MB (supports large video files)
+MAX_FILE_SIZE = 100 * 1024 * 1024  # 100 MB max document size
 
 
 @router.get("")
@@ -156,6 +146,8 @@ async def upload(
 
 @router.delete("/{file_id}")
 async def delete_file_route(file_id: str, current_user: dict = Depends(get_current_user)):
+    if not ObjectId.is_valid(file_id):
+        raise HTTPException(status_code=404, detail="File not found")
     db = get_db()
     f = await db.files.find_one({"_id": ObjectId(file_id), "user_id": str(current_user["_id"])})
     if not f:
@@ -165,13 +157,78 @@ async def delete_file_route(file_id: str, current_user: dict = Depends(get_curre
     return {"message": "File deleted"}
 
 
+from fastapi.responses import FileResponse
+import os
+import hashlib
+from services.storage import LOCAL_STORAGE_DIR
+
+
+@router.get("/{file_id}/download")
+async def download_file_binary(
+    file_id: str,
+    token: str = Query(None),
+    current_user: dict = Depends(get_current_user),
+):
+    """Canonical file download endpoint. Authenticates user, verifies binary PDF integrity, and streams file."""
+    if not ObjectId.is_valid(file_id):
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    db = get_db()
+    f = await db.files.find_one({
+        "_id": ObjectId(file_id),
+        "user_id": str(current_user["_id"]),
+        "is_deleted": False
+    })
+    if not f:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    storage_url = f.get("storage_url", "")
+    if storage_url.startswith("/storage/"):
+        filename = storage_url.split("/storage/")[1]
+        file_path = os.path.join(LOCAL_STORAGE_DIR, filename)
+    else:
+        file_path = storage_url
+
+    if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+        raise HTTPException(status_code=404, detail="Requested file asset was not found on server storage.")
+
+    content_type = f.get("content_type", "application/pdf")
+    orig_filename = f.get("original_filename", "document.pdf")
+
+    # If PDF, verify binary signature %PDF-
+    if content_type == "application/pdf" or orig_filename.lower().endswith(".pdf"):
+        with open(file_path, "rb") as check_f:
+            header = check_f.read(10)
+            if not header.startswith(b"%PDF-"):
+                raise HTTPException(status_code=500, detail="Stored file binary is corrupted or not a valid PDF.")
+
+    with open(file_path, "rb") as check_f:
+        file_bytes = check_f.read()
+        sha256_hash = hashlib.sha256(file_bytes).hexdigest()
+
+    headers = {
+        "Content-Disposition": f'attachment; filename="{orig_filename}"',
+        "X-SHA256": sha256_hash,
+        "Access-Control-Expose-Headers": "Content-Disposition, X-SHA256",
+    }
+
+    return FileResponse(
+        path=file_path,
+        media_type=content_type,
+        filename=orig_filename,
+        headers=headers,
+    )
+
+
 @router.get("/{file_id}/download-url")
 async def get_download_url(file_id: str, current_user: dict = Depends(get_current_user)):
+    if not ObjectId.is_valid(file_id):
+        raise HTTPException(status_code=404, detail="File not found")
     db = get_db()
     f = await db.files.find_one({"_id": ObjectId(file_id), "user_id": str(current_user["_id"]), "is_deleted": False})
     if not f:
         raise HTTPException(status_code=404, detail="File not found")
-    return {"url": f["storage_url"]}
+    return {"url": f["storage_url"], "download_endpoint": f"/files/{file_id}/download"}
 
 
 @router.patch("/{file_id}/rename")
@@ -180,6 +237,8 @@ async def rename_file(
     body: dict,
     current_user: dict = Depends(get_current_user),
 ):
+    if not ObjectId.is_valid(file_id):
+        raise HTTPException(status_code=404, detail="File not found")
     new_name = body.get("filename")
     if not new_name:
         raise HTTPException(status_code=400, detail="filename is required")
@@ -218,6 +277,8 @@ async def storage_usage(current_user: dict = Depends(get_current_user)):
 @router.get("/{file_id}/metadata")
 async def file_metadata(file_id: str, current_user: dict = Depends(get_current_user)):
     """Return extended metadata for a file."""
+    if not ObjectId.is_valid(file_id):
+        raise HTTPException(status_code=404, detail="File not found")
     db      = get_db()
     user_id = str(current_user["_id"])
     try:

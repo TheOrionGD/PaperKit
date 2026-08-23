@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { ShieldCheck, FileCheck, Info, CheckCircle, Download, Eye, Sparkles } from 'lucide-react';
+import { ShieldCheck, FileCheck, CheckCircle, Download, Eye, Sparkles } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
 import FileUploader from '../../components/common/FileUploader';
 import { PrimaryButton } from '../../components/ui/Button';
@@ -25,7 +25,7 @@ export default function PDFToPDFAScreen() {
   const [result, setResult] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
-  const fileInputRef = useRef(null);
+  const _fileInputRef = useRef(null);
   const { runProcessing } = useProcessing();
   const { toast, showToast, dismissToast } = useToast();
 

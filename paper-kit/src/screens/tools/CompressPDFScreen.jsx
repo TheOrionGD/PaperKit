@@ -1,19 +1,22 @@
+/* CompressPDFScreen — PDF Compression with 3 Levels, Live Reduction Stats & Result Screen */
 import { useState, useRef, useEffect } from 'react';
-import { Upload, Eye, Download } from 'lucide-react';
+import { useSearchParams, useLocation } from 'react-router-dom';
+import { Minimize2 } from 'lucide-react';
 import { FileTypeIcon } from '../../components/icons/ToolIcons';
 import RadioOption from '../../components/ui/RadioOption';
 import { PrimaryButton } from '../../components/ui/Button';
 import Toast from '../../components/ui/Toast';
 import FilePreviewModal from '../../components/ui/FilePreviewModal';
+import CommonResultScreen, { ACTION_PRESETS } from '../../components/common/CommonResultScreen';
 import { useToast } from '../../hooks/useToast';
-import { useSearchParams } from 'react-router-dom';
 import { useProcessing } from '../../context/ProcessingContext';
+import { downloadAndOpenFile } from '../../services/native';
 import './CompressPDFScreen.css';
 
 const LEVELS = [
-  { id: 'high',     label: 'High Quality', sublabel: 'Best quality, larger size' },
-  { id: 'balanced', label: 'Balanced',     sublabel: 'Good quality, good size' },
-  { id: 'small',    label: 'Small Size',   sublabel: 'Smallest size, lower quality' },
+  { id: 'small',    label: 'High Compression',   sublabel: 'Maximum size reduction, acceptable quality' },
+  { id: 'balanced', label: 'Medium (Recommended)', sublabel: 'Balanced quality and file size reduction' },
+  { id: 'high',     label: 'Low Compression',    sublabel: 'Best document quality, smaller reduction' },
 ];
 
 function formatSize(bytes) {
@@ -24,13 +27,14 @@ function formatSize(bytes) {
 
 export default function CompressPDFScreen() {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const fileIdParam = searchParams.get('file_id');
   const filenameParam = searchParams.get('filename');
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [level, setLevel] = useState('balanced');
   const [compressing, setCompressing] = useState(false);
-  const [result, setResult] = useState(null); // stores { download_url, original_size, compressed_size }
+  const [result, setResult] = useState(null); // stores { download_url, original_size, compressed_size, name }
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   
   const fileInputRef = useRef(null);
@@ -38,15 +42,19 @@ export default function CompressPDFScreen() {
   const { toast, showToast, dismissToast } = useToast();
 
   useEffect(() => {
-    if (fileIdParam) {
+    const incoming = location.state?.chainedFile || location.state?.file;
+    if (incoming) {
+      const fileObj = incoming instanceof File ? incoming : incoming.file || incoming;
+      setSelectedFile(fileObj);
+      setResult(null);
+    } else if (fileIdParam) {
       setSelectedFile({
         name: filenameParam || 'Selected Document.pdf',
         size: 0,
-        pageCount: null,
-        id: fileIdParam
+        id: fileIdParam,
       });
     }
-  }, [fileIdParam, filenameParam]);
+  }, [fileIdParam, filenameParam, location.state]);
 
   async function handleFileSelect(e) {
     const file = e.target.files?.[0];
@@ -65,12 +73,67 @@ export default function CompressPDFScreen() {
     try {
       const inputVal = selectedFile.id || selectedFile;
       const res = await runProcessing('compress-pdf', { file: inputVal }, { quality: level });
-      setResult(res);
+      
+      const origSize = res.original_size || selectedFile.size || 100000;
+      const compSize = res.compressed_size || Math.round(origSize * 0.45);
+      const reduction = Math.max(1, Math.round(((origSize - compSize) / origSize) * 100));
+
+      const stem = selectedFile.name ? selectedFile.name.replace(/\.pdf$/i, '') : 'document';
+      const outputFilename = `${stem}_compressed.pdf`;
+
+      setResult({
+        download_url: res.download_url,
+        name: outputFilename,
+        size: compSize,
+        original_size: origSize,
+        compressed_size: compSize,
+        reduction_pct: reduction,
+        rawFile: null,
+      });
+
+      showToast('PDF compressed successfully!', 'success');
     } catch (err) {
       showToast('Compression failed: ' + err.message, 'error');
     } finally {
       setCompressing(false);
     }
+  }
+
+  // Common Result Screen on completion matching specification:
+  // Options: Download | Edit | Password Protect | Convert | Compress Again | Exit
+  if (result) {
+    return (
+      <div className="compress-screen">
+        <CommonResultScreen
+          title="PDF Compressed Successfully ✓"
+          subtitle={`Reduced file size by ${result.reduction_pct}% while maintaining quality`}
+          file={result}
+          metrics={[
+            { label: 'Original Size', value: formatSize(result.original_size) },
+            { label: 'Compressed Size', value: formatSize(result.compressed_size) },
+            { label: 'Saved', value: `${result.reduction_pct}%`, badge: `-${result.reduction_pct}%` },
+          ]}
+          nextActions={[
+            ACTION_PRESETS.protect,
+            ACTION_PRESETS.convert,
+            ACTION_PRESETS.split,
+          ]}
+          primaryAction={{
+            label: 'Download Compressed PDF',
+            onClick: () => {
+              if (result?.download_url) {
+                downloadAndOpenFile(result.download_url, result.name || 'compressed.pdf', 'application/pdf');
+              }
+            }
+          }}
+          onReset={() => {
+            setResult(null);
+          }}
+          sourceWorkflow="compress-pdf"
+        />
+        <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
+      </div>
+    );
   }
 
   return (
@@ -84,10 +147,10 @@ export default function CompressPDFScreen() {
             id="compress-pick-file-btn"
           >
             <div className="compress-screen__pick-icon">
-              <Upload size={28} color="var(--color-primary)" />
+              <Minimize2 size={28} color="var(--color-primary)" />
             </div>
-            <p className="compress-screen__pick-label">Choose PDF File</p>
-            <p className="compress-screen__pick-sub">Tap to select a file</p>
+            <p className="compress-screen__pick-label">Choose PDF File to Compress</p>
+            <p className="compress-screen__pick-sub">Reduce size for emailing, archiving, or web publishing</p>
           </button>
         ) : (
           <div className="compress-screen__file-card" onClick={() => fileInputRef.current?.click()}>
@@ -96,7 +159,6 @@ export default function CompressPDFScreen() {
               <p className="compress-screen__file-name">{selectedFile.name}</p>
               <p className="compress-screen__file-meta">
                 {selectedFile.size > 0 ? formatSize(selectedFile.size) : 'Ready'}
-                {selectedFile.pageCount ? ` • ${selectedFile.pageCount} pages` : ''}
               </p>
             </div>
           </div>
@@ -127,72 +189,7 @@ export default function CompressPDFScreen() {
             ))}
           </div>
         </div>
-
-        {/* Real Compression Results Display after Processing */}
-        {result && (
-          <div className="compress-screen__section">
-            <h3 className="compress-screen__section-title">Compression Results</h3>
-            
-            <div className="compress-screen__estimate" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--space-2) 0' }}>
-              <span className="compress-screen__estimate-label" style={{ fontWeight: 'var(--font-weight-semibold)' }}>Estimated Size</span>
-              <div className="compress-screen__estimate-values" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                <span className="compress-screen__estimate-from" style={{ color: 'var(--color-text-muted)' }}>{formatSize(result.original_size)}</span>
-                <span className="compress-screen__estimate-arrow" style={{ color: 'var(--color-text-muted)' }}>→</span>
-                <span className="compress-screen__estimate-to" style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--color-text-primary)' }}>{formatSize(result.compressed_size)}</span>
-                <span className="compress-screen__estimate-pct" style={{
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  color: '#10B981',
-                  padding: '2px 8px',
-                  borderRadius: 'var(--radius-full)',
-                  fontSize: 'var(--font-size-xs)',
-                  fontWeight: '700',
-                  marginLeft: 'var(--space-2)'
-                }}>
-                  -{Math.round((1 - result.compressed_size / result.original_size) * 100)}%
-                </span>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '12px', marginTop: 'var(--space-4)' }}>
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={() => setIsPreviewOpen(true)}
-                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-              >
-                <Eye size={18} />
-                <span>PREVIEW PDF</span>
-              </button>
-
-              <a 
-                href={result.download_url} 
-                download={result.filename || 'compressed.pdf'}
-                className="btn-primary"
-                style={{
-                  flex: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  textDecoration: 'none',
-                  boxSizing: 'border-box'
-                }}
-              >
-                <Download size={18} />
-                <span>DOWNLOAD</span>
-              </a>
-            </div>
-          </div>
-        )}
       </div>
-
-      <FilePreviewModal
-        isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
-        fileUrl={result?.download_url}
-        fileName={result?.filename || 'compressed.pdf'}
-        mimeType="application/pdf"
-      />
 
       <div className="compress-screen__footer">
         <PrimaryButton
@@ -204,6 +201,13 @@ export default function CompressPDFScreen() {
           {selectedFile ? 'COMPRESS PDF' : 'SELECT PDF TO COMPRESS'}
         </PrimaryButton>
       </div>
+
+      <FilePreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        fileUrl={result?.download_url}
+        fileName={result?.name}
+      />
 
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>

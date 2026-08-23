@@ -177,7 +177,7 @@ export default function RotatePDFScreen() {
 
               {!rotateAll && (
                 <div className="rotate-screen__option">
-                  <label className="auth-screen__label" htmlFor="rotate-pages">
+                  <label className="rotate-screen__label" htmlFor="rotate-pages">
                     Pages to Rotate (e.g. 1-3, 5)
                   </label>
                   <input

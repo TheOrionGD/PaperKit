@@ -1,44 +1,42 @@
-/* OrganizePDFScreen — visually rotate, reorder, remove, or extract pages using pdf.js thumbnails */
+/* OrganizePDFScreen — Visual Page Engine: Rearrange, Delete, Duplicate, Rotate L/R & Preview */
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { RotateCw, Trash2, Grid } from 'lucide-react';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { RotateCw, RotateCcw, Copy, Trash2, Grid } from 'lucide-react';
 import { FileTypeIcon } from '../../components/icons/ToolIcons';
 import { PrimaryButton } from '../../components/ui/Button';
 import LoadingState from '../../components/ui/LoadingState';
-import ErrorState from '../../components/ui/ErrorState';
 import Toast from '../../components/ui/Toast';
+import FilePreviewModal from '../../components/ui/FilePreviewModal';
+import CommonResultScreen, { ACTION_PRESETS } from '../../components/common/CommonResultScreen';
 import { useToast } from '../../hooks/useToast';
 import { getFileDownloadUrl } from '../../services/files';
+import { downloadAndOpenFile } from '../../services/native';
 import { useProcessing } from '../../context/ProcessingContext';
 import './OrganizePDFScreen.css';
 
-export default function OrganizePDFScreen({ mode = 'organize' }) {
-  const navigate = useNavigate();
+export default function OrganizePDFScreen({ mode: _mode = 'organize' }) {
+  const _navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const fileIdParam = searchParams.get('file_id');
 
   const fileInputRef = useRef(null);
   const [selectedFile, setSelectedFile] = useState(null);
   
-  const [pages, setPages] = useState([]); // Array of { originalIndex, index, rotation, dataUrl, selected }
+  const [pages, setPages] = useState([]); // Array of { id, originalIndex, rotation, dataUrl, selected }
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState(null);
+  const [organizeResult, setOrganizeResult] = useState(null);
+
+  // Full page preview
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [previewTarget, setPreviewTarget] = useState(null);
 
   const { runProcessing } = useProcessing();
   const { toast, showToast, dismissToast } = useToast();
 
-  /* Get readable title based on route mode */
-  const _title = mode === 'extract'
-    ? 'Extract Pages'
-    : mode === 'remove'
-    ? 'Remove Pages'
-    : mode === 'reorder'
-    ? 'Reorder Pages'
-    : 'Organize Pages';
-
-  /* Load PDF.js and render thumbnails */
   const loadPdf = useCallback(async (fileOrUrl) => {
     setLoading(true);
     setLoadError(null);
@@ -58,12 +56,10 @@ export default function OrganizePDFScreen({ mode = 'organize' }) {
         doc = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
       }
 
-      // Generate thumbnails for all pages
       const pageList = [];
       for (let i = 1; i <= doc.numPages; i++) {
         const page = await doc.getPage(i);
-        // Render at low scale for thumbnails
-        const viewport = page.getViewport({ scale: 0.18 });
+        const viewport = page.getViewport({ scale: 0.22 });
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         canvas.width = viewport.width;
@@ -73,7 +69,6 @@ export default function OrganizePDFScreen({ mode = 'organize' }) {
         pageList.push({
           id: `p-${i}-${Date.now()}-${Math.random()}`,
           originalIndex: i - 1, // 0-based
-          index: i - 1,
           rotation: 0,
           dataUrl: canvas.toDataURL('image/jpeg', 0.85),
           selected: false,
@@ -88,24 +83,27 @@ export default function OrganizePDFScreen({ mode = 'organize' }) {
     }
   }, []);
 
-  // Fetch remote file if file_id search param is set
   useEffect(() => {
-    if (fileIdParam) {
+    const incoming = location.state?.chainedFile || location.state?.file;
+    if (incoming) {
+      const fileObj = incoming instanceof File ? incoming : incoming.file || incoming;
+      setSelectedFile(fileObj);
+      loadPdf(fileObj);
+    } else if (fileIdParam) {
       setSelectedFile({ name: 'Loading PDF document...', id: fileIdParam });
       getFileDownloadUrl(fileIdParam)
-        .then(url => {
-          loadPdf(url);
-        })
+        .then(url => loadPdf(url))
         .catch(err => {
           setLoadError('Failed to fetch file: ' + err.message);
           setSelectedFile(null);
         });
     }
-  }, [fileIdParam, loadPdf]);
+  }, [fileIdParam, location.state, loadPdf]);
 
   async function handleFileSelect(file) {
     if (!file) return;
     setSelectedFile(file);
+    setOrganizeResult(null);
     try {
       await loadPdf(file);
     } catch (err) {
@@ -113,8 +111,8 @@ export default function OrganizePDFScreen({ mode = 'organize' }) {
     }
   }
 
-  // Rotate individual page 90 degrees clockwise
-  function rotatePage(idx) {
+  // Rotate clockwise (right) 90 deg
+  function rotateCW(idx) {
     setPages(prev => prev.map((p, i) => {
       if (i === idx) {
         return { ...p, rotation: (p.rotation + 90) % 360 };
@@ -123,24 +121,42 @@ export default function OrganizePDFScreen({ mode = 'organize' }) {
     }));
   }
 
-  // Remove individual page from list
-  function deletePage(idx) {
-    setPages(prev => prev.filter((_, i) => i !== idx));
-  }
-
-  // Toggle page selection (for extract/remove modes)
-  function toggleSelectPage(idx) {
+  // Rotate counter-clockwise (left) 90 deg
+  function rotateCCW(idx) {
     setPages(prev => prev.map((p, i) => {
       if (i === idx) {
-        return { ...p, selected: !p.selected };
+        return { ...p, rotation: (p.rotation + 270) % 360 };
       }
       return p;
     }));
   }
 
-  // Drag and Drop reordering
+  // Duplicate page
+  function duplicatePage(idx) {
+    setPages(prev => {
+      const copy = [...prev];
+      const target = copy[idx];
+      const duplicated = {
+        ...target,
+        id: `p-dup-${Date.now()}-${Math.random()}`,
+      };
+      copy.splice(idx + 1, 0, duplicated);
+      return copy;
+    });
+    showToast(`Duplicated Page ${pages[idx].originalIndex + 1}`, 'info');
+  }
+
+  // Delete page
+  function deletePage(idx) {
+    if (pages.length <= 1) {
+      showToast('A document must have at least 1 page', 'warning');
+      return;
+    }
+    setPages(prev => prev.filter((_, i) => i !== idx));
+  }
+
+  // Drag and drop reordering
   const handleDragStart = (e, index) => {
-    if (mode === 'extract' || mode === 'remove') return; // Disable reorder in selection modes
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', index.toString());
@@ -150,107 +166,123 @@ export default function OrganizePDFScreen({ mode = 'organize' }) {
     e.preventDefault();
     if (draggedIndex === null || draggedIndex === index) return;
     
-    const updatedPages = [...pages];
-    const draggedItem = updatedPages[draggedIndex];
-    updatedPages.splice(draggedIndex, 1);
-    updatedPages.splice(index, 0, draggedItem);
+    const updated = [...pages];
+    const draggedItem = updated[draggedIndex];
+    updated.splice(draggedIndex, 1);
+    updated.splice(index, 0, draggedItem);
     setDraggedIndex(index);
-    setPages(updatedPages);
+    setPages(updated);
   };
 
   const handleDragEnd = () => {
     setDraggedIndex(null);
   };
 
-  // Submit visual changes to the backend
   async function handleApply() {
     if (!selectedFile) {
       fileInputRef.current?.click();
       return;
     }
-    if (pages.length === 0) return;
-
-    let targetPages;
-    const toolId = `${mode}-pages`;
-
-    if (mode === 'extract') {
-      const selected = pages.filter(p => p.selected);
-      if (selected.length === 0) {
-        showToast('Select at least one page to extract', 'warning');
-        return;
-      }
-      targetPages = selected.map(p => ({ index: p.originalIndex, rotation: p.rotation }));
-    } else if (mode === 'remove') {
-      const remaining = pages.filter(p => !p.selected);
-      if (pages.every(p => p.selected)) {
-        showToast('Cannot remove all pages from PDF', 'warning');
-        return;
-      }
-      if (!pages.some(p => p.selected)) {
-        showToast('Select at least one page to remove', 'warning');
-        return;
-      }
-      targetPages = remaining.map(p => ({ index: p.originalIndex, rotation: p.rotation }));
-    } else {
-      targetPages = pages.map(p => ({ index: p.originalIndex, rotation: p.rotation }));
+    if (pages.length === 0) {
+      showToast('No pages left in document', 'warning');
+      return;
     }
 
-    const pageIndices = targetPages.map(p => p.index);
-    const rotations = targetPages.map(p => p.rotation);
-
     setProcessing(true);
-    try {
-      const inputVal = selectedFile.id || selectedFile;
-      const result = await runProcessing(
-        'organize-pages',
-        { file: inputVal, pageIndices, rotations },
-        { tool_id: toolId }
-      );
+    setOrganizeResult(null);
 
-      setTimeout(() => {
-        if (result.download_url) {
-          const url = result.download_url.startsWith('http') || result.download_url.startsWith('blob:')
-            ? result.download_url
-            : `${import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'}${result.download_url}`;
-          window.open(url, '_blank');
-        }
-        navigate('/files', { replace: true });
-      }, 1500);
+    try {
+      const pageInstructions = pages.map(p => ({
+        index: p.originalIndex,
+        rotation: p.rotation,
+      }));
+
+      const inputVal = selectedFile.id || selectedFile;
+      const res = await runProcessing('organize-pdf', {
+        file: inputVal,
+        pages: pageInstructions,
+      });
+
+      const stem = selectedFile.name ? selectedFile.name.replace(/\.pdf$/i, '') : 'document';
+      const outputFilename = `${stem}_modified.pdf`;
+
+      setOrganizeResult({
+        download_url: res.download_url,
+        name: outputFilename,
+        size: res.size || selectedFile.size || 0,
+        pageCount: pages.length,
+        rawFile: null,
+      });
+
+      showToast('Page Changes Saved ✓', 'success');
     } catch (err) {
-      showToast(err.message || 'Operation failed', 'error');
+      showToast(err.message || 'Failed to save page modifications', 'error');
     } finally {
       setProcessing(false);
     }
   }
 
-  // Select/Deselect all pages helper
-  function toggleSelectAll(select) {
-    setPages(prev => prev.map(p => ({ ...p, selected: select })));
+  // Result Screen matching specification:
+  // Page Changes Saved ✓
+  // Options: Download | Compress | Continue Editing | Merge with Another PDF | Password Protect | Exit
+  if (organizeResult) {
+    return (
+      <div className="organize-screen">
+        <CommonResultScreen
+          title="Page Changes Saved ✓"
+          subtitle={`Updated document structure with ${pages.length} configured pages`}
+          file={organizeResult}
+          metrics={[
+            { label: 'Total Pages', value: `${pages.length} Pages` },
+            { label: 'Transformations', value: 'Applied', badge: 'Saved' },
+          ]}
+          nextActions={[
+            ACTION_PRESETS.compress,
+            ACTION_PRESETS.merge,
+            ACTION_PRESETS.protect,
+            ACTION_PRESETS.convert,
+          ]}
+          primaryAction={{
+            label: 'Download Modified PDF',
+            onClick: () => {
+              if (organizeResult?.download_url) {
+                downloadAndOpenFile(organizeResult.download_url, organizeResult.name || 'organized.pdf', 'application/pdf');
+              }
+            }
+          }}
+          onReset={() => {
+            setOrganizeResult(null);
+          }}
+          sourceWorkflow="organize-pages"
+        />
+        <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
+      </div>
+    );
   }
 
   return (
     <div className="organize-screen">
       <div className="organize-screen__body">
-        {/* File picker */}
+        {/* File Picker */}
         {!selectedFile ? (
-          <button 
-            className="compress-screen__pick-btn" 
-            onClick={() => fileInputRef.current?.click()} 
-            id="organize-pick-file-btn"
+          <button
+            className="organize-screen__pick-btn"
+            onClick={() => fileInputRef.current?.click()}
+            id="organize-pick-btn"
           >
-            <div className="compress-screen__pick-icon" style={{ width: 48, height: 48, background: '#DBEAFE', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Grid size={24} color="#2563EB" />
+            <div className="organize-screen__pick-icon">
+              <Grid size={32} color="var(--color-primary)" />
             </div>
-            <p className="compress-screen__pick-label">Choose PDF File</p>
-            <p className="compress-screen__pick-sub">Select PDF to {mode} pages</p>
+            <p className="organize-screen__pick-label">Select PDF to Manage Pages</p>
+            <p className="organize-screen__pick-sub">Drag & drop to reorder, duplicate, rotate left/right, or delete pages</p>
           </button>
         ) : (
-          <div className="compress-screen__file-card" onClick={() => !fileIdParam && fileInputRef.current?.click()}>
-            <FileTypeIcon type="pdf" size={40} />
-            <div className="compress-screen__file-info">
-              <p className="compress-screen__file-name">{selectedFile.name}</p>
-              <p className="compress-screen__file-meta">
-                {loading ? 'Reading document...' : selectedFile ? `Document Loaded (${pages.length} pages)` : 'Preparing...'}
+          <div className="organize-screen__file-card" onClick={() => fileInputRef.current?.click()}>
+            <FileTypeIcon type="pdf" size={36} />
+            <div className="organize-screen__file-info">
+              <p className="organize-screen__file-name">{selectedFile.name}</p>
+              <p className="organize-screen__file-meta">
+                {pages.length > 0 ? `${pages.length} pages loaded` : 'Loading pages...'}
               </p>
             </div>
           </div>
@@ -261,76 +293,73 @@ export default function OrganizePDFScreen({ mode = 'organize' }) {
           type="file"
           accept=".pdf,application/pdf"
           style={{ display: 'none' }}
-          onChange={handleFileSelect}
+          onChange={(e) => handleFileSelect(e.target.files?.[0])}
           id="organize-file-input"
         />
 
-        {loading && <LoadingState text="Parsing PDF pages into thumbnails..." />}
-        {loadError && <ErrorState title="Failed to read PDF" message={loadError} onRetry={() => loadPdf(selectedFile)} />}
+        {/* Loading / Error state */}
+        {loading && <LoadingState text="Generating visual page thumbnails..." />}
+        {loadError && <div className="organize-screen__error">{loadError}</div>}
 
-        {pages.length > 0 && !loading && (
-          <>
-            {/* Quick Actions Bar */}
-            {(mode === 'extract' || mode === 'remove') && (
-              <div className="organize-screen__summary-bar">
-                <span>
-                  {mode === 'extract' 
-                    ? `${pages.filter(p => p.selected).length} of ${pages.length} pages selected for extraction`
-                    : `${pages.filter(p => p.selected).length} of ${pages.length} pages marked for removal`}
-                </span>
-                <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                  <button 
-                    onClick={() => toggleSelectAll(true)} 
-                    style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontWeight: 600, cursor: 'pointer' }}
-                  >
-                    Select All
-                  </button>
-                  <span style={{ color: 'var(--color-primary-border)' }}>|</span>
-                  <button 
-                    onClick={() => toggleSelectAll(false)} 
-                    style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontWeight: 600, cursor: 'pointer' }}
-                  >
-                    Clear
-                  </button>
-                </div>
-              </div>
-            )}
+        {/* Visual Page Grid */}
+        {!loading && pages.length > 0 && (
+          <div style={{ marginTop: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+                Page Order & Orientation ({pages.length} pages)
+              </span>
+              <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                Drag cards to reorder
+              </span>
+            </div>
 
-            {/* Thumbnail Grid */}
             <div className="organize-screen__grid">
               {pages.map((p, index) => (
                 <div
                   key={p.id}
                   className={`page-card ${draggedIndex === index ? 'page-card--dragging' : ''}`}
-                  draggable={mode !== 'extract' && mode !== 'remove'}
+                  draggable
                   onDragStart={(e) => handleDragStart(e, index)}
                   onDragOver={(e) => handleDragOver(e, index)}
                   onDragEnd={handleDragEnd}
-                  onClick={() => (mode === 'extract' || mode === 'remove') && toggleSelectPage(index)}
                 >
-                  {/* Action buttons (only in organize mode) */}
-                  {mode === 'organize' && (
-                    <div className="page-card__controls">
-                      <button
-                        className="page-card__btn"
-                        onClick={(e) => { e.stopPropagation(); rotatePage(index); }}
-                        title="Rotate Page"
-                        aria-label="Rotate Page"
-                      >
-                        <RotateCw size={12} />
-                      </button>
-                      <button
-                        className="page-card__btn page-card__btn--danger"
-                        onClick={(e) => { e.stopPropagation(); deletePage(index); }}
-                        title="Delete Page"
-                        aria-label="Delete Page"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
-                  )}
+                  {/* Visual Control Bar */}
+                  <div className="page-card__controls" style={{ display: 'flex', gap: '3px' }}>
+                    <button
+                      type="button"
+                      className="page-card__btn"
+                      onClick={(e) => { e.stopPropagation(); rotateCCW(index); }}
+                      title="Rotate Left (90° CCW)"
+                    >
+                      <RotateCcw size={11} />
+                    </button>
+                    <button
+                      type="button"
+                      className="page-card__btn"
+                      onClick={(e) => { e.stopPropagation(); rotateCW(index); }}
+                      title="Rotate Right (90° CW)"
+                    >
+                      <RotateCw size={11} />
+                    </button>
+                    <button
+                      type="button"
+                      className="page-card__btn"
+                      onClick={(e) => { e.stopPropagation(); duplicatePage(index); }}
+                      title="Duplicate Page"
+                    >
+                      <Copy size={11} />
+                    </button>
+                    <button
+                      type="button"
+                      className="page-card__btn page-card__btn--danger"
+                      onClick={(e) => { e.stopPropagation(); deletePage(index); }}
+                      title="Delete Page"
+                    >
+                      <Trash2 size={11} />
+                    </button>
+                  </div>
 
-                  {/* Image container */}
+                  {/* Thumbnail Image */}
                   <div className="page-card__image-container">
                     <img
                       src={p.dataUrl}
@@ -341,42 +370,39 @@ export default function OrganizePDFScreen({ mode = 'organize' }) {
                     />
                   </div>
 
-                  {/* Page number badge */}
-                  <span className="page-card__badge">Page {p.originalIndex + 1}</span>
-
-                  {/* Selection Checkbox */}
-                  {(mode === 'extract' || mode === 'remove') && (
-                    <input
-                      type="checkbox"
-                      className="page-card__checkbox"
-                      checked={p.selected}
-                      onChange={() => toggleSelectPage(index)}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  )}
+                  {/* Badges */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '0 4px' }}>
+                    <span className="page-card__badge">Page {p.originalIndex + 1}</span>
+                    {p.rotation !== 0 && (
+                      <span style={{ fontSize: '10px', color: 'var(--color-primary)', fontWeight: 700 }}>
+                        {p.rotation}°
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
-          </>
+          </div>
         )}
       </div>
 
       <div className="compress-screen__footer">
         <PrimaryButton
           onClick={handleApply}
-          loading={processing || false}
-          disabled={processing || false}
+          loading={processing}
+          disabled={processing || pages.length === 0}
           id="organize-submit-btn"
         >
-          {!selectedFile
-            ? 'SELECT PDF TO ORGANIZE'
-            : mode === 'extract' 
-            ? 'EXTRACT PAGES' 
-            : mode === 'remove' 
-            ? 'REMOVE PAGES' 
-            : 'APPLY CHANGES'}
+          {selectedFile ? 'SAVE PAGE CHANGES' : 'SELECT PDF TO MANAGE'}
         </PrimaryButton>
       </div>
+
+      <FilePreviewModal
+        isOpen={previewModalOpen}
+        onClose={() => setPreviewModalOpen(false)}
+        fileUrl={previewTarget?.download_url}
+        fileName={previewTarget?.name}
+      />
 
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>

@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Clock, CheckCircle, XCircle, AlertCircle, RefreshCw, Download } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, AlertCircle, RefreshCw, Download, Eye } from 'lucide-react';
 import { getProcessingHistory } from '../services/tools';
 import { formatDateTime, formatFileTimestamp } from '../utils/dateUtils';
 import LoadingState from '../components/ui/LoadingState';
 import EmptyState from '../components/ui/EmptyState';
+import FilePreviewModal from '../components/ui/FilePreviewModal';
 import './HistoryScreen.css';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com';
+import { API_BASE } from '../services/api';
 
 const STATUS_ICONS = {
   completed: <CheckCircle size={16} style={{ color: '#22c55e' }} />,
@@ -39,6 +40,10 @@ export default function HistoryScreen() {
   const [filterStatus, setFilter] = useState('all');
   const [searchTerm, setSearch]   = useState('');
   const [expanded, setExpanded]   = useState(null);
+
+  // File Preview Modal State
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [previewTarget, setPreviewTarget] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -156,11 +161,31 @@ export default function HistoryScreen() {
                       {STATUS_LABELS[status] || status}
                     </span>
                     {outUrl && (
-                      <a href={resolveUrl(outUrl)} target="_blank" rel="noopener noreferrer"
-                        className="history-item__download" download
-                        onClick={e => e.stopPropagation()} id={`history-dl-${item.id}`}>
-                        <Download size={14} />
-                      </a>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <button
+                          type="button"
+                          className="history-item__download"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPreviewTarget({
+                              url: resolveUrl(outUrl),
+                              name: item.output_file?.filename || item.action || 'Output Document',
+                              size: item.output_file?.size,
+                              fileId: item.output_file?.id,
+                            });
+                            setPreviewModalOpen(true);
+                          }}
+                          title="Preview Document"
+                          style={{ border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        >
+                          <Eye size={14} color="var(--color-primary)" />
+                        </button>
+                        <a href={resolveUrl(outUrl)} target="_blank" rel="noopener noreferrer"
+                          className="history-item__download" download
+                          onClick={e => e.stopPropagation()} id={`history-dl-${item.id}`} title="Download">
+                          <Download size={14} />
+                        </a>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -181,12 +206,42 @@ export default function HistoryScreen() {
                     {item.output_file?.filename && (
                       <div className="history-item__detail-row">
                         <span className="history-item__detail-label">Output</span>
-                        <span className="history-item__detail-val">
+                        <span className="history-item__detail-val" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span className="history-item__file-chip">{item.output_file.filename}</span>
                           {item.output_file.size && (
                             <small className="history-item__size">
                               {' '}({(item.output_file.size / 1024).toFixed(1)} KB)
                             </small>
+                          )}
+                          {outUrl && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPreviewTarget({
+                                  url: resolveUrl(outUrl),
+                                  name: item.output_file.filename,
+                                  size: item.output_file.size,
+                                  fileId: item.output_file.id,
+                                });
+                                setPreviewModalOpen(true);
+                              }}
+                              style={{
+                                background: 'var(--color-primary-soft)',
+                                border: 'none',
+                                color: 'var(--color-primary)',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                padding: '2px 8px',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                marginLeft: '6px'
+                              }}
+                            >
+                              <Eye size={12} /> Preview
+                            </button>
                           )}
                         </span>
                       </div>
@@ -228,6 +283,16 @@ export default function HistoryScreen() {
           })}
         </div>
       )}
+
+      <FilePreviewModal
+        isOpen={previewModalOpen}
+        onClose={() => setPreviewModalOpen(false)}
+        fileUrl={previewTarget?.url}
+        fileName={previewTarget?.name}
+        fileSize={previewTarget?.size}
+        mimeType={previewTarget?.mimeType}
+        fileId={previewTarget?.fileId}
+      />
     </div>
   );
 }

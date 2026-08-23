@@ -7,11 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "cap:sync": "cap sync android",
+    "build:android": "vite build && cap sync android",
+    "build:apk": "vite build && cap sync android && cd android && gradlew.bat assembleRelease",
+    "build:aab": "vite build && cap sync android && cd android && gradlew.bat bundleRelease"
   },
   "dependencies": {
     "@capacitor-community/file-opener": "^8.0.1",
-    "@capacitor-firebase/authentication": "^8.4.0",
     "@capacitor/app": "^8.1.1",
     "@capacitor/browser": "^8.0.4",
     "@capacitor/camera": "^8.2.3",
@@ -30,7 +33,6 @@
     "@capacitor/toast": "^8.0.1",
     "@capawesome/capacitor-file-picker": "^8.0.4",
     "axios": "^1.19.0",
-    "firebase": "^12.18.0",
     "lucide-react": "^1.33.0",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.2.108",

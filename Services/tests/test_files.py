@@ -41,11 +41,17 @@ class TestFileUpload:
         resp = await client.post("/files/upload", files=files, headers=auth_headers)
         assert resp.status_code == 415
 
-    async def test_upload_unauthenticated(self, client, sample_pdf_bytes):
-        """Upload without auth should return 401."""
+    async def test_upload_invalid_token(self, client, sample_pdf_bytes):
+        """Upload with invalid token should return 401."""
+        files = {"file": ("doc.pdf", io.BytesIO(sample_pdf_bytes), "application/pdf")}
+        resp = await client.post("/files/upload", files=files, headers={"Authorization": "Bearer bad-token"})
+        assert resp.status_code == 401
+
+    async def test_upload_guest_session(self, client, sample_pdf_bytes):
+        """Upload without auth should succeed under guest session."""
         files = {"file": ("doc.pdf", io.BytesIO(sample_pdf_bytes), "application/pdf")}
         resp = await client.post("/files/upload", files=files)
-        assert resp.status_code == 401
+        assert resp.status_code == 200
 
 
 class TestFileList:

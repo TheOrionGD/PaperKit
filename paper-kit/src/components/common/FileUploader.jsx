@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import { Upload } from 'lucide-react';
 import { FileTypeIcon } from '../icons/ToolIcons';
 import './FileUploader.css';

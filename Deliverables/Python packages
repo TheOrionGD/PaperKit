@@ -1,0 +1,44 @@
+Here is the complete list of installed Python packages in the backend environment (`Services\.venv`):
+
+### Core Application & API Server
+- **`fastapi`** (`0.115.0`) — Web API framework
+- **`uvicorn[standard]`** (`0.30.6`) — ASGI server
+- **`motor`** (`3.5.1`) / **`pymongo`** (`4.8.0`) — MongoDB async database driver
+- **`pydantic`** (`2.13.4`) / **`pydantic-settings`** (`2.4.0`) — Data validation & config management
+- **`starlette`** (`0.38.6`) — Underlying ASGI toolkit
+
+### Auth & Security
+- **`python-jose[cryptography]`** (`3.3.0`) — JWT token handling
+- **`passlib[bcrypt]`** (`1.7.4`) / **`bcrypt`** (`5.0.0`) — Password hashing
+- **`cryptography`** (`50.0.0`) & **`Authlib`** (`1.3.2`) — Encryption & OAuth2 integration
+- **`python-multipart`** (`0.0.12`) — Form data and file upload parsing
+
+### Document Processing, Conversion & OCR
+- **`PyMuPDF` (fitz)** (`1.24.11`) — High-performance PDF reader & renderer
+- **`pdf2docx`** (`0.5.13`) — PDF to Word conversion engine
+- **`python-docx`** (`1.2.0`) — Word DOCX document creation & editing
+- **`reportlab`** (`5.0.1`) — PDF layout generation & creation
+- **`openpyxl`** (`3.1.5`) — Excel spreadsheet reading & creation
+- **`python-pptx`** (`1.0.2`) — PowerPoint presentation handling
+- **`docx2pdf`** (`0.1.8`) — Word to PDF conversion utility
+- **`pytesseract`** (`0.3.13`) — Tesseract OCR wrapper
+- **`beautifulsoup4`** (`4.15.0`) — HTML parsing & text extraction
+- **`lxml`** (`6.1.2`) — High-speed XML/HTML processing
+
+### Image Processing & Storage
+- **`pillow` (Pillow)** (`12.3.0`) — Image manipulation & format conversion
+- **`opencv-python`** (`5.0.0.93`) — Computer vision & image processing
+- **`cloudinary`** (`1.41.0`) — Cloud asset storage & sync
+- **`tifffile`** (`2026.8.16`) — TIFF image processing
+
+### AI Models & External Integrations
+- **`google-generativeai`** (`0.8.3`) — Gemini AI API client
+- **`google-ai-generativelanguage`** (`0.6.10`) — Google AI protos
+- **`groq`** (`1.6.0`) — Groq Llama/Mistral API client
+- **`httpx`** (`0.27.2`) — Async HTTP client for external APIs
+
+### Testing & Utilities
+- **`pytest`** (`9.1.1`) & **`pytest-asyncio`** (`1.4.0`) — Test runner & async fixtures
+- **`python-dotenv`** (`1.0.1`) — `.env` file loader
+- **`py7zr`** (`1.1.3`) & **`rarfile`** (`4.5`) — Archive handling
+- **`psutil`** (`7.2.2`) — Process & system resource monitoring

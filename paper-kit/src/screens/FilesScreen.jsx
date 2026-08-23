@@ -2,7 +2,7 @@ import { useState, useMemo, useContext, useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { FilePicker } from '@capawesome/capacitor-file-picker';
 import { useNavigate } from 'react-router-dom';
-import { SlidersHorizontal, FileText, Upload, ChevronLeft, ChevronRight, Share2, Download, Trash2, Edit2 } from 'lucide-react';
+import { SlidersHorizontal, FileText, Upload, ChevronLeft, ChevronRight, Share2, Download, Trash2, Edit2, Eye } from 'lucide-react';
 import SearchBar from '../components/ui/SearchBar';
 import FilterTabs from '../components/ui/FilterTabs';
 import FileCard from '../components/ui/FileCard';
@@ -11,6 +11,7 @@ import LoadingState from '../components/ui/LoadingState';
 import ErrorState from '../components/ui/ErrorState';
 import BottomSheet from '../components/ui/BottomSheet';
 import Toast from '../components/ui/Toast';
+import FilePreviewModal from '../components/ui/FilePreviewModal';
 import { useFiles, useRecentFiles } from '../hooks/useFiles';
 import { useUpload } from '../hooks/useUpload';
 import { useToast } from '../hooks/useToast';
@@ -44,6 +45,10 @@ export default function FilesScreen() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [newName, setNewName] = useState('');
+  
+  // File Preview Modal state
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [previewTarget, setPreviewTarget] = useState(null); // { url, name, size, mimeType, fileId }
   
   // Sorting panel & Pagination states
   const [showSortPanel, setShowSortPanel] = useState(false);
@@ -136,24 +141,38 @@ export default function FilesScreen() {
     }
   }
 
+  async function handlePreview(file) {
+    if (!file) return;
+    setSheetOpen(false);
+    try {
+      const fid = file._id || file.id;
+      const downloadUrl = await getFileDownloadUrl(fid);
+      setPreviewTarget({
+        url: downloadUrl,
+        name: file.original_filename || file.filename || 'Document',
+        size: file.size,
+        mimeType: file.content_type || file.mime_type,
+        fileId: fid,
+      });
+      setPreviewModalOpen(true);
+    } catch (err) {
+      showToast('Failed to load file preview: ' + err.message, 'error');
+    }
+  }
+
   async function handleOpen(file) {
     setSheetOpen(false);
     if (!file) return;
-    const ext = (file.original_filename || '').split('.').pop()?.toLowerCase();
-    if (ext === 'pdf') {
-      navigate(`/tools/edit?file_id=${file._id}`);
-    } else {
-      try {
-        const downloadUrl = await getFileDownloadUrl(file._id);
-        const fullUrl = downloadUrl.startsWith('http') ? downloadUrl : `${import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'}${downloadUrl}`;
-        if (window.Capacitor?.isNativePlatform?.()) {
-          await downloadAndOpenFile(fullUrl, file.original_filename, file.mime_type || 'application/octet-stream');
-        } else {
-          window.open(fullUrl, '_blank');
-        }
-      } catch (err) {
-        showToast('Failed to open file: ' + err.message, 'error');
+    try {
+      const downloadUrl = await getFileDownloadUrl(file._id);
+      const fullUrl = downloadUrl.startsWith('http') ? downloadUrl : `${import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'}${downloadUrl}`;
+      if (window.Capacitor?.isNativePlatform?.()) {
+        await downloadAndOpenFile(fullUrl, file.original_filename, file.mime_type || 'application/octet-stream');
+      } else {
+        window.open(fullUrl, '_blank');
       }
+    } catch (err) {
+      showToast('Failed to open file: ' + err.message, 'error');
     }
   }
 
@@ -230,8 +249,8 @@ export default function FilesScreen() {
           id="files-upload-btn"
           disabled={uploading}
         >
-          <Upload size={16} />
-          <span>Upload</span>
+          <Upload size={16} style={{ flexShrink: 0 }} />
+          <span className="hide-on-compact">Upload</span>
         </button>
         <input
           ref={fileInputRef}
@@ -305,7 +324,7 @@ export default function FilesScreen() {
                 <div
                   key={rf._id || rf.id}
                   className="files-screen__recent-card"
-                  onClick={() => handleOpen(rf)}
+                  onClick={() => handlePreview(rf)}
                   id={`recent-file-${rf._id || rf.id}`}
                 >
                   {rf.thumbnail_url ? (
@@ -341,7 +360,7 @@ export default function FilesScreen() {
             key={file._id || file.id}
             file={file}
             onMore={openMore}
-            onClick={() => handleOpen(file)}
+            onClick={() => handlePreview(file)}
           />
         ))}
       </div>
@@ -402,6 +421,9 @@ export default function FilesScreen() {
           </div>
         ) : (
           <div className="files-screen__sheet-actions">
+            <button className="home-screen__sheet-action" onClick={() => handlePreview(selectedFile)} style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--color-primary)', fontWeight: 600 }}>
+              <Eye size={16} /> Quick Preview
+            </button>
             <button className="home-screen__sheet-action" onClick={() => handleOpen(selectedFile)} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <FileText size={16} /> Open / Edit
             </button>
@@ -428,6 +450,16 @@ export default function FilesScreen() {
           </div>
         )}
       </BottomSheet>
+
+      <FilePreviewModal
+        isOpen={previewModalOpen}
+        onClose={() => setPreviewModalOpen(false)}
+        fileUrl={previewTarget?.url}
+        fileName={previewTarget?.name}
+        fileSize={previewTarget?.size}
+        mimeType={previewTarget?.mimeType}
+        fileId={previewTarget?.fileId}
+      />
 
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>

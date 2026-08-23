@@ -8,13 +8,15 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'https://paperkit-backend.onrender.com',
+        // target: 'https://paperkit-backend.onrender.com',
+        target: 'http://localhost:8000',
         changeOrigin: true,
         rewrite: path => path.replace(/^\/api/, ''),
       },
     },
   },
   define: {
-    'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'),
+    // 'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'),
+    'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || 'http://localhost:8000'),
   },
 })

@@ -40,21 +40,78 @@ export async function addWatermark(fileId, options) {
   return res.data;
 }
 
+export async function protectPDF(fileId, options) {
+  const res = await api.post('/tools/protect', { file_id: fileId, ...options });
+  return res.data;
+}
+
+export async function signPDF(fileId, signatures) {
+  const res = await api.post('/tools/sign', { file_id: fileId, signatures });
+  return res.data;
+}
+
+export async function getPDFMetadata(fileId) {
+  const res = await api.get(`/tools/metadata/${fileId}`);
+  return res.data;
+}
+
+export async function updatePDFMetadata(fileId, updates, wipeAll = false) {
+  const res = await api.post('/tools/metadata', { file_id: fileId, updates, wipe_all: wipeAll });
+  return res.data;
+}
+
+export async function redactPDF(fileId, terms) {
+  const res = await api.post('/tools/redact', { file_id: fileId, terms });
+  return res.data;
+}
+
+export async function convertHtmlToWord(htmlContent, filename = 'edited_document.docx') {
+  const res = await api.post('/tools/html-to-word', {
+    html_content: htmlContent,
+    filename,
+  });
+  return res.data;
+}
+
 const DEFAULT_REGISTRY = [
-  { toolId: 'merge-pdf', name: 'Merge PDF', category: 'Organize', route: '/tools/merge', description: 'Combine multiple PDFs into one document', availability: { available: true } },
-  { toolId: 'split-pdf', name: 'Split PDF', category: 'Organize', route: '/tools/split', description: 'Split PDF by ranges or extract pages', availability: { available: true } },
-  { toolId: 'compress-pdf', name: 'Compress PDF', category: 'Optimize', route: '/tools/compress', description: 'Reduce PDF file size', availability: { available: true } },
-  { toolId: 'edit-pdf', name: 'Edit PDF', category: 'Optimize', route: '/tools/edit', description: 'Add text, drawings, and signatures to PDF', availability: { available: true } },
-  { toolId: 'rotate-pdf', name: 'Rotate PDF', category: 'Organize', route: '/tools/rotate', description: 'Rotate PDF pages orientation', availability: { available: true } },
-  { toolId: 'watermark', name: 'Watermark', category: 'Optimize', route: '/tools/watermark', description: 'Add text watermark to PDF', availability: { available: true } },
-  { toolId: 'organize-pages', name: 'Organize Pages', category: 'Organize', route: '/tools/organize-pages', description: 'Reorder, delete or rotate pages', availability: { available: true } },
-  { toolId: 'word-to-pdf', name: 'Word to PDF', category: 'Convert', route: '/tools/convert?from=word&to=pdf', description: 'Convert Word document to PDF', availability: { available: true } },
+  // PDF Management
+  { toolId: 'edit-pdf', name: 'Edit PDF', category: 'PDF Tools', route: '/tools/edit', description: 'Convert PDF to Word, edit in web editor, and save back to PDF', availability: { available: true } },
+  { toolId: 'merge-pdf', name: 'Merge PDF', category: 'PDF Tools', route: '/tools/merge', description: 'Combine multiple PDFs in custom order', availability: { available: true } },
+  { toolId: 'split-pdf', name: 'Split PDF', category: 'PDF Tools', route: '/tools/split', description: 'Split PDF by ranges, every N pages, or single pages', availability: { available: true } },
+  { toolId: 'extract-pages', name: 'Extract Pages', category: 'PDF Tools', route: '/tools/extract-pages', description: 'Select and extract specific pages', availability: { available: true } },
+  { toolId: 'organize-pages', name: 'Organize Pages', category: 'PDF Tools', route: '/tools/organize-pages', description: 'Delete, reorder, duplicate & rotate pages', availability: { available: true } },
+  { toolId: 'rotate-pdf', name: 'Rotate PDF', category: 'PDF Tools', route: '/tools/rotate', description: 'Rotate PDF pages permanently', availability: { available: true } },
+  { toolId: 'compress-pdf', name: 'Compress PDF', category: 'PDF Tools', route: '/tools/compress', description: 'Reduce PDF file size with multi-level optimization', availability: { available: true } },
+  { toolId: 'watermark', name: 'Watermark', category: 'PDF Tools', route: '/tools/watermark', description: 'Add confidential text/image watermarks', availability: { available: true } },
+  
+  // Conversions
+  { toolId: 'word-to-pdf', name: 'Word to PDF', category: 'Convert', route: '/tools/convert?from=word&to=pdf', description: 'Convert Word documents to PDF', availability: { available: true } },
   { toolId: 'pdf-to-word', name: 'PDF to Word', category: 'Convert', route: '/tools/convert?from=pdf&to=word', description: 'Convert PDF to editable Word document', availability: { available: true } },
-  { toolId: 'pdf-to-excel', name: 'PDF to Excel', category: 'Convert', route: '/tools/convert?from=pdf&to=excel', description: 'Convert PDF tables to Excel spreadsheet', availability: { available: true } },
-  { toolId: 'summarize-pdf', name: 'Summarize PDF', category: 'AI Tools', route: '/ai/summarize', description: 'Get an AI-generated summary of your PDF', availability: { available: true } },
-  { toolId: 'ask-pdf', name: 'Ask PDF', category: 'AI Tools', route: '/ai/ask', description: 'Ask questions and chat with your PDF', availability: { available: true } },
-  { toolId: 'translate-pdf', name: 'Translate PDF', category: 'AI Tools', route: '/ai/translate', description: 'Translate PDF to any language using AI', availability: { available: true } },
-  { toolId: 'extract-tables', name: 'Extract Tables', category: 'AI Tools', route: '/ai/extract-tables', description: 'Extract tables from PDF to Excel', availability: { available: true } },
+  { toolId: 'pdf-to-excel', name: 'PDF to Excel', category: 'Convert', route: '/tools/convert?from=pdf&to=excel', description: 'Extract tables to Excel spreadsheet', availability: { available: true } },
+  { toolId: 'excel-to-pdf', name: 'Excel to PDF', category: 'Convert', route: '/tools/convert?from=excel&to=pdf', description: 'Convert spreadsheets to PDF', availability: { available: true } },
+  { toolId: 'pdf-to-ppt', name: 'PDF to PPT', category: 'Convert', route: '/tools/convert?from=pdf&to=ppt', description: 'Convert PDF pages to PowerPoint slides', availability: { available: true } },
+  { toolId: 'ppt-to-pdf', name: 'PPT to PDF', category: 'Convert', route: '/tools/convert?from=ppt&to=pdf', description: 'Convert presentations to PDF', availability: { available: true } },
+  { toolId: 'pdf-to-image', name: 'PDF to Image', category: 'Convert', route: '/tools/convert?from=pdf&to=image', description: 'Convert PDF pages to high-res images', availability: { available: true } },
+  { toolId: 'image-to-pdf', name: 'Image to PDF', category: 'Convert', route: '/tools/convert?from=image&to=pdf', description: 'Convert JPG/PNG images to PDF', availability: { available: true } },
+  
+  // AI Tools
+  { toolId: 'ai-ocr', name: 'OCR Text Detection', category: 'AI Tools', route: '/ai/ocr', description: 'Extract text & layout from scanned PDFs and images', availability: { available: true } },
+  { toolId: 'summarize-pdf', name: 'AI Summary', category: 'AI Tools', route: '/ai/summarize', description: 'Smart summary, key points, findings & action items', availability: { available: true } },
+  { toolId: 'semantic-compare', name: 'Semantic Compare', category: 'AI Tools', route: '/ai/compare', description: 'Compare meaning & detect temporal/financial changes', availability: { available: true } },
+  { toolId: 'similarity-matrix', name: 'Similarity Score', category: 'AI Tools', route: '/ai/similarity', description: 'Calculate document similarity % and duplicate detection', availability: { available: true } },
+  { toolId: 'ask-pdf', name: 'AI Document Chat', category: 'AI Tools', route: '/ai/ask', description: 'Interactive Q&A and conversational research', availability: { available: true } },
+  { toolId: 'semantic-search', name: 'Semantic Search', category: 'AI Tools', route: '/ai/search', description: 'Search document by intent and conceptual meaning', availability: { available: true } },
+  { toolId: 'classify-pdf', name: 'Document Classification', category: 'AI Tools', route: '/ai/classify', description: 'Auto-identify document category and structure', availability: { available: true } },
+  { toolId: 'extract-info', name: 'Information Extraction', category: 'AI Tools', route: '/ai/extract-info', description: 'Extract structured fields from invoices, resumes & papers', availability: { available: true } },
+  { toolId: 'translate-pdf', name: 'AI Translation', category: 'AI Tools', route: '/ai/translate', description: 'Translate document into 15+ languages', availability: { available: true } },
+  { toolId: 'writing-assistant', name: 'Writing Assistant', category: 'AI Tools', route: '/ai/writing-assist', description: 'Grammar, paraphrasing, simplifying & formal rewrite', availability: { available: true } },
+  { toolId: 'quality-checker', name: 'Quality Checker', category: 'AI Tools', route: '/ai/quality-checker', description: 'Audit structure, citations, consistency & readability', availability: { available: true } },
+
+  // Security & Privacy
+  { toolId: 'protect-pdf', name: 'Protect PDF', category: 'Security', route: '/security/protect', description: 'Password protection and AES encryption', availability: { available: true } },
+  { toolId: 'smart-redaction', name: 'Redact Data', category: 'Security', route: '/security/redact', description: 'Detect and blackout sensitive PII data', availability: { available: true } },
+  { toolId: 'digital-sign', name: 'Digital Signature', category: 'Security', route: '/security/sign', description: 'Draw, upload or stamp digital signatures', availability: { available: true } },
+  { toolId: 'metadata-manager', name: 'Metadata Manager', category: 'Security', route: '/security/metadata', description: 'View, edit or sanitize PDF metadata for privacy', availability: { available: true } },
 ];
 
 export async function getToolsRegistry() {
@@ -73,8 +130,18 @@ export async function getToolsRegistry() {
 }
 
 export async function getProcessingHistory() {
-  const res = await api.get('/tools/history');
-  return res.data;
+  try {
+    const res = await api.get('/tools/history');
+    if (Array.isArray(res.data)) return res.data;
+  } catch (err) {
+    console.warn('Backend history sync unavailable, using local history:', err.message);
+  }
+  try {
+    const raw = localStorage.getItem('pk_local_history');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
 }
 
 export async function organizePDF(fileId, pages, toolId = 'organize-pages') {
@@ -82,7 +149,5 @@ export async function organizePDF(fileId, pages, toolId = 'organize-pages') {
   return res.data;
 }
 
-export async function applyPDFEdits(fileId, operations) {
-  const res = await api.post('/tools/edit/apply', { file_id: fileId, operations });
-  return res.data; // { download_url, size }
-}
+
+

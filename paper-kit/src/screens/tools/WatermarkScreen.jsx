@@ -116,9 +116,37 @@ export default function WatermarkScreen() {
         {/* Options */}
         {selectedFile && (
           <div className="watermark-screen__options">
+            {/* Watermark Preset Chips */}
             <div className="watermark-screen__option">
-              <label className="auth-screen__label" htmlFor="watermark-text-input">
-                Watermark Text
+              <label className="watermark-screen__label" style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 600 }}>
+                Quick Presets
+              </label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
+                {['CONFIDENTIAL', 'DRAFT', 'TOP SECRET', 'SAMPLE', 'DO NOT COPY', 'INTERNAL ONLY'].map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setText(preset)}
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: '12px',
+                      fontSize: '11px',
+                      fontWeight: text === preset ? 700 : 500,
+                      background: text === preset ? 'var(--color-primary-soft)' : 'var(--color-surface)',
+                      border: text === preset ? '1px solid var(--color-primary)' : '1px solid var(--color-divider)',
+                      color: text === preset ? 'var(--color-primary)' : 'var(--color-text)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="watermark-screen__option">
+              <label className="watermark-screen__label" htmlFor="watermark-text-input">
+                Custom Watermark Text
               </label>
               <input
                 id="watermark-text-input"
@@ -131,7 +159,7 @@ export default function WatermarkScreen() {
             </div>
 
             <div className="watermark-screen__option">
-              <label className="auth-screen__label" htmlFor="watermark-rotation-slider">
+              <label className="watermark-screen__label" htmlFor="watermark-rotation-slider">
                 Rotation Angle
               </label>
               <div className="watermark-screen__slider-container">
@@ -150,7 +178,7 @@ export default function WatermarkScreen() {
             </div>
 
             <div className="watermark-screen__option">
-              <label className="auth-screen__label" htmlFor="watermark-opacity-slider">
+              <label className="watermark-screen__label" htmlFor="watermark-opacity-slider">
                 Opacity
               </label>
               <div className="watermark-screen__slider-container">
