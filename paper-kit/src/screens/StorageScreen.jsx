@@ -1,15 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
-import { HardDrive, Cloud, RefreshCw, Info } from 'lucide-react';
+import { HardDrive, Cloud, RefreshCw } from 'lucide-react';
 import { getStorageUsage, getFileMetadata } from '../services/jobs';
 import { listFiles, getFileDownloadUrl } from '../services/files';
 import { downloadAndOpenFile } from '../services/native';
 import LoadingState from '../components/ui/LoadingState';
 import { useProcessing } from '../context/ProcessingContext';
-import { FileTypeIcon } from '../components/icons/ToolIcons';
-import { formatFileTimestamp, formatDateTime } from '../utils/dateUtils';
+import { formatDateTime } from '../utils/dateUtils';
 import './StorageScreen.css';
 
-function getFileType(filename) {
+function _getFileType(filename) {
   if (!filename) return 'default';
   const ext = filename.split('.').pop()?.toLowerCase();
   const map = { pdf: 'pdf', doc: 'word', docx: 'word', xls: 'excel', xlsx: 'excel', ppt: 'ppt', pptx: 'ppt', jpg: 'image', jpeg: 'image', png: 'image', gif: 'image', webp: 'image' };
@@ -19,7 +18,7 @@ function getFileType(filename) {
 export default function StorageScreen() {
   const { config, updateConfig } = useProcessing();
   const [usage, setUsage] = useState(null);
-  const [files, setFiles] = useState([]);
+  const [_files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   
   const [error, setError] = useState('');
@@ -46,7 +45,7 @@ export default function StorageScreen() {
     loadData();
   }, [loadData]);
 
-  const handlePreview = async (file) => {
+  const _handlePreview = async (file) => {
     try {
       const downloadUrl = await getFileDownloadUrl(file._id);
       const url = downloadUrl.startsWith('http') ? downloadUrl : `${import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'}${downloadUrl}`;
@@ -56,7 +55,7 @@ export default function StorageScreen() {
     }
   };
 
-  const handleDownload = async (file) => {
+  const _handleDownload = async (file) => {
     try {
       const downloadUrl = await getFileDownloadUrl(file._id);
       await downloadAndOpenFile(downloadUrl, file.original_filename, file.content_type);
@@ -65,7 +64,7 @@ export default function StorageScreen() {
     }
   };
 
-  const handleShowMeta = async (fileId) => {
+  const _handleShowMeta = async (fileId) => {
     try {
       const meta = await getFileMetadata(fileId);
       setSelectedFileMeta(meta);

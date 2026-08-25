@@ -650,8 +650,14 @@ async def get_history(
     return items
 
 
+_REGISTRY_CACHE = None
+
 @router.get("/registry")
 async def get_tools_registry():
+    global _REGISTRY_CACHE
+    if _REGISTRY_CACHE is not None:
+        return _REGISTRY_CACHE
+
     ai_available = bool(settings.groq_api_key or settings.gemini_api_key)
     tools = [
         # Organize Category
@@ -958,6 +964,7 @@ async def get_tools_registry():
             "capabilities": ["smart-detection", "csv-download"]
         },
     ]
+    _REGISTRY_CACHE = tools
     return tools
 
 

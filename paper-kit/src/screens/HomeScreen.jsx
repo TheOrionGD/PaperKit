@@ -28,8 +28,15 @@ export default function HomeScreen() {
   const [droppedFile, setDroppedFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
-  const [history, setHistory] = useState([]);
-  const [historyLoading, setHistoryLoading] = useState(true);
+  const [history, setHistory] = useState(() => {
+    try {
+      const raw = localStorage.getItem('pk_local_history');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [historyLoading, setHistoryLoading] = useState(() => !localStorage.getItem('pk_local_history'));
   const [storageData, setStorageData] = useState(null);
 
   // File Preview State
@@ -41,10 +48,10 @@ export default function HomeScreen() {
       try {
         const [historyData, storageStats] = await Promise.all([
           getProcessingHistory(),
-          getStorageUsage(),
+          getStorageUsage().catch(() => null),
         ]);
-        setHistory(historyData || []);
-        setStorageData(storageStats);
+        if (historyData) setHistory(historyData);
+        if (storageStats) setStorageData(storageStats);
       } catch (err) {
         console.error('Failed to load home stats:', err);
       } finally {

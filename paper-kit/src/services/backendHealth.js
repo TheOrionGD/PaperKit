@@ -11,18 +11,25 @@ export const API_BASE = RENDER_BACKEND_URL;
  * @returns {Promise<{ ok: boolean, status?: number, data?: any, error?: string }>}
  */
 export async function pingUrl(url, timeoutMs = 5000) {
+  const isWebUrl = url.includes('paperkit-web.onrender.com');
+
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     const response = await fetch(url, {
       method: 'GET',
-      headers: { 'Accept': 'application/json, text/html, */*' },
+      mode: isWebUrl ? 'no-cors' : 'cors',
+      headers: isWebUrl ? undefined : { 'Accept': 'application/json, text/html, */*' },
       signal: controller.signal,
       cache: 'no-store',
     });
 
     clearTimeout(timeoutId);
+
+    if (isWebUrl) {
+      return { ok: true, status: 200 };
+    }
 
     if (response.ok || (response.status >= 200 && response.status < 400)) {
       const contentType = response.headers.get('content-type') || '';

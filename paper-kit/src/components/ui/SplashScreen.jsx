@@ -1,5 +1,6 @@
 /* SplashScreen.jsx — Splash Screen with Render Cloud Backend Health Indicator */
 import { RefreshCw, ArrowRight, Cloud, Sparkles } from 'lucide-react';
+import ParticleBackground from './ParticleBackground';
 import './SplashScreen.css';
 
 export default function SplashScreen({
@@ -14,7 +15,10 @@ export default function SplashScreen({
   onProceedAnyway = null,
 }) {
   return (
-    <div className={`splash-screen${fadeOut ? ' splash-screen--fade-out' : ''}`}>
+    <div className={`splash-screen splash-screen--light-theme${fadeOut ? ' splash-screen--fade-out' : ''}`}>
+      {/* Dynamic Animated Particle Background */}
+      <ParticleBackground />
+
       {/* Ambient background glow */}
       <div className="splash-screen__ambient-glow"></div>
 

@@ -41,7 +41,7 @@ api.interceptors.response.use(
 
     // Retry up to 3 times on cold-start errors (502, 503, 504, or network timeout/disconnect)
     const isColdStart = !err.response || [502, 503, 504].includes(status);
-    if (isColdStart && config && (!config._retryCount || config._retryCount < 3)) {
+    if (!config?._fast && isColdStart && config && (!config._retryCount || config._retryCount < 3)) {
       config._retryCount = (config._retryCount || 0) + 1;
       const backoffDelay = Math.min(config._retryCount * 2000, 8000); // 2s, 4s, 6s
       window.dispatchEvent(new CustomEvent('pk:waking_server', { detail: { retryCount: config._retryCount } }));
@@ -64,12 +64,27 @@ api.interceptors.response.use(
 );
 
 /**
- * Pre-warm the backend server on application boot
+ * Pre-warm the backend server on application boot.
+ * Sends non-blocking requests to trigger Render container cold boot immediately.
  */
 export function prewarmBackend() {
-  api.get('/health').catch(() => {
-    // Silent catch — just triggering Render wake-up cycle
-  });
+  const backendUrl = API_BASE.replace(/\/+$/, '');
+  try {
+    fetch(`${backendUrl}/health`, { mode: 'no-cors', cache: 'no-store' }).catch(() => {});
+  } catch {
+    // Ignore background network errors
+  }
+
+  api.get('/health', { timeout: 5000, _fast: true }).catch(() => {});
+}
+
+/**
+ * Fast GET request for metadata and revalidations with a short timeout (default 2500ms)
+ * to prevent UI blocking when the backend is sleeping or slow.
+ */
+export async function fastGet(url, config = {}) {
+  const timeout = config.timeout || 2500;
+  return api.get(url, { ...config, timeout, _fast: true });
 }
 
 export default api;

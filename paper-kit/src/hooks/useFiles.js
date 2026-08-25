@@ -1,27 +1,44 @@
 import { useState, useEffect, useCallback } from 'react';
-import { listFiles, deleteFile } from '../services/files';
+import { listFiles, deleteFile, getCachedFiles } from '../services/files';
 
 export function useFiles(params = {}) {
-  const [files, setFiles] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const cachedInitial = getCachedFiles(params);
+  const [files, setFiles] = useState(cachedInitial.items || []);
+  const [total, setTotal] = useState(cachedInitial.total || 0);
+  const [loading, setLoading] = useState(!cachedInitial.items?.length);
   const [error, setError] = useState(null);
 
   const fetchFiles = useCallback(async () => {
-    setLoading(true);
+    // Only set loading to true if we have zero cached items
+    if (!files.length) {
+      setLoading(true);
+    }
     setError(null);
     try {
       const data = await listFiles(params);
-      setFiles(data.items || []);
-      setTotal(data.total || 0);
+      if (data && Array.isArray(data.items)) {
+        setFiles(data.items);
+        setTotal(data.total || 0);
+      }
     } catch (err) {
-      setError(err.message);
+      if (!files.length) {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
   }, [JSON.stringify(params)]); // eslint-disable-line
 
-  useEffect(() => { fetchFiles(); }, [fetchFiles]);
+  useEffect(() => {
+    // Synchronously update with cached data when params change
+    const updated = getCachedFiles(params);
+    if (updated.items && updated.items.length > 0) {
+      setFiles(updated.items);
+      setTotal(updated.total);
+      setLoading(false);
+    }
+    fetchFiles();
+  }, [fetchFiles, params]);
 
   const remove = useCallback(async (fileId) => {
     await deleteFile(fileId);

@@ -11,7 +11,7 @@ import { downloadAndOpenFile } from '../../services/native';
 import { convertFile } from '../../services/tools';
 import './FilePreviewModal.css';
 
-import { API_BASE, resolveBackendFileUrl } from '../../services/api';
+import { resolveBackendFileUrl } from '../../services/api';
 
 function resolveFullUrl(url) {
   return resolveBackendFileUrl(url);
@@ -228,7 +228,7 @@ export default function FilePreviewModal({
           .trim();
 
         if (cleanText && cleanText.length > 15) {
-          const sentences = cleanText.split(/(?<=\.|\?|\!)\s+/).filter(s => s.trim().length > 0);
+          const sentences = cleanText.split(/(?<=\.|\?|!)\s+/).filter(s => s.trim().length > 0);
           setTextContent(sentences.join('\n\n'));
         }
       }

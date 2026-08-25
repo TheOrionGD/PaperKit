@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useState } from 'react';
+import { createContext, useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import TopBar from './TopBar';
 import BackHeader from './BackHeader';
@@ -23,11 +23,20 @@ export default function AppShell({ children, headerProps }) {
   const { pathname } = useLocation();
   const [query, setQuery] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const contentRef = useRef(null);
 
   const showTopBar = TOP_BAR_ROUTES.includes(pathname);
   const showBottomNav = SHOW_BOTTOM_NAV_ROUTES.includes(pathname);
   const _showBackHeader = !showTopBar && showBottomNav;
   const isFullScreen = FULL_SCREEN_ROUTES.some(r => pathname.startsWith(r));
+
+  /* Reset scroll to top on route change or reload */
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
   return (
     <SearchContext.Provider value={{ query, setQuery }}>
@@ -42,6 +51,7 @@ export default function AppShell({ children, headerProps }) {
           <NavigationDrawer isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
           <main
+            ref={contentRef}
             className={`app-shell__content ${!showBottomNav ? 'app-shell__content--no-bottom-nav' : ''}`}
             style={isFullScreen ? { paddingTop: 0, paddingBottom: 0 } : undefined}
           >

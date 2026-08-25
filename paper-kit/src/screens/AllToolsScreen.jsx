@@ -1,36 +1,37 @@
 /* AllToolsScreen — dynamically categorized tool grid driven by registry */
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import ToolCategory from '../components/ui/ToolCategory';
 import SearchBar from '../components/ui/SearchBar';
 import LoadingState from '../components/ui/LoadingState';
 import ErrorState from '../components/ui/ErrorState';
 import EmptyState from '../components/ui/EmptyState';
-import { getToolsRegistry } from '../services/tools';
+import { getToolsRegistry, getToolsRegistrySync } from '../services/tools';
 import { Wrench } from 'lucide-react';
 import './AllToolsScreen.css';
 
 export default function AllToolsScreen() {
-  const [tools, setTools] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const initialTools = getToolsRegistrySync();
+  const [tools, setTools] = useState(initialTools);
+  const [loading, setLoading] = useState(!initialTools.length);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
 
-  const loadRegistry = async () => {
-    setLoading(true);
+  const loadRegistry = useCallback(async () => {
+    if (!tools.length) setLoading(true);
     setError(null);
     try {
       const data = await getToolsRegistry();
-      setTools(data || []);
+      if (data && data.length > 0) setTools(data);
     } catch (err) {
-      setError(err.message);
+      if (!tools.length) setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [tools.length]);
 
   useEffect(() => {
     loadRegistry();
-  }, []);
+  }, [loadRegistry]);
 
   const filteredTools = useMemo(() => {
     if (!search.trim()) return tools;

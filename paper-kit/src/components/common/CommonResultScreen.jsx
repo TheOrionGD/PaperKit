@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Check, Download, Eye, Sparkles, RefreshCw, LogOut, ArrowRight,
-  FileText, Shield, Layers, Minimize2, FileCode, Edit3, Lock,
+  FileText, Shield, Layers, Minimize2, FileCode, Lock,
   Bot, Scale, Search, Split, FileCheck, Trophy, Clock, Pause, Play
 } from 'lucide-react';
 import { FileTypeIcon } from '../icons/ToolIcons';
@@ -127,7 +127,7 @@ export default function CommonResultScreen({
     setIsPreviewOpen(true);
   }
 
-  function handleDefaultDownload() {
+  const handleDefaultDownload = useCallback(() => {
     if (file?.download_url) {
       downloadAndOpenFile(file.download_url, file.name || 'document.pdf', file.mimeType);
     } else if (files && files.length > 0) {
@@ -137,7 +137,7 @@ export default function CommonResultScreen({
         }
       });
     }
-  }
+  }, [file, files]);
 
   const triggerDownload = useCallback(() => {
     if (downloadTriggered) return;
@@ -149,7 +149,7 @@ export default function CommonResultScreen({
     } else {
       handleDefaultDownload();
     }
-  }, [downloadTriggered, primaryAction]);
+  }, [downloadTriggered, primaryAction, handleDefaultDownload]);
 
   useEffect(() => {
     if (!autoDownloadActive || downloadTriggered) return;

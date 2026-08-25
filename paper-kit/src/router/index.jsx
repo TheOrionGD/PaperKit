@@ -20,6 +20,7 @@ const AIToolsScreen    = lazy(() => import('../screens/AIToolsScreen'));
 const HistoryScreen    = lazy(() => import('../screens/HistoryScreen'));
 const StorageScreen    = lazy(() => import('../screens/StorageScreen'));
 const LandingScreen    = lazy(() => import('../screens/welcome/LandingScreen'));
+const OnboardingScreen = lazy(() => import('../screens/welcome/OnboardingScreen'));
 const HelpScreen       = lazy(() => import('../screens/HelpScreen'));
 const AboutScreen      = lazy(() => import('../screens/AboutScreen'));
 const NotFoundScreen   = lazy(() => import('../screens/NotFoundScreen'));
@@ -61,10 +62,11 @@ const MetadataScreen        = lazy(() => import('../screens/tools/MetadataScreen
 
 export default function AppRouter() {
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
-  const [backendReady, setBackendReady] = useState(false);
-  const [forceProceed, setForceProceed] = useState(false);
+  const [_backendReady, setBackendReady] = useState(false);
+  const [_forceProceed, setForceProceed] = useState(false);
   const [splashVisible, setSplashVisible] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(true);
 
   const [healthState, setHealthState] = useState({
     stage: 'connecting',
@@ -109,17 +111,16 @@ export default function AppRouter() {
     return () => clearTimeout(timer);
   }, [checkBackendHealth]);
 
-  /* Dismiss splash when both minimum time elapsed and backend is responsive (or forced) */
+  /* Dismiss splash when minimum display time elapses */
   useEffect(() => {
-    const isReady = (backendReady || forceProceed) && minTimeElapsed;
-    if (isReady && splashVisible && !fadeOut) {
+    if (minTimeElapsed && splashVisible && !fadeOut) {
       setFadeOut(true);
       const timer = setTimeout(() => setSplashVisible(false), 400);
       return () => clearTimeout(timer);
     }
-  }, [backendReady, forceProceed, minTimeElapsed, splashVisible, fadeOut]);
+  }, [minTimeElapsed, splashVisible, fadeOut]);
 
-  /* Block all routes until splash is done */
+  /* Show 13-page Onboarding right after splash screen */
   if (splashVisible && !fadeOut) {
     return (
       <SplashScreen
@@ -130,8 +131,19 @@ export default function AppRouter() {
         services={healthState.services}
         error={healthState.error}
         onRetry={checkBackendHealth}
-        onProceedAnyway={() => setForceProceed(true)}
+        onProceedAnyway={() => {
+          setForceProceed(true);
+          setSplashVisible(false);
+        }}
       />
+    );
+  }
+
+  if (showOnboarding) {
+    return (
+      <Suspense fallback={<LoadingState text="Preparing Onboarding..." />}>
+        <OnboardingScreen onFinish={() => setShowOnboarding(false)} />
+      </Suspense>
     );
   }
 
@@ -155,6 +167,7 @@ export default function AppRouter() {
           <Routes>
             {/* Onboarding & welcome routes */}
             <Route path="/welcome" element={<LandingScreen />} />
+            <Route path="/onboarding" element={<OnboardingScreen />} />
 
             {/* Core app routes — wrapped in AppShell */}
             <Route path="/" element={<AppShell><HomeScreen /></AppShell>} />

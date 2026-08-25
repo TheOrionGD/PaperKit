@@ -1,8 +1,8 @@
-import api from './api';
+import api, { fastGet } from './api';
 
 const LOCAL_FILES_KEY = 'pk_local_files';
 
-function getStoredLocalFiles() {
+export function getStoredLocalFiles() {
   try {
     const raw = localStorage.getItem(LOCAL_FILES_KEY);
     return raw ? JSON.parse(raw) : [];
@@ -11,7 +11,7 @@ function getStoredLocalFiles() {
   }
 }
 
-function saveStoredLocalFiles(files) {
+export function saveStoredLocalFiles(files) {
   try {
     localStorage.setItem(LOCAL_FILES_KEY, JSON.stringify(files.slice(0, 100)));
   } catch (err) {
@@ -19,17 +19,7 @@ function saveStoredLocalFiles(files) {
   }
 }
 
-export async function listFiles(params = {}) {
-  try {
-    const res = await api.get('/files', { params });
-    if (res.data && Array.isArray(res.data.items)) {
-      return res.data;
-    }
-  } catch (err) {
-    console.warn('Backend file sync unavailable, using local workspace storage:', err.message);
-  }
-
-  // Resilient fallback to local workspace files
+export function getCachedFiles(params = {}) {
   const localList = getStoredLocalFiles();
   let filtered = [...localList];
   if (params.search) {
@@ -46,7 +36,35 @@ export async function listFiles(params = {}) {
       return true;
     });
   }
+  if (params.limit) {
+    const skip = params.skip || 0;
+    const items = filtered.slice(skip, skip + params.limit);
+    return { items, total: filtered.length };
+  }
   return { items: filtered, total: filtered.length };
+}
+
+export async function listFiles(params = {}) {
+  try {
+    const res = await fastGet('/files', { params });
+    if (res.data && Array.isArray(res.data.items)) {
+      // Merge remote items with local storage
+      const remoteItems = res.data.items;
+      if (remoteItems.length > 0) {
+        const existing = getStoredLocalFiles();
+        const mergedMap = new Map();
+        existing.forEach(f => mergedMap.set(f._id || f.id, f));
+        remoteItems.forEach(f => mergedMap.set(f._id || f.id, f));
+        saveStoredLocalFiles(Array.from(mergedMap.values()));
+      }
+      return res.data;
+    }
+  } catch (err) {
+    console.debug('Backend file list sync unavailable, using local cache:', err.message);
+  }
+
+  // Resilient instant fallback to cached workspace files
+  return getCachedFiles(params);
 }
 
 export async function uploadFile(file, onProgress) {

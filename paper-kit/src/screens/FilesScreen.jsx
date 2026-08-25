@@ -1,7 +1,6 @@
 import { useState, useMemo, useContext, useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { FilePicker } from '@capawesome/capacitor-file-picker';
-import { useNavigate } from 'react-router-dom';
 import { SlidersHorizontal, FileText, Upload, ChevronLeft, ChevronRight, Share2, Download, Trash2, Edit2, Eye } from 'lucide-react';
 import SearchBar from '../components/ui/SearchBar';
 import FilterTabs from '../components/ui/FilterTabs';
@@ -38,7 +37,6 @@ function getFileType(filename) {
 }
 
 export default function FilesScreen() {
-  const navigate = useNavigate();
   const { query: search, setQuery: setSearch } = useContext(SearchContext);
   const [activeTab, setActiveTab] = useState('all');
   const [selectedFile, setSelectedFile] = useState(null);

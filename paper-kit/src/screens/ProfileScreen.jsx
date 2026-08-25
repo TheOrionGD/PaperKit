@@ -11,6 +11,7 @@ import { updateMe } from '../services/auth';
 import { getStorageUsage } from '../services/jobs';
 import { getProcessingHistory } from '../services/tools';
 import LoadingState from '../components/ui/LoadingState';
+import ParticleBackground from '../components/ui/ParticleBackground';
 import { shareUrl, exitApp } from '../services/native';
 import { formatFileTimestamp } from '../utils/dateUtils';
 import './ProfileScreen.css';
@@ -28,7 +29,7 @@ export default function ProfileScreen() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState('');
-  
+
   // Real dynamic stats
   const [storageStats, setStorageStats] = useState({ totalMB: '0.00', fileCount: 0 });
   const [historyCount, setHistoryCount] = useState(0);
@@ -81,7 +82,7 @@ export default function ProfileScreen() {
     ? user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
     : (user?.email ? user.email.slice(0, 2).toUpperCase() : 'PK');
 
-  const registeredDate = user?.created_at 
+  const registeredDate = user?.created_at
     ? formatFileTimestamp(user.created_at, { relative: false })
     : 'Active Session';
 
@@ -90,26 +91,26 @@ export default function ProfileScreen() {
     {
       title: t('files'),
       items: [
-        { id: 'my-files',     label: t('files'),       icon: Files,      path: '/files', color: 'var(--color-primary)' },
-        { id: 'recent',       label: t('recent'),      icon: Clock,      path: '/files?filter=recent', color: 'var(--tool-blue)' },
-        { id: 'favorites',    label: t('favorites'),   icon: Star,       path: '/files?filter=favorites', color: 'var(--tool-orange)' },
-        { id: 'trash',        label: t('trash'),       icon: Trash2,     path: '/files?filter=trash', color: 'var(--color-error)' },
+        { id: 'my-files', label: t('files'), icon: Files, path: '/files', color: 'var(--color-primary)' },
+        { id: 'recent', label: t('recent'), icon: Clock, path: '/files?filter=recent', color: 'var(--tool-blue)' },
+        { id: 'favorites', label: t('favorites'), icon: Star, path: '/files?filter=favorites', color: 'var(--tool-orange)' },
+        { id: 'trash', label: t('trash'), icon: Trash2, path: '/files?filter=trash', color: 'var(--color-error)' },
       ]
     },
     {
       title: t('app_preferences'),
       items: [
-        { id: 'storage',      label: t('storage'),     icon: HardDrive,  path: '/storage', color: 'var(--tool-teal)', badge: `${storageStats.totalMB} MB` },
-        { id: 'history',      label: t('history'),     icon: Clock,      path: '/history', color: 'var(--tool-indigo)', badge: `${historyCount}` },
-        { id: 'settings',     label: t('settings'),    icon: Settings,   color: 'var(--color-text-secondary)', isSettings: true },
+        { id: 'storage', label: t('storage'), icon: HardDrive, path: '/storage', color: 'var(--tool-teal)', badge: `${storageStats.totalMB} MB` },
+        { id: 'history', label: t('history'), icon: Clock, path: '/history', color: 'var(--tool-indigo)', badge: `${historyCount}` },
+        { id: 'settings', label: t('settings'), icon: Settings, color: 'var(--color-text-secondary)', isSettings: true },
       ]
     },
     {
       title: t('help'),
       items: [
-        { id: 'help',         label: t('help'),        icon: HelpCircle, path: '/help', color: 'var(--tool-purple)' },
-        { id: 'share',        label: t('share'),       icon: Share2,     action: 'share', color: 'var(--tool-green)' },
-        { id: 'about',        label: t('about'),       icon: Info,       path: '/about', color: 'var(--color-text-muted)' },
+        { id: 'help', label: t('help'), icon: HelpCircle, path: '/help', color: 'var(--tool-purple)' },
+        { id: 'share', label: t('share'), icon: Share2, action: 'share', color: 'var(--tool-green)' },
+        { id: 'about', label: t('about'), icon: Info, path: '/about', color: 'var(--color-text-muted)' },
       ]
     }
   ];
@@ -143,7 +144,7 @@ export default function ProfileScreen() {
     try {
       if (key === 'dark_mode') setDarkMode(value);
       if (key === 'default_view') setDefaultView(value);
-      
+
       const currentPreferences = user?.preferences || {};
       const newPreferences = { ...currentPreferences, [key]: value };
       const updatedUser = await updateMe({ preferences: newPreferences });
@@ -189,35 +190,63 @@ export default function ProfileScreen() {
 
   return (
     <div className="profile-screen">
-      <div className="profile-screen__hero">
-        <div className="profile-screen__hero-glow" />
-        
-        <div className="profile-screen__avatar-container">
-          {user?.avatar_url ? (
-            <img 
-              src={user.avatar_url.startsWith('http') ? user.avatar_url : `${import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'}${user.avatar_url}`} 
-              alt="Profile" 
-              className="profile-screen__avatar-img" 
-            />
-          ) : (
-            <div className="profile-screen__avatar-circle">{initials}</div>
-          )}
-          <div className="profile-screen__badge-status">
-            <ShieldCheck size={14} color="#10B981" />
-          </div>
-        </div>
+      {/* Dynamic Floating Particle Background across entire Profile Page */}
+      <ParticleBackground />
 
-        <h1 className="profile-screen__user-title">{user?.name || (user?.email ? user.email.split('@')[0] : 'Workspace Studio')}</h1>
-        <p className="profile-screen__user-sub">{user?.email || 'PaperKit Client Account'}</p>
-        
-        <div className="profile-screen__pill-row">
-          <span className="profile-screen__verified-pill">
-            <ShieldCheck size={12} />
-            <span>UNRESTRICTED ACCESS</span>
-          </span>
-          <span className="profile-screen__date-pill">
-            <span>{registeredDate}</span>
-          </span>
+      {/* Modern Glassmorphic Profile Card */}
+      <div className="profile-screen__card-hero">
+        <div className="profile-screen__card-hero-glow" />
+        <div className="profile-screen__card-hero-content">
+          <div className="profile-screen__avatar-container">
+            {user?.avatar_url ? (
+              <img
+                src={user.avatar_url.startsWith('http') ? user.avatar_url : `${import.meta.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'}${user.avatar_url}`}
+                alt="Profile"
+                className="profile-screen__avatar-img"
+              />
+            ) : (
+              <div className="profile-screen__avatar-circle">{initials}</div>
+            )}
+            <div className="profile-screen__badge-status" title="Active Client Connection">
+              <ShieldCheck size={14} color="#10B981" />
+            </div>
+          </div>
+
+          <div className="profile-screen__user-details">
+            <div className="profile-screen__user-name-row">
+              <h1 className="profile-screen__user-title">
+                {user?.name || (user?.email ? user.email.split('@')[0] : 'Open Source User')}
+              </h1>
+              <span className="profile-screen__verified-badge">
+                <ShieldCheck size={13} color="#10B981" />
+                <span>Verified</span>
+              </span>
+            </div>
+
+            <p className="profile-screen__user-sub">
+              {user?.email || 'user@paperkit.local'}
+            </p>
+
+            <div className="profile-screen__pill-row">
+              <span className="profile-screen__access-pill">
+                <ShieldCheck size={13} />
+                <span>UNRESTRICTED ACCESS</span>
+              </span>
+              <span className="profile-screen__date-pill">
+                <Clock size={12} />
+                <span>{registeredDate}</span>
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="profile-screen__quick-settings-btn"
+            onClick={() => setSettingsOpen(true)}
+            title="Open Settings"
+          >
+            <Settings size={18} />
+          </button>
         </div>
       </div>
 
@@ -317,22 +346,23 @@ export default function ProfileScreen() {
 
       {settingsOpen && (
         <div className="profile-screen__modal-overlay" onClick={() => setSettingsOpen(false)}>
+          <ParticleBackground />
           <div className="profile-screen__modal" onClick={e => e.stopPropagation()}>
             <div className="profile-screen__modal-header">
               <h2>{t('settings')}</h2>
-              <button 
-                className="profile-screen__modal-close" 
+              <button
+                className="profile-screen__modal-close"
                 onClick={() => { setSettingsOpen(false); setSaveError(''); setSaveSuccess(''); }}
                 aria-label="Close settings"
               >
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className="profile-screen__modal-body">
               <form onSubmit={handleSaveProfile} className="profile-screen__form">
                 <div className="profile-screen__section-title">{t('profile')}</div>
-                
+
                 {saveError && <div className="profile-screen__alert profile-screen__alert--error">{saveError}</div>}
                 {saveSuccess && <div className="profile-screen__alert profile-screen__alert--success">{saveSuccess}</div>}
 
@@ -351,8 +381,8 @@ export default function ProfileScreen() {
                   </div>
                 </div>
 
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="profile-screen__btn profile-screen__btn--primary"
                   disabled={saving}
                 >
@@ -362,7 +392,7 @@ export default function ProfileScreen() {
 
               <div className="profile-screen__prefs-section">
                 <div className="profile-screen__section-title">{t('app_preferences')}</div>
-                
+
                 <div className="profile-screen__pref-row">
                   <div className="profile-screen__pref-info">
                     <span className="profile-screen__pref-name">{t('language')}</span>
@@ -416,8 +446,8 @@ export default function ProfileScreen() {
                     <span className="profile-screen__pref-name">Reset Workspace</span>
                     <span className="profile-screen__pref-desc">Reset local preferences and cache</span>
                   </div>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="profile-screen__btn profile-screen__btn--danger"
                     onClick={handleResetPreferences}
                     style={{ background: 'var(--color-error-light)', color: 'var(--color-error)', border: '1px solid var(--color-error-border)', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer' }}

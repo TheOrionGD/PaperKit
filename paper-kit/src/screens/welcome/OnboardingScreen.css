@@ -1,0 +1,351 @@
+/* OnboardingScreen.css — Modern Light-Theme Glassmorphism 13-Page Onboarding Tour */
+
+.onboarding-screen,
+.onboarding-screen--light-theme {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 50%, #F1F5F9 100%);
+  color: #0F172A;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Ambient glow lighting for light theme */
+.onboarding-screen__glow-1 {
+  position: absolute;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 650px;
+  height: 550px;
+  border-radius: 50%;
+  filter: blur(130px);
+  opacity: 0.6;
+  transition: background 0.6s ease;
+  pointer-events: none;
+}
+
+.onboarding-screen__glow-2 {
+  position: absolute;
+  bottom: -150px;
+  right: -100px;
+  width: 550px;
+  height: 550px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.2);
+  filter: blur(150px);
+  pointer-events: none;
+}
+
+/* Top Bar */
+.onboarding-screen__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  z-index: 10;
+  backdrop-filter: blur(12px);
+}
+
+.onboarding-screen__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.onboarding-screen__brand-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0F172A;
+}
+
+.onboarding-screen__page-pill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  color: #1D4ED8;
+  margin-left: 6px;
+}
+
+.onboarding-screen__top-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.onboarding-screen__autoplay-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  color: #1E40AF;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.onboarding-screen__autoplay-btn:hover {
+  background: rgba(37, 99, 235, 0.15);
+  color: #1D4ED8;
+}
+
+.onboarding-screen__skip-btn {
+  background: transparent;
+  border: none;
+  color: #64748B;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 14px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.onboarding-screen__skip-btn:hover {
+  color: #0F172A;
+  background: rgba(37, 99, 235, 0.08);
+}
+
+/* Progress line */
+.onboarding-screen__progress-container {
+  width: 100%;
+  height: 4px;
+  background: rgba(37, 99, 235, 0.1);
+  z-index: 10;
+}
+
+.onboarding-screen__progress-bar {
+  height: 100%;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.4s ease;
+}
+
+/* Main Content Area */
+.onboarding-screen__main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 5;
+  overflow-y: auto;
+}
+
+.onboarding-screen__card {
+  width: 100%;
+  max-width: 580px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  border-radius: 28px;
+  padding: 40px 36px;
+  box-shadow: 0 25px 60px -15px rgba(37, 99, 235, 0.15), 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  animation: slideFadeIn 0.35s ease-out forwards;
+}
+
+@keyframes slideFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.onboarding-screen__card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.onboarding-screen__icon-orb {
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.12);
+}
+
+.onboarding-screen__badge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 6px 16px;
+  border-radius: 30px;
+  border: 1px solid;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.onboarding-screen__title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: #0F172A;
+  margin: 0 0 12px 0;
+}
+
+.onboarding-screen__subtitle {
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: #475569;
+  margin: 0 0 28px 0;
+}
+
+/* Features List */
+.onboarding-screen__features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.onboarding-screen__feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.92rem;
+  color: #1E293B;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.onboarding-screen__feature-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Footer & Controls */
+.onboarding-screen__footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 24px 32px;
+  z-index: 10;
+}
+
+.onboarding-screen__dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.onboarding-screen__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+  background-color: rgba(37, 99, 235, 0.2);
+}
+
+.onboarding-screen__dot--active {
+  width: 24px;
+  border-radius: 12px;
+}
+
+.onboarding-screen__nav-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.onboarding-screen__nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #FFFFFF;
+}
+
+.onboarding-screen__nav-btn--secondary {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  color: #334155;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.onboarding-screen__nav-btn--secondary:hover {
+  background: #FFFFFF;
+  color: #0F172A;
+}
+
+.onboarding-screen__nav-btn--primary {
+  flex: 1;
+  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.35);
+}
+
+.onboarding-screen__nav-btn--primary:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+.onboarding-screen__finish-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px 28px;
+  border-radius: 16px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+  color: #FFFFFF;
+  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.4);
+  transition: all 0.25s ease;
+}
+
+.onboarding-screen__finish-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px rgba(37, 99, 235, 0.55);
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+}
+
+@media (max-width: 640px) {
+  .onboarding-screen__card {
+    padding: 28px 22px;
+  }
+  .onboarding-screen__title {
+    font-size: 1.45rem;
+  }
+  .onboarding-screen__subtitle {
+    font-size: 0.9rem;
+  }
+  .onboarding-screen__topbar {
+    padding: 12px 16px;
+  }
+}

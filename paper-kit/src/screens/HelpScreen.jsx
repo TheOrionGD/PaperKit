@@ -1,6 +1,9 @@
-import { Mail, HelpCircle, FileQuestion, MessageSquare } from 'lucide-react';
+import { Mail, HelpCircle, FileQuestion, MessageSquare, Compass } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function HelpScreen() {
+  const navigate = useNavigate();
+
   return (
     <div style={{ padding: 'var(--space-6)', maxWidth: '800px', margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-6)' }}>
@@ -9,6 +12,18 @@ export default function HelpScreen() {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+        <section style={{ background: 'var(--color-surface)', padding: 'var(--space-5)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-divider)' }}>
+          <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-4)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <Compass size={20} color="var(--color-primary)" /> PaperKit Feature Walkthrough
+          </h2>
+          <p style={{ color: 'var(--color-text-muted)', marginBottom: 'var(--space-4)' }}>
+            Want to explore all key features, client-side security benefits, and AI tools in PaperKit?
+          </p>
+          <button className="btn-primary" onClick={() => navigate('/onboarding')}>
+            <Compass size={18} /> View 13-Page Feature Tour
+          </button>
+        </section>
+
         <section style={{ background: 'var(--color-surface)', padding: 'var(--space-5)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-divider)' }}>
           <h2 style={{ fontSize: 'var(--font-size-lg)', marginBottom: 'var(--space-4)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
             <FileQuestion size={20} /> Frequently Asked Questions

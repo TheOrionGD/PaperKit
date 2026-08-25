@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
-  FileText, Download, RefreshCw, Loader2, Plus, Trash2,
+  Download, Loader2, Plus, Trash2,
   Bold, Italic, Underline, Strikethrough, AlignLeft, AlignCenter, AlignRight, AlignJustify,
   List, ListOrdered, Table, Minus, RotateCcw, Pencil, Check
 } from 'lucide-react';
@@ -17,7 +17,7 @@ import { downloadAndOpenFile } from '../../services/native';
 import './EditPDFScreen.css';
 
 export default function EditPDFScreen() {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const location = useLocation();
 
   // Workflow steps: 'upload' -> 'converting_to_word' -> 'editor' -> 'converting_to_pdf' -> 'success'
@@ -25,8 +25,8 @@ export default function EditPDFScreen() {
   
   // File & conversion state
   const [selectedFile, setSelectedFile] = useState(null);
-  const [uploadedPdfId, setUploadedPdfId] = useState(null);
-  const [editedWordFileId, setEditedWordFileId] = useState(null);
+  const [_uploadedPdfId, setUploadedPdfId] = useState(null);
+  const [_editedWordFileId, setEditedWordFileId] = useState(null);
   const [finalPdfResult, setFinalPdfResult] = useState(null);
 
   // Multi-Page A4 Sheets State
@@ -40,18 +40,8 @@ export default function EditPDFScreen() {
   const [autoDownloaded, setAutoDownloaded] = useState(false);
 
   const fileInputRef = useRef(null);
-  const { upload, uploading } = useUpload();
+  const { upload } = useUpload();
   const { toast, showToast, dismissToast } = useToast();
-
-  // Load chained file if passed from smart workflow chaining
-  useEffect(() => {
-    const incoming = location.state?.chainedFile || location.state?.file;
-    if (incoming) {
-      const fileObj = incoming instanceof File ? incoming : incoming.file || incoming;
-      setSelectedFile(fileObj);
-      processAndOpenEditor(fileObj);
-    }
-  }, [location.state]);
 
   function sanitizeHtmlForEditor(rawHtml) {
     if (!rawHtml) return '';
@@ -63,14 +53,14 @@ export default function EditPDFScreen() {
       .trim();
   }
 
-  function splitIntoPages(rawHtml) {
+  const splitIntoPages = useCallback((rawHtml) => {
     if (!rawHtml) return [''];
     const parts = rawHtml
       .split(/<!--\s*PAGE_SPLIT\s*-->/g)
       .map(p => sanitizeHtmlForEditor(p))
       .filter(p => p.trim());
     return parts.length > 0 ? parts : [rawHtml];
-  }
+  }, []);
 
   // Update document stats across all active A4 page sheets
   const updateStats = useCallback(() => {
@@ -102,7 +92,7 @@ export default function EditPDFScreen() {
   }, [pages, step, updateStats]);
 
   // Process PDF into editable Word format & open editor
-  async function processAndOpenEditor(file) {
+  const processAndOpenEditor = useCallback(async (file) => {
     if (!file) return;
     setSelectedFile(file);
     setStep('converting_to_word');
@@ -139,7 +129,17 @@ export default function EditPDFScreen() {
       showToast('Could not open document for editing: ' + err.message, 'error');
       setStep('upload');
     }
-  }
+  }, [showToast, upload, updateStats, splitIntoPages]);
+
+  // Load chained file if passed from smart workflow chaining
+  useEffect(() => {
+    const incoming = location.state?.chainedFile || location.state?.file;
+    if (incoming) {
+      const fileObj = incoming instanceof File ? incoming : incoming.file || incoming;
+      setSelectedFile(fileObj);
+      processAndOpenEditor(fileObj);
+    }
+  }, [location.state, processAndOpenEditor]);
 
   // Handle PDF file selection
   function handleFileSelect(fileOrEvent) {
@@ -251,6 +251,18 @@ export default function EditPDFScreen() {
   }
 
   // Auto Download Timer (3 seconds countdown)
+  const triggerPdfDownload = useCallback(() => {
+    if (finalPdfResult?.download_url && !autoDownloaded) {
+      setAutoDownloaded(true);
+      downloadAndOpenFile(
+        finalPdfResult.download_url,
+        finalPdfResult.filename || finalPdfResult.name || 'edited_document.pdf',
+        'application/pdf'
+      );
+      showToast('Download started ✓', 'success');
+    }
+  }, [autoDownloaded, finalPdfResult, showToast]);
+
   useEffect(() => {
     if (step !== 'success' || !finalPdfResult || autoDownloaded) return;
 
@@ -266,19 +278,7 @@ export default function EditPDFScreen() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [step, finalPdfResult, autoDownloaded]);
-
-  function triggerPdfDownload() {
-    if (finalPdfResult?.download_url && !autoDownloaded) {
-      setAutoDownloaded(true);
-      downloadAndOpenFile(
-        finalPdfResult.download_url,
-        finalPdfResult.filename || finalPdfResult.name || 'edited_document.pdf',
-        'application/pdf'
-      );
-      showToast('Download started ✓', 'success');
-    }
-  }
+  }, [step, finalPdfResult, autoDownloaded, triggerPdfDownload]);
 
   // Render Success Screen with 3s Auto Download
   if (step === 'success' && finalPdfResult) {
