@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Home, Files, Clock, Star, Trash2, Settings, 
+import {
+  Home, Files, Clock, Star, Trash2, Settings,
   HelpCircle, Share2, Info, X, ChevronRight, ShieldCheck, Sparkles, LogOut
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -33,22 +33,22 @@ export default function NavigationDrawer({ isOpen, onClose }) {
     : 'PK';
 
   const menuItems = [
-    { id: 'home',         label: t('home') || 'Home Dashboard',    icon: Home,       path: '/' },
-    { id: 'welcome',      label: 'Welcome & Feature Tour', icon: Sparkles,   path: '/welcome', highlight: true },
-    { id: 'my-files',     label: t('files') || 'My Files',         icon: Files,      path: '/files' },
-    { id: 'recent',       label: t('recent') || 'Recent Files',    icon: Clock,      path: '/files?filter=recent' },
-    { id: 'favorites',    label: t('favorites') || 'Favorites',    icon: Star,       path: '/files?filter=favorites' },
-    { id: 'trash',        label: t('trash') || 'Trash',            icon: Trash2,     path: '/files?filter=trash' },
-    { id: 'settings',     label: t('settings') || 'Settings',      icon: Settings,   path: '/profile' },
-    { id: 'help',         label: t('help') || 'Help & Support',    icon: HelpCircle, path: '/help' },
-    { id: 'share',        label: t('share') || 'Share PaperKit',   icon: Share2,     action: 'share' },
-    { id: 'about',        label: t('about') || 'About PaperKit',   icon: Info,       path: '/about' },
+    { id: 'home', label: t('home') || 'Home Dashboard', icon: Home, path: '/' },
+    { id: 'welcome', label: 'Welcome & Feature Tour', icon: Sparkles, path: '/welcome', highlight: true },
+    { id: 'my-files', label: t('files') || 'My Files', icon: Files, path: '/files' },
+    { id: 'recent', label: t('recent') || 'Recent Files', icon: Clock, path: '/files?filter=recent' },
+    { id: 'favorites', label: t('favorites') || 'Favorites', icon: Star, path: '/files?filter=favorites' },
+    { id: 'trash', label: t('trash') || 'Trash', icon: Trash2, path: '/files?filter=trash' },
+    { id: 'settings', label: t('settings') || 'Settings', icon: Settings, path: '/profile' },
+    { id: 'help', label: t('help') || 'Help & Support', icon: HelpCircle, path: '/help' },
+    { id: 'share', label: t('share') || 'Share PaperKit', icon: Share2, action: 'share' },
+    { id: 'about', label: t('about') || 'About PaperKit', icon: Info, path: '/about' },
   ];
 
   function handleItemClick(item) {
     onClose();
     if (item.action === 'share') {
-      shareUrl('PaperKit', 'Check out PaperKit — All-in-One Open-Source PDF Suite!', 'https://paperkit-web.onrender.com');
+      shareUrl('PaperKit', 'Check out PaperKit — All-in-One Open-Source Suite!', 'https://paperkit-web.onrender.com');
       return;
     }
     if (item.path) {
@@ -73,7 +73,7 @@ export default function NavigationDrawer({ isOpen, onClose }) {
     <div className="nav-drawer" role="dialog" aria-modal="true" aria-label="Navigation Menu">
       {/* Backdrop overlay */}
       <div className="nav-drawer__overlay" onClick={onClose} aria-hidden="true" />
-      
+
       {/* Drawer content sliding from left within the app shell */}
       <div className="nav-drawer__content" onClick={(e) => e.stopPropagation()}>
         {/* Header Profile Section */}
@@ -81,7 +81,7 @@ export default function NavigationDrawer({ isOpen, onClose }) {
           <button className="nav-drawer__close-btn" onClick={onClose} aria-label="Close menu" id="drawer-close-btn">
             <X size={18} color="white" />
           </button>
-          
+
           <div className="nav-drawer__profile" onClick={() => { onClose(); navigate('/profile'); }} role="button" tabIndex={0}>
             <div className="nav-drawer__avatar">{initials}</div>
             <div className="nav-drawer__user-details">
@@ -115,7 +115,7 @@ export default function NavigationDrawer({ isOpen, onClose }) {
               </button>
             );
           })}
-          
+
           <div className="nav-drawer__divider"></div>
           <button
             className="nav-drawer__menu-item nav-drawer__menu-item--danger"

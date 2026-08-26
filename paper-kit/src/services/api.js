@@ -70,7 +70,7 @@ api.interceptors.response.use(
 export function prewarmBackend() {
   const backendUrl = API_BASE.replace(/\/+$/, '');
   try {
-    fetch(`${backendUrl}/health`, { mode: 'no-cors', cache: 'no-store' }).catch(() => {});
+    fetch(`${backendUrl}/health`, { cache: 'no-store' }).catch(() => {});
   } catch {
     // Ignore background network errors
   }

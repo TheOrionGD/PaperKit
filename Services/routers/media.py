@@ -32,12 +32,17 @@ async def download_youtube(req: DownloadRequest, background_tasks: BackgroundTas
     
     try:
         import sys
+        bin_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "bin")
         command = [
             sys.executable, "-m", "yt_dlp",
             "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
             "-o", output_template,
             req.url
         ]
+        
+        if os.path.exists(bin_dir):
+            command.insert(4, "--ffmpeg-location")
+            command.insert(5, bin_dir)
         
         result = subprocess.run(command, capture_output=True, text=True)
         if result.returncode != 0:
@@ -76,11 +81,17 @@ async def download_spotify(req: DownloadRequest, background_tasks: BackgroundTas
     
     try:
         import sys
+        bin_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "bin")
+        ffmpeg_path = os.path.join(bin_dir, "ffmpeg")
         command = [
             sys.executable, "-m", "spotdl",
             "--output", output_template,
             req.url
         ]
+        
+        if os.path.exists(ffmpeg_path):
+            command.insert(3, "--ffmpeg")
+            command.insert(4, ffmpeg_path)
         
         result = subprocess.run(command, capture_output=True, text=True)
         if result.returncode != 0:
