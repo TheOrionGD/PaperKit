@@ -1,0 +1,68 @@
+PS O:\PROJECTS\College\PaperKit\paper-kit> npx cap sync android
+√ Copying web assets from dist to android\app\src\main\assets\public in 135.82ms
+√ Creating capacitor.config.json in android\app\src\main\assets in 2.22ms
+√ copy android in 190.77ms
+√ Updating Android plugins in 7.08ms
+[info] Found 17 Capacitor plugins for android:
+       @capacitor-community/file-opener@8.0.1
+       @capacitor/app@8.1.1
+       @capacitor/browser@8.0.4
+       @capacitor/camera@8.2.3
+       @capacitor/clipboard@8.0.1
+       @capacitor/device@8.0.3
+       @capacitor/dialog@8.0.1
+       @capacitor/keyboard@8.0.5
+       @capacitor/network@8.0.1
+       @capacitor/preferences@8.0.1
+       @capacitor/share@8.0.1
+       @capacitor/splash-screen@8.0.2
+       @capacitor/status-bar@8.0.3
+       @capacitor/toast@8.0.1
+       @capawesome/capacitor-file-picker@8.0.4
+√ update android in 478.01ms
+[info] Sync finished in 0.787s
+PS O:\PROJECTS\College\PaperKit\paper-kit> cd android
+>> .\gradlew assembleDebug
+>>
+Starting a Gradle Daemon, 1 incompatible and 1 stopped Daemons could not be reused, use --status for details
+<-------------> 0% CONFIGURING [7s]
+
+> Configure project :app
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+
+> Configure project :capacitor-cordova-android-plugins
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+
+> Task :capacitor-android:compileDebugJavaWithJavac
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :capawesome-capacitor-file-picker:compileDebugJavaWithJavac
+Note: O:\PROJECTS\College\PaperKit\paper-kit\node_modules\@capawesome\capacitor-file-picker\android\src\main\java\io\capawesome\capacitorjs\plugins\filepicker\FilePickerPlugin.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libimage_processing_util_jni.so, libsurface_util_jni.so. Run with --info option to learn more.
+
+> Task :capacitor-camera:compileDebugKotlin                                                                              
+w: file:///O:/PROJECTS/College/PaperKit/paper-kit/node_modules/@capacitor/camera/android/src/main/java/com/capacitorjs/plugins/camera/IonCameraFlow.kt:864:13 Condition is always 'false'.                                                        
+
+> Task :capacitor-filesystem:compileDebugKotlin                                                                          
+w: file:///O:/PROJECTS/College/PaperKit/paper-kit/node_modules/@capacitor/filesystem/android/src/main/kotlin/com/capacitorjs/plugins/filesystem/FilesystemPlugin.kt:335:31 'fun downloadFile(call: PluginCall): Unit' is deprecated. Use @capacitor/file-transfer plugin instead.                                                                                          
+w: file:///O:/PROJECTS/College/PaperKit/paper-kit/node_modules/@capacitor/filesystem/android/src/main/kotlin/com/capacitorjs/plugins/filesystem/LegacyFilesystemImplementation.kt:66:29 Java type mismatch: inferred type is 'String?', but 'String' was expected.
+
+> Task :capacitor-camera:compileDebugJavaWithJavac
+Note: O:\PROJECTS\College\PaperKit\paper-kit\node_modules\@capacitor\camera\android\src\main\java\com\capacitorjs\plugins\camera\CameraBottomSheetDialogFragment.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+[Incubating] Problems report is available at: file:///O:/PROJECTS/College/PaperKit/paper-kit/android/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 1m 32s
+609 actionable tasks: 515 executed, 94 up-to-date
+PS O:\PROJECTS\College\PaperKit\paper-kit\android> 

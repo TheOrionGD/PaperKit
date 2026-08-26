@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
-import { ShieldCheck, FileCheck, CheckCircle, Download, Eye, Sparkles, Archive, FontAwesome, Zap } from 'lucide-react';
+import { ShieldCheck, FileCheck, CheckCircle, Download, Eye, Sparkles, Archive, Type, Zap } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
 import FileUploader from '../../components/common/FileUploader';
 import { PrimaryButton } from '../../components/ui/Button';
@@ -18,7 +18,7 @@ const TOOL_TIPS = [
     description: 'Converts PDFs to ISO-standard PDF/A.'
   },
   {
-    icon: <FontAwesome size={20} />,
+    icon: <Type size={20} />,
     title: 'Embed Fonts',
     description: 'Ensures documents look identical forever.'
   },

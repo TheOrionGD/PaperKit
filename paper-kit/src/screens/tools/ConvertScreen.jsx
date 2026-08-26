@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowRight, Cpu, Loader2, Layers, FileCode, FileRepeat, Layout, Zap, ShieldCheck, Smartphone } from 'lucide-react';
+import { ArrowRight, Cpu, Loader2, Layers, FileCode, RefreshCw, Layout, Zap, ShieldCheck, Smartphone } from 'lucide-react';
 import { FileTypeIcon } from '../../components/icons/ToolIcons';
 import Toggle from '../../components/ui/Toggle';
 import SelectField from '../../components/ui/SelectField';
@@ -20,7 +20,7 @@ import './ConvertScreen.css';
 
 const TOOL_TIPS = [
   {
-    icon: <FileRepeat size={20} />,
+    icon: <RefreshCw size={20} />,
     title: 'Format Mastery',
     description: 'Convert Word, Excel, and images to PDF.'
   },
