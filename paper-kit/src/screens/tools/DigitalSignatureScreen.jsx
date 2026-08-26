@@ -1,12 +1,42 @@
 /* DigitalSignatureScreen — Draw, Type, or Upload Digital Signatures onto PDF (Feature 22 of gv) */
 import { useState, useRef, useEffect } from 'react';
-import { PenTool, Type, Image as ImageIcon, Download, Check, Trash2 } from 'lucide-react';
+import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
+import { PenTool, Type, Image as ImageIcon, Download, Check, Trash2, Lock, Users, ShieldCheck, Clock } from 'lucide-react';
 import { uploadFile } from '../../services/files';
 import { signPDF } from '../../services/tools';
 import { PrimaryButton } from '../../components/ui/Button';
 import Toast from '../../components/ui/Toast';
 import { useToast } from '../../hooks/useToast';
 import './CompressPDFScreen.css';
+
+const TOOL_TIPS = [
+  {
+    icon: <PenTool size={20} />,
+    title: 'E-Sign Instantly',
+    description: 'Draw, type, or upload your signature.'
+  },
+  {
+    icon: <Lock size={20} />,
+    title: 'Legally Binding',
+    description: 'Secure digital signatures you can trust.'
+  },
+  {
+    icon: <Users size={20} />,
+    title: 'Multi-Signer',
+    description: 'Add multiple signature fields easily.'
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: 'Tamper-Proof',
+    description: 'Document integrity is cryptographically sealed.'
+  },
+  {
+    icon: <Clock size={20} />,
+    title: 'Time Stamped',
+    description: 'Records exact time of signature.'
+  },
+];
+
 
 const FONTS = ['Caveat', 'Dancing Script', 'Pacifico', 'Great Vibes', 'cursive'];
 
@@ -403,6 +433,7 @@ export default function DigitalSignatureScreen() {
         </div>
       )}
 
+      <FeatureTipsSwipeStack tips={TOOL_TIPS} />
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>
   );

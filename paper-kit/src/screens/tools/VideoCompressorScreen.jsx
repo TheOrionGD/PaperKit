@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
+import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
 import { useSearchParams } from 'react-router-dom';
-import { Minimize2 } from 'lucide-react';
+import { Minimize2, Eye, Share2, Zap, ShieldCheck } from 'lucide-react';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import Toast from '../../components/ui/Toast';
@@ -8,6 +9,35 @@ import CommonResultScreen, { ACTION_PRESETS } from '../../components/common/Comm
 import { useToast } from '../../hooks/useToast';
 import { downloadAndOpenFile } from '../../services/native';
 import '../ai/ai-screen.css';
+
+const TOOL_TIPS = [
+  {
+    icon: <Minimize2 size={20} />,
+    title: 'Massive Compression',
+    description: 'Shrink video size by up to 80%.'
+  },
+  {
+    icon: <Eye size={20} />,
+    title: 'Preserve Quality',
+    description: 'Smart encoding keeps footage crisp.'
+  },
+  {
+    icon: <Share2 size={20} />,
+    title: 'Social Ready',
+    description: 'Perfect size for Discord and WhatsApp.'
+  },
+  {
+    icon: <Zap size={20} />,
+    title: 'Hardware Accelerated',
+    description: 'Uses your GPU for fast encoding.'
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: 'Local Processing',
+    description: 'Your videos stay strictly on your device.'
+  },
+];
+
 
 const LEVELS = [
   { id: 'low', label: 'Low Compression', sublabel: 'High quality, larger file size', crf: '18' },
@@ -139,7 +169,8 @@ export default function VideoCompressorScreen() {
           }}
           sourceWorkflow="video-compressor"
         />
-        <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
+        <FeatureTipsSwipeStack tips={TOOL_TIPS} />
+      <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
       </div>
     );
   }
@@ -228,6 +259,7 @@ export default function VideoCompressorScreen() {
         </div>
       )}
 
+      <FeatureTipsSwipeStack tips={TOOL_TIPS} />
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>
   );

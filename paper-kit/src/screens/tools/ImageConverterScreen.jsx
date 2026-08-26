@@ -1,16 +1,64 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
-import { Image as ImageIcon } from 'lucide-react';
+import { Image as ImageIcon, FileImage, ShieldCheck, Zap, Image, Layers, Maximize } from 'lucide-react';
 import Toast from '../../components/ui/Toast';
 import CommonResultScreen, { ACTION_PRESETS } from '../../components/common/CommonResultScreen';
+import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
 import { useToast } from '../../hooks/useToast';
 import { downloadAndOpenFile } from '../../services/native';
 import heic2any from 'heic2any';
 import '../ai/ai-screen.css';
 
+const TOOL_TIPS = [
+  {
+    icon: <Image size={20} />,
+    title: 'Universal Formats',
+    description: 'Convert between PNG, JPEG, WEBP, and HEIC.'
+  },
+  {
+    icon: <Layers size={20} />,
+    title: 'Batch Conversion',
+    description: 'Process entire folders of images instantly.'
+  },
+  {
+    icon: <Maximize size={20} />,
+    title: 'Auto-Resize',
+    description: 'Optionally scale images during conversion.'
+  },
+  {
+    icon: <Zap size={20} />,
+    title: 'Hardware Accelerated',
+    description: 'Blazing fast conversion speeds.'
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: '100% Secure',
+    description: 'Everything happens offline.'
+  },
+];
+
+
 const FORMATS = [
   { id: 'image/jpeg', label: 'JPG', sublabel: 'Best for photographs' },
   { id: 'image/png', label: 'PNG', sublabel: 'Best for graphics with transparency' },
+];
+
+const CONVERTER_TIPS = [
+  {
+    icon: <FileImage size={20} />,
+    title: 'Universal Format Support',
+    description: 'Easily convert HEIC, WebP, BMP, and more into widely accepted formats like JPG and PNG.'
+  },
+  {
+    icon: <Zap size={20} />,
+    title: 'Lightning Fast',
+    description: 'All conversions happen instantly on your device without needing to upload anything.'
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: '100% Private',
+    description: 'Your images are processed locally and never sent to any external servers, ensuring complete privacy.'
+  }
 ];
 
 function formatSize(bytes) {
@@ -169,7 +217,8 @@ export default function ImageConverterScreen() {
           }}
           sourceWorkflow="image-converter"
         />
-        <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
+        <FeatureTipsSwipeStack tips={TOOL_TIPS} />
+      <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
       </div>
     );
   }
@@ -266,6 +315,7 @@ export default function ImageConverterScreen() {
         </div>
       )}
 
+      <FeatureTipsSwipeStack tips={TOOL_TIPS} />
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>
   );

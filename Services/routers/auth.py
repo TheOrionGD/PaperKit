@@ -141,3 +141,27 @@ async def delete_account(current_user: dict = Depends(get_required_user)):
     await db.users.delete_one({"_id": current_user["_id"]})
 
     return {"message": "Account and all associated files deleted successfully"}
+
+@router.delete("/clear-session")
+async def clear_session(current_user: dict = Depends(get_required_user)):
+    db = get_db()
+    user_id = str(current_user["_id"])
+
+    cursor = db.files.find({"user_id": user_id})
+    async for f in cursor:
+        try:
+            if "storage_url" in f and f["storage_url"]:
+                await delete_file(f["storage_url"])
+        except Exception as e:
+            print(f"Error deleting file {f.get('_id')} from storage: {e}")
+
+    await db.files.delete_many({"user_id": user_id})
+    
+    try:
+        await db.jobs.delete_many({"user_id": user_id})
+        await db.history.delete_many({"user_id": user_id})
+        await db.ai_usage_logs.delete_many({"user_id": user_id})
+    except Exception:
+        pass
+
+    return {"message": "Session data cleared successfully"}

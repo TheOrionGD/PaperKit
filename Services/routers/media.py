@@ -31,8 +31,9 @@ async def download_youtube(req: DownloadRequest, background_tasks: BackgroundTas
     output_template = os.path.join(DOWNLOAD_DIR, f"{job_id}_%(title)s.%(ext)s")
     
     try:
+        import sys
         command = [
-            "yt-dlp",
+            sys.executable, "-m", "yt_dlp",
             "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
             "-o", output_template,
             req.url
@@ -74,8 +75,9 @@ async def download_spotify(req: DownloadRequest, background_tasks: BackgroundTas
     output_template = os.path.join(DOWNLOAD_DIR, f"{job_id}_" + "{title} - {artists}.{ext}")
     
     try:
+        import sys
         command = [
-            "spotdl",
+            sys.executable, "-m", "spotdl",
             "--output", output_template,
             req.url
         ]

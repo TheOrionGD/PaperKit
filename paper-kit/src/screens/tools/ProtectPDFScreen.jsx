@@ -1,7 +1,8 @@
 /* ProtectPDFScreen — PDF Password Protection, Confirmation & Granular Security Permissions */
 import { useState, useRef, useEffect } from 'react';
+import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
 import { useLocation } from 'react-router-dom';
-import { Lock, Eye, EyeOff, Shield, Printer, Copy, Edit3, RefreshCw } from 'lucide-react';
+import { Lock, Eye, EyeOff, Shield, Printer, Copy, Edit3, RefreshCw, Key, Ban, Unlock, ShieldCheck } from 'lucide-react';
 import { uploadFile } from '../../services/files';
 import { protectPDF } from '../../services/tools';
 import { PrimaryButton } from '../../components/ui/Button';
@@ -10,6 +11,35 @@ import CommonResultScreen, { ACTION_PRESETS } from '../../components/common/Comm
 import { downloadAndOpenFile } from '../../services/native';
 import { useToast } from '../../hooks/useToast';
 import './CompressPDFScreen.css';
+
+const TOOL_TIPS = [
+  {
+    icon: <Lock size={20} />,
+    title: 'AES-256 Encryption',
+    description: 'Military-grade security for your PDFs.'
+  },
+  {
+    icon: <Key size={20} />,
+    title: 'Password Protect',
+    description: 'Require a password to open.'
+  },
+  {
+    icon: <Ban size={20} />,
+    title: 'Restrict Edits',
+    description: 'Prevent printing and copying.'
+  },
+  {
+    icon: <Unlock size={20} />,
+    title: 'Remove Passwords',
+    description: 'Unlock PDFs if you know the password.'
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: 'Absolute Privacy',
+    description: 'Passwords never leave your device.'
+  },
+];
+
 
 export default function ProtectPDFScreen() {
   const location = useLocation();
@@ -132,7 +162,8 @@ export default function ProtectPDFScreen() {
           }}
           sourceWorkflow="protect-pdf"
         />
-        <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
+        <FeatureTipsSwipeStack tips={TOOL_TIPS} />
+      <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
       </div>
     );
   }
@@ -290,6 +321,7 @@ export default function ProtectPDFScreen() {
         </PrimaryButton>
       </div>
 
+      <FeatureTipsSwipeStack tips={TOOL_TIPS} />
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>
   );

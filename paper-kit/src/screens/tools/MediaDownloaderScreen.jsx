@@ -1,10 +1,40 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Youtube, Music, Download } from 'lucide-react';
+import { Video, Music, Download, Zap, HardDrive, ShieldCheck, DownloadCloud } from 'lucide-react';
 import Toast from '../../components/ui/Toast';
 import { useToast } from '../../hooks/useToast';
 import { downloadAndOpenFile } from '../../services/native';
+import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
 import '../ai/ai-screen.css';
+
+const TOOL_TIPS = [
+  {
+    icon: <DownloadCloud size={20} />,
+    title: 'High Quality',
+    description: 'Download the best available video/audio quality.'
+  },
+  {
+    icon: <HardDrive size={20} />,
+    title: 'Save Offline',
+    description: 'Store files locally for offline enjoyment.'
+  },
+  {
+    icon: <Music size={20} />,
+    title: 'Audio Extraction',
+    description: 'Rip high-bitrate MP3s from videos.'
+  },
+  {
+    icon: <Zap size={20} />,
+    title: 'Fast Speeds',
+    description: 'Multi-threaded downloads for maximum speed.'
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: 'No Tracking',
+    description: '100% private and secure downloads.'
+  },
+];
+
 
 export default function MediaDownloaderScreen() {
   const [searchParams] = useSearchParams();
@@ -22,9 +52,10 @@ export default function MediaDownloaderScreen() {
     
     setDownloading(true);
     try {
+      const { API_BASE } = await import('../../services/api');
       const endpoint = typeParam === 'youtube' 
-        ? '/api/media/download-youtube' 
-        : '/api/media/download-spotify';
+        ? `${API_BASE}/api/media/download-youtube` 
+        : `${API_BASE}/api/media/download-spotify`;
         
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -68,7 +99,7 @@ export default function MediaDownloaderScreen() {
       <div className="ai-screen__unavailable" style={{ opacity: 1, padding: '24px 0', border: 'none', background: 'transparent' }}>
         <div className="ai-screen__unavailable-icon" style={{ background: isYouTube ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)' }}>
           {isYouTube ? (
-            <Youtube size={28} color="#EF4444" />
+            <Video size={28} color="#EF4444" />
           ) : (
             <Music size={28} color="#22C55E" />
           )}
@@ -133,6 +164,7 @@ export default function MediaDownloaderScreen() {
         </div>
       )}
 
+      <FeatureTipsSwipeStack tips={TOOL_TIPS} />
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>
   );

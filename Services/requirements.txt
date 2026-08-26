@@ -26,3 +26,5 @@ rarfile>=4.0
 # Image tools (background removal - optional, downloads model on first use)
 rembg>=2.0.0
 # Video processing requires FFmpeg binary installed on system
+yt-dlp>=2024.3.10
+spotdl>=4.2.4

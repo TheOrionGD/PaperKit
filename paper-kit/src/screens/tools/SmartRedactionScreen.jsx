@@ -1,6 +1,7 @@
 /* SmartRedactionScreen — AI Privacy Detection & Irreversible Blackout Redaction (Features 19, 20 of gv) */
 import { useState, useRef } from 'react';
-import { EyeOff, Sparkles, ShieldAlert, CheckCircle2, Download, Plus } from 'lucide-react';
+import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
+import { EyeOff, Sparkles, ShieldAlert, CheckCircle2, Download, Plus, Eraser, Search, ShieldCheck } from 'lucide-react';
 import { uploadFile } from '../../services/files';
 import { detectPrivacy } from '../../services/ai';
 import { redactPDF } from '../../services/tools';
@@ -9,6 +10,35 @@ import { PrimaryButton } from '../../components/ui/Button';
 import Toast from '../../components/ui/Toast';
 import { useToast } from '../../hooks/useToast';
 import './CompressPDFScreen.css';
+
+const TOOL_TIPS = [
+  {
+    icon: <EyeOff size={20} />,
+    title: 'Auto-Redact',
+    description: 'Automatically hide SSNs, emails, and cards.'
+  },
+  {
+    icon: <Eraser size={20} />,
+    title: 'Manual Redaction',
+    description: 'Draw black boxes over sensitive text.'
+  },
+  {
+    icon: <Search size={20} />,
+    title: 'Search & Destroy',
+    description: 'Find specific words and redact them all.'
+  },
+  {
+    icon: <ShieldAlert size={20} />,
+    title: 'True Removal',
+    description: 'Text is permanently deleted, not just hidden.'
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: 'Ultimate Security',
+    description: 'Redacted offline for maximum safety.'
+  },
+];
+
 
 export default function SmartRedactionScreen() {
   const fileInputRef = useRef(null);
@@ -252,6 +282,7 @@ export default function SmartRedactionScreen() {
         )}
       </div>
 
+      <FeatureTipsSwipeStack tips={TOOL_TIPS} />
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>
   );

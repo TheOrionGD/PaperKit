@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
+import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
 import { useSearchParams } from 'react-router-dom';
-import { Music } from 'lucide-react';
+import { Music, Zap, ShieldCheck, HardDrive, Sliders } from 'lucide-react';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import Toast from '../../components/ui/Toast';
@@ -8,6 +9,35 @@ import CommonResultScreen, { ACTION_PRESETS } from '../../components/common/Comm
 import { useToast } from '../../hooks/useToast';
 import { downloadAndOpenFile } from '../../services/native';
 import '../ai/ai-screen.css';
+
+const TOOL_TIPS = [
+  {
+    icon: <Music size={20} />,
+    title: 'Universal Support',
+    description: 'Convert between MP3, WAV, FLAC, and more.'
+  },
+  {
+    icon: <Zap size={20} />,
+    title: 'Lightning Fast',
+    description: 'Hardware-accelerated processing for instant results.'
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: '100% Private',
+    description: 'Your audio files never leave your device.'
+  },
+  {
+    icon: <HardDrive size={20} />,
+    title: 'Save Storage',
+    description: 'Compress audio without losing noticeable quality.'
+  },
+  {
+    icon: <Sliders size={20} />,
+    title: 'Custom Bitrates',
+    description: 'Full control over your audio fidelity.'
+  },
+];
+
 
 const AUDIO_FORMATS = [
   { ext: 'mp3', label: 'MP3', mime: 'audio/mpeg' },
@@ -132,7 +162,8 @@ export default function AudioConverterScreen() {
           }}
           sourceWorkflow="audio-converter"
         />
-        <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
+        <FeatureTipsSwipeStack tips={TOOL_TIPS} />
+      <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
       </div>
     );
   }
@@ -221,6 +252,7 @@ export default function AudioConverterScreen() {
         </div>
       )}
 
+      <FeatureTipsSwipeStack tips={TOOL_TIPS} />
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>
   );

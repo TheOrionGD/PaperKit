@@ -1,7 +1,8 @@
 /* MergePDFScreen — PDF Merge Flow & Smart Workflow Chaining */
 import { useState, useRef, useEffect } from 'react';
+import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
 import { useLocation } from 'react-router-dom';
-import { GripVertical, X, Plus, FolderOpen, Eye } from 'lucide-react';
+import { GripVertical, X, Plus, FolderOpen, Eye, Layers, Move, FileSignature, Zap, ShieldCheck } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
 import { FileTypeIcon } from '../../components/icons/ToolIcons';
 import { PrimaryButton } from '../../components/ui/Button';
@@ -14,6 +15,35 @@ import Toast from '../../components/ui/Toast';
 import { useProcessing } from '../../context/ProcessingContext';
 import { downloadAndOpenFile } from '../../services/native';
 import './MergePDFScreen.css';
+
+const TOOL_TIPS = [
+  {
+    icon: <Layers size={20} />,
+    title: 'Combine Instantly',
+    description: 'Merge dozens of documents in seconds.'
+  },
+  {
+    icon: <Move size={20} />,
+    title: 'Drag & Drop',
+    description: 'Reorder files effortlessly before merging.'
+  },
+  {
+    icon: <FileSignature size={20} />,
+    title: 'Keep Metadata',
+    description: 'Maintains bookmarks and outlines.'
+  },
+  {
+    icon: <Zap size={20} />,
+    title: 'Unlimited Size',
+    description: 'Merge massive PDFs without crashing.'
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: '100% Private',
+    description: 'Merged securely on your device.'
+  },
+];
+
 
 const PAGE_SIZES = [
   { value: 'original', label: 'Original' },
@@ -242,7 +272,8 @@ export default function MergePDFScreen() {
           }}
           sourceWorkflow="merge-pdf"
         />
-        <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
+        <FeatureTipsSwipeStack tips={TOOL_TIPS} />
+      <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
       </div>
     );
   }
@@ -386,6 +417,7 @@ export default function MergePDFScreen() {
         rawFile={previewTarget?.rawFile}
       />
 
+      <FeatureTipsSwipeStack tips={TOOL_TIPS} />
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>
   );

@@ -1,7 +1,8 @@
 /* OrganizePDFScreen — Visual Page Engine: Rearrange, Delete, Duplicate, Rotate L/R & Preview */
 import { useState, useRef, useEffect, useCallback } from 'react';
+import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { RotateCw, RotateCcw, Copy, Trash2, Grid } from 'lucide-react';
+import { RotateCw, RotateCcw, Copy, Trash2, Grid, LayoutGrid, Move, ShieldCheck } from 'lucide-react';
 import { FileTypeIcon } from '../../components/icons/ToolIcons';
 import { PrimaryButton } from '../../components/ui/Button';
 import LoadingState from '../../components/ui/LoadingState';
@@ -13,6 +14,35 @@ import { getFileDownloadUrl } from '../../services/files';
 import { downloadAndOpenFile } from '../../services/native';
 import { useProcessing } from '../../context/ProcessingContext';
 import './OrganizePDFScreen.css';
+
+const TOOL_TIPS = [
+  {
+    icon: <LayoutGrid size={20} />,
+    title: 'Visual Sorting',
+    description: 'See all pages in a beautiful grid.'
+  },
+  {
+    icon: <Move size={20} />,
+    title: 'Drag & Drop',
+    description: 'Move pages around seamlessly.'
+  },
+  {
+    icon: <Trash2 size={20} />,
+    title: 'Quick Delete',
+    description: 'Remove unwanted pages with a click.'
+  },
+  {
+    icon: <RotateCw size={20} />,
+    title: 'Quick Rotate',
+    description: 'Fix upside-down pages instantly.'
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: 'Privacy First',
+    description: 'Your document never leaves your screen.'
+  },
+];
+
 
 export default function OrganizePDFScreen({ mode: _mode = 'organize' }) {
   const _navigate = useNavigate();
@@ -254,7 +284,8 @@ export default function OrganizePDFScreen({ mode: _mode = 'organize' }) {
           }}
           sourceWorkflow="organize-pages"
         />
-        <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
+        <FeatureTipsSwipeStack tips={TOOL_TIPS} />
+      <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
       </div>
     );
   }
@@ -401,6 +432,7 @@ export default function OrganizePDFScreen({ mode: _mode = 'organize' }) {
         onClose={() => setPreviewModalOpen(false)}
       />
 
+      <FeatureTipsSwipeStack tips={TOOL_TIPS} />
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>
   );

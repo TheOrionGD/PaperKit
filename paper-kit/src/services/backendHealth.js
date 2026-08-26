@@ -11,6 +11,12 @@ export const API_BASE = RENDER_BACKEND_URL;
  * @returns {Promise<{ ok: boolean, status?: number, data?: any, error?: string }>}
  */
 export async function pingUrl(url, timeoutMs = 5000) {
+  // In dev mode, strict COEP headers block cross-origin requests to Render.
+  // We bypass the health check locally so the app loads instantly without errors.
+  if (import.meta.env.DEV && (url.includes('onrender.com') || url.includes('localhost'))) {
+    return { ok: true, status: 200, data: { status: 'dev-bypass' } };
+  }
+
   const isWebUrl = url.includes('paperkit-web.onrender.com');
 
   try {

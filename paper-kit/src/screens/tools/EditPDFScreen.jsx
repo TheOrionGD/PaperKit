@@ -1,11 +1,8 @@
 /* EditPDFScreen — Concurrent White A4 Sheet Live Editor with Responsive Design & 3s Auto-Download */
 import { useState, useRef, useEffect, useCallback } from 'react';
+import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-  Download, Loader2, Plus, Trash2,
-  Bold, Italic, Underline, Strikethrough, AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  List, ListOrdered, Table, Minus, RotateCcw, Pencil, Check
-} from 'lucide-react';
+import { Download, Loader2, Plus, Trash2, Bold, Italic, Underline, Strikethrough, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered, Table, Minus, RotateCcw, Pencil, Check, Edit3, Type, Image, ShieldCheck, Save } from 'lucide-react';
 import { PrimaryButton, SecondaryButton } from '../../components/ui/Button';
 import Toast from '../../components/ui/Toast';
 import FileUploader from '../../components/common/FileUploader';
@@ -15,6 +12,35 @@ import { useToast } from '../../hooks/useToast';
 import { convertFile, convertHtmlToWord } from '../../services/tools';
 import { downloadAndOpenFile } from '../../services/native';
 import './EditPDFScreen.css';
+
+const TOOL_TIPS = [
+  {
+    icon: <Edit3 size={20} />,
+    title: 'Full Editing',
+    description: 'Add text, images, and shapes to any PDF.'
+  },
+  {
+    icon: <Type size={20} />,
+    title: 'Rich Text',
+    description: 'Change fonts, colors, and sizes easily.'
+  },
+  {
+    icon: <Image size={20} />,
+    title: 'Insert Media',
+    description: 'Drop images directly into your documents.'
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: '100% Private',
+    description: 'Your documents never hit the cloud.'
+  },
+  {
+    icon: <Save size={20} />,
+    title: 'Auto-Save',
+    description: 'Never lose your progress while editing.'
+  },
+];
+
 
 export default function EditPDFScreen() {
   const _navigate = useNavigate();
@@ -334,7 +360,8 @@ export default function EditPDFScreen() {
           }}
           sourceWorkflow="pdf-live-editor"
         />
-        <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
+        <FeatureTipsSwipeStack tips={TOOL_TIPS} />
+      <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
       </div>
     );
   }
@@ -534,6 +561,7 @@ export default function EditPDFScreen() {
         </div>
       )}
 
+      <FeatureTipsSwipeStack tips={TOOL_TIPS} />
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>
   );

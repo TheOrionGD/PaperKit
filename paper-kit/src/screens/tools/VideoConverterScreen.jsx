@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
+import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
 import { useSearchParams } from 'react-router-dom';
-import { Video } from 'lucide-react';
+import { Video, Music, Settings, Zap, ShieldCheck } from 'lucide-react';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import Toast from '../../components/ui/Toast';
@@ -8,6 +9,35 @@ import CommonResultScreen, { ACTION_PRESETS } from '../../components/common/Comm
 import { useToast } from '../../hooks/useToast';
 import { downloadAndOpenFile } from '../../services/native';
 import '../ai/ai-screen.css';
+
+const TOOL_TIPS = [
+  {
+    icon: <Video size={20} />,
+    title: 'Format Mastery',
+    description: 'Convert between MP4, WebM, MOV, and AVI.'
+  },
+  {
+    icon: <Music size={20} />,
+    title: 'Extract Audio',
+    description: 'Pull MP3 tracks from your videos.'
+  },
+  {
+    icon: <Settings size={20} />,
+    title: 'Custom Settings',
+    description: 'Adjust resolution and framerate.'
+  },
+  {
+    icon: <Zap size={20} />,
+    title: 'Blazing Fast',
+    description: 'Powered by WebAssembly technology.'
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: '100% Secure',
+    description: 'Your footage never hits the cloud.'
+  },
+];
+
 
 const VIDEO_FORMATS = [
   { ext: 'mp4', label: 'MP4', mime: 'video/mp4' },
@@ -130,7 +160,8 @@ export default function VideoConverterScreen() {
           }}
           sourceWorkflow="video-converter"
         />
-        <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
+        <FeatureTipsSwipeStack tips={TOOL_TIPS} />
+      <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
       </div>
     );
   }
@@ -219,6 +250,7 @@ export default function VideoConverterScreen() {
         </div>
       )}
 
+      <FeatureTipsSwipeStack tips={TOOL_TIPS} />
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>
   );

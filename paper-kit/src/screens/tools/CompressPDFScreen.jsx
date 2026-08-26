@@ -1,7 +1,8 @@
 /* CompressPDFScreen — PDF Compression with 3 Levels, Live Reduction Stats & Result Screen */
 import { useState, useRef, useEffect } from 'react';
+import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
 import { useSearchParams, useLocation } from 'react-router-dom';
-import { Minimize2 } from 'lucide-react';
+import { Minimize2, Eye, Share2, HardDrive, ShieldCheck } from 'lucide-react';
 import { FileTypeIcon } from '../../components/icons/ToolIcons';
 import RadioOption from '../../components/ui/RadioOption';
 import { PrimaryButton } from '../../components/ui/Button';
@@ -12,6 +13,35 @@ import { useToast } from '../../hooks/useToast';
 import { useProcessing } from '../../context/ProcessingContext';
 import { downloadAndOpenFile } from '../../services/native';
 import './CompressPDFScreen.css';
+
+const TOOL_TIPS = [
+  {
+    icon: <Minimize2 size={20} />,
+    title: 'Extreme Compression',
+    description: 'Shrink PDFs by up to 90% in file size.'
+  },
+  {
+    icon: <Eye size={20} />,
+    title: 'Preserve Quality',
+    description: 'Smart algorithms keep your text crisp.'
+  },
+  {
+    icon: <Share2 size={20} />,
+    title: 'Easy Sharing',
+    description: 'Perfect size for email and messenger attachments.'
+  },
+  {
+    icon: <HardDrive size={20} />,
+    title: 'Save Space',
+    description: 'Free up valuable storage on your device.'
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: 'Local Processing',
+    description: 'Your confidential documents stay on your device.'
+  },
+];
+
 
 const LEVELS = [
   { id: 'small',    label: 'High Compression',   sublabel: 'Maximum size reduction, acceptable quality' },
@@ -131,7 +161,8 @@ export default function CompressPDFScreen() {
           }}
           sourceWorkflow="compress-pdf"
         />
-        <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
+        <FeatureTipsSwipeStack tips={TOOL_TIPS} />
+      <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
       </div>
     );
   }
@@ -209,6 +240,7 @@ export default function CompressPDFScreen() {
         fileName={result?.name}
       />
 
+      <FeatureTipsSwipeStack tips={TOOL_TIPS} />
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>
   );

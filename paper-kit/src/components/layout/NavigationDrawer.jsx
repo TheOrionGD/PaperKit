@@ -2,11 +2,12 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Home, Files, Clock, Star, Trash2, Settings, 
-  HelpCircle, Share2, Info, X, ChevronRight, ShieldCheck, Sparkles
+  HelpCircle, Share2, Info, X, ChevronRight, ShieldCheck, Sparkles, LogOut
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useI18n } from '../../context/I18nContext';
 import { shareUrl } from '../../services/native';
+import api from '../../services/api';
 import './NavigationDrawer.css';
 
 export default function NavigationDrawer({ isOpen, onClose }) {
@@ -52,6 +53,19 @@ export default function NavigationDrawer({ isOpen, onClose }) {
     }
     if (item.path) {
       navigate(item.path);
+    }
+  }
+
+  async function handleClearSession() {
+    if (window.confirm("Are you sure you want to end this session and clear all local and remote data? This action cannot be undone.")) {
+      try {
+        await api.delete('/auth/clear-session');
+      } catch (err) {
+        console.warn("Backend session clear failed or not available:", err);
+      }
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/';
     }
   }
 
@@ -101,6 +115,18 @@ export default function NavigationDrawer({ isOpen, onClose }) {
               </button>
             );
           })}
+          
+          <div className="nav-drawer__divider"></div>
+          <button
+            className="nav-drawer__menu-item nav-drawer__menu-item--danger"
+            onClick={handleClearSession}
+            id="drawer-menu-clear-session"
+          >
+            <div className="nav-drawer__menu-icon-wrapper">
+              <LogOut size={18} color="var(--color-danger, #ef4444)" />
+            </div>
+            <span className="nav-drawer__menu-label" style={{ color: 'var(--color-danger, #ef4444)', fontWeight: 'bold' }}>End Session & Clear Data</span>
+          </button>
         </nav>
 
         {/* Footer info */}

@@ -1,12 +1,42 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
-import { Minimize2 } from 'lucide-react';
+import { Minimize2, Zap, ShieldCheck, Save, ImageDown, Eye, Layers, Share2 } from 'lucide-react';
 import Toast from '../../components/ui/Toast';
 import CommonResultScreen, { ACTION_PRESETS } from '../../components/common/CommonResultScreen';
+import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
 import { useToast } from '../../hooks/useToast';
 import { downloadAndOpenFile } from '../../services/native';
 import heic2any from 'heic2any';
 import '../ai/ai-screen.css';
+
+const TOOL_TIPS = [
+  {
+    icon: <ImageDown size={20} />,
+    title: 'Smart Compression',
+    description: 'Reduce image size by up to 80%.'
+  },
+  {
+    icon: <Eye size={20} />,
+    title: 'Lossless Quality',
+    description: 'Virtually identical visual fidelity.'
+  },
+  {
+    icon: <Layers size={20} />,
+    title: 'Batch Processing',
+    description: 'Compress hundreds of images at once.'
+  },
+  {
+    icon: <Share2 size={20} />,
+    title: 'Web Optimized',
+    description: 'Perfect for websites and social media.'
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: 'Local Processing',
+    description: 'Your photos stay private on your device.'
+  },
+];
+
 
 const LEVELS = [
   { id: 'low', label: 'Low Compression', sublabel: 'High quality, larger file size', quality: 0.9 },
@@ -168,7 +198,8 @@ export default function ImageCompressorScreen() {
           }}
           sourceWorkflow="image-compressor"
         />
-        <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
+        <FeatureTipsSwipeStack tips={TOOL_TIPS} />
+      <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
       </div>
     );
   }
@@ -275,6 +306,7 @@ export default function ImageCompressorScreen() {
         </div>
       )}
 
+      <FeatureTipsSwipeStack tips={TOOL_TIPS} />
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>
   );

@@ -1,7 +1,8 @@
 /* SplitPDFScreen — Split PDF with 4 modes & Smart Workflow Chaining */
 import { useState, useRef, useEffect } from 'react';
+import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Layers, Eye, Scissors } from 'lucide-react';
+import { Layers, Eye, Scissors, FilePlus, Archive, Zap, ShieldCheck } from 'lucide-react';
 import { FileTypeIcon } from '../../components/icons/ToolIcons';
 import { PrimaryButton } from '../../components/ui/Button';
 import Toast from '../../components/ui/Toast';
@@ -11,6 +12,35 @@ import { downloadAndOpenFile } from '../../services/native';
 import { useToast } from '../../hooks/useToast';
 import { useProcessing } from '../../context/ProcessingContext';
 import './SplitPDFScreen.css';
+
+const TOOL_TIPS = [
+  {
+    icon: <Scissors size={20} />,
+    title: 'Split by Ranges',
+    description: 'Divide your PDF exactly how you want.'
+  },
+  {
+    icon: <FilePlus size={20} />,
+    title: 'Extract All Pages',
+    description: 'Turn every page into a separate file.'
+  },
+  {
+    icon: <Archive size={20} />,
+    title: 'Auto-ZIP',
+    description: 'Downloads split files in a neat ZIP archive.'
+  },
+  {
+    icon: <Zap size={20} />,
+    title: 'Lightning Fast',
+    description: 'Splits 1000-page PDFs in seconds.'
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: '100% Private',
+    description: 'Your documents never leave your device.'
+  },
+];
+
 
 const MODES = [
   { id: 'range',      label: 'By Page Range',    desc: 'e.g. 1-20, 21-40' },
@@ -156,7 +186,8 @@ export default function SplitPDFScreen() {
           }}
           sourceWorkflow="split-pdf"
         />
-        <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
+        <FeatureTipsSwipeStack tips={TOOL_TIPS} />
+      <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
       </div>
     );
   }
@@ -286,6 +317,7 @@ export default function SplitPDFScreen() {
         rawFile={previewTarget?.rawFile}
       />
 
+      <FeatureTipsSwipeStack tips={TOOL_TIPS} />
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>
   );

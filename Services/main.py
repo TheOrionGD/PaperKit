@@ -96,6 +96,7 @@ async def log_requests(request: Request, call_next):
     
     try:
         response = await call_next(request)
+        response.headers["Cross-Origin-Resource-Policy"] = "cross-origin"
         duration_ms = (time.time() - start_time) * 1000
         print(f"[API LOG] {method} {path} => Status: {response.status_code} ({duration_ms:.2f}ms) | Client: {client_ip}")
         return response

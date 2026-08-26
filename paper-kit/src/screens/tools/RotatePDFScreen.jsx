@@ -1,4 +1,6 @@
 import { useState, useRef } from 'react';
+import { RotateCw, Layers, MousePointerClick, Zap, ShieldCheck } from 'lucide-react';
+import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
 import { useNavigate } from 'react-router-dom';
 import { PDFDocument } from 'pdf-lib';
 import { FileTypeIcon } from '../../components/icons/ToolIcons';
@@ -8,6 +10,35 @@ import Toast from '../../components/ui/Toast';
 import { useToast } from '../../hooks/useToast';
 import { useProcessing } from '../../context/ProcessingContext';
 import './RotatePDFScreen.css';
+
+const TOOL_TIPS = [
+  {
+    icon: <RotateCw size={20} />,
+    title: 'Rotate Instantly',
+    description: 'Spin pages 90, 180, or 270 degrees.'
+  },
+  {
+    icon: <Layers size={20} />,
+    title: 'Batch Rotate',
+    description: 'Rotate all pages at once.'
+  },
+  {
+    icon: <MousePointerClick size={20} />,
+    title: 'Click to Spin',
+    description: 'Individually adjust specific pages.'
+  },
+  {
+    icon: <Zap size={20} />,
+    title: 'Fast Processing',
+    description: 'Saves your changes in milliseconds.'
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: 'Privacy Assured',
+    description: 'Your document never hits a server.'
+  },
+];
+
 
 const DEGREES = [
   { value: 90, label: '90° Clockwise' },
@@ -206,6 +237,7 @@ export default function RotatePDFScreen() {
         </PrimaryButton>
       </div>
 
+      <FeatureTipsSwipeStack tips={TOOL_TIPS} />
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>
   );

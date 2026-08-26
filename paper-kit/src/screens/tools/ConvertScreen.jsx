@@ -1,7 +1,8 @@
 /* ConvertScreen — Full Bi-Directional Document Converter & Smart Workflow Chaining */
 import { useState, useRef, useEffect } from 'react';
+import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowRight, Cpu, Loader2, Layers, FileCode } from 'lucide-react';
+import { ArrowRight, Cpu, Loader2, Layers, FileCode, FileRepeat, Layout, Zap, ShieldCheck, Smartphone } from 'lucide-react';
 import { FileTypeIcon } from '../../components/icons/ToolIcons';
 import Toggle from '../../components/ui/Toggle';
 import SelectField from '../../components/ui/SelectField';
@@ -16,6 +17,35 @@ import { useToast } from '../../hooks/useToast';
 import { convertFile, getToolsRegistry } from '../../services/tools';
 import { downloadAndOpenFile } from '../../services/native';
 import './ConvertScreen.css';
+
+const TOOL_TIPS = [
+  {
+    icon: <FileRepeat size={20} />,
+    title: 'Format Mastery',
+    description: 'Convert Word, Excel, and images to PDF.'
+  },
+  {
+    icon: <Layout size={20} />,
+    title: 'Perfect Layouts',
+    description: 'Maintains original formatting perfectly.'
+  },
+  {
+    icon: <Zap size={20} />,
+    title: 'Instant Conversion',
+    description: 'No waiting in cloud queues.'
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: 'Privacy First',
+    description: 'Documents are processed securely.'
+  },
+  {
+    icon: <Smartphone size={20} />,
+    title: 'Mobile Ready',
+    description: 'Works seamlessly on phones and tablets.'
+  },
+];
+
 
 const FORMAT_META = {
   pdf:      { label: 'PDF',      ext: '.pdf',  iconType: 'pdf' },
@@ -261,7 +291,8 @@ export default function ConvertScreen() {
           }}
           sourceWorkflow={`convert-${from}-to-${to}`}
         />
-        <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
+        <FeatureTipsSwipeStack tips={TOOL_TIPS} />
+      <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
       </div>
     );
   }
@@ -456,6 +487,7 @@ export default function ConvertScreen() {
         fileName={convertedResult?.filename}
       />
 
+      <FeatureTipsSwipeStack tips={TOOL_TIPS} />
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>
   );

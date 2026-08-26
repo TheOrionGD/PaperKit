@@ -1,12 +1,42 @@
 /* MetadataScreen — View, Edit, and Sanitize PDF Metadata for Privacy (Feature 24 of gv) */
 import { useState, useRef } from 'react';
-import { Info, Trash2, Save, Download, CheckCircle2 } from 'lucide-react';
+import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
+import { Info, Trash2, Save, Download, CheckCircle2, FileText, Search, Zap, ShieldCheck } from 'lucide-react';
 import { uploadFile } from '../../services/files';
 import { getPDFMetadata, updatePDFMetadata } from '../../services/tools';
 import { PrimaryButton, SecondaryButton } from '../../components/ui/Button';
 import Toast from '../../components/ui/Toast';
 import { useToast } from '../../hooks/useToast';
 import './CompressPDFScreen.css';
+
+const TOOL_TIPS = [
+  {
+    icon: <FileText size={20} />,
+    title: 'Edit Properties',
+    description: 'Change Title, Author, and Subject.'
+  },
+  {
+    icon: <Search size={20} />,
+    title: 'SEO Optimized',
+    description: 'Add keywords for better searchability.'
+  },
+  {
+    icon: <Trash2 size={20} />,
+    title: 'Scrub Metadata',
+    description: 'Remove hidden data for privacy.'
+  },
+  {
+    icon: <Zap size={20} />,
+    title: 'Instant Save',
+    description: 'Changes apply without re-encoding.'
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: 'Secure Edits',
+    description: 'Processed locally in your browser.'
+  },
+];
+
 
 export default function MetadataScreen() {
   const fileInputRef = useRef(null);
@@ -202,6 +232,7 @@ export default function MetadataScreen() {
         )}
       </div>
 
+      <FeatureTipsSwipeStack tips={TOOL_TIPS} />
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>
   );

@@ -1,7 +1,8 @@
 /* ExtractPagesScreen — PDF Page Extractor with Visual & Range Selectors & Smart Chaining */
 import { useState, useRef, useEffect } from 'react';
+import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Layers, Eye, Check, Scissors } from 'lucide-react';
+import { Layers, Eye, Check, Scissors, FilePlus, Zap, ShieldCheck } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
 import { FileTypeIcon } from '../../components/icons/ToolIcons';
 import { PrimaryButton, SecondaryButton } from '../../components/ui/Button';
@@ -12,6 +13,35 @@ import { useToast } from '../../hooks/useToast';
 import { useProcessing } from '../../context/ProcessingContext';
 import { downloadAndOpenFile } from '../../services/native';
 import './CompressPDFScreen.css';
+
+const TOOL_TIPS = [
+  {
+    icon: <Scissors size={20} />,
+    title: 'Precision Extraction',
+    description: 'Pull out exact pages or ranges.'
+  },
+  {
+    icon: <FilePlus size={20} />,
+    title: 'Split to Files',
+    description: 'Extract each page as a separate PDF.'
+  },
+  {
+    icon: <Eye size={20} />,
+    title: 'Visual Selection',
+    description: 'Click pages in the grid to select them.'
+  },
+  {
+    icon: <Zap size={20} />,
+    title: 'Lightning Fast',
+    description: 'Extraction takes milliseconds.'
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: 'Secure Tool',
+    description: 'Files are processed locally.'
+  },
+];
+
 
 export default function ExtractPagesScreen() {
   const _navigate = useNavigate();
@@ -194,7 +224,8 @@ export default function ExtractPagesScreen() {
           }}
           sourceWorkflow="extract-pages"
         />
-        <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
+        <FeatureTipsSwipeStack tips={TOOL_TIPS} />
+      <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
       </div>
     );
   }
@@ -343,6 +374,7 @@ export default function ExtractPagesScreen() {
         rawFile={previewTarget?.rawFile}
       />
 
+      <FeatureTipsSwipeStack tips={TOOL_TIPS} />
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>
   );

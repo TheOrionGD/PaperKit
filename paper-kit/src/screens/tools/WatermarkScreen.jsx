@@ -1,5 +1,7 @@
 /* WatermarkScreen — add a text watermark overlay to a PDF */
 import { useState, useRef } from 'react';
+import { Stamp, Layout, Layers, Lock, ShieldCheck } from 'lucide-react';
+import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
 import { useNavigate } from 'react-router-dom';
 import { PDFDocument } from 'pdf-lib';
 import { FileTypeIcon } from '../../components/icons/ToolIcons';
@@ -8,6 +10,35 @@ import Toast from '../../components/ui/Toast';
 import { useToast } from '../../hooks/useToast';
 import { useProcessing } from '../../context/ProcessingContext';
 import './WatermarkScreen.css';
+
+const TOOL_TIPS = [
+  {
+    icon: <Stamp size={20} />,
+    title: 'Text & Images',
+    description: 'Add logos or text watermarks.'
+  },
+  {
+    icon: <Layout size={20} />,
+    title: 'Precision Placement',
+    description: 'Control opacity, rotation, and position.'
+  },
+  {
+    icon: <Layers size={20} />,
+    title: 'Batch Processing',
+    description: 'Watermark multiple pages at once.'
+  },
+  {
+    icon: <Lock size={20} />,
+    title: 'Protect IP',
+    description: 'Prevent unauthorized copying.'
+  },
+  {
+    icon: <ShieldCheck size={20} />,
+    title: '100% Private',
+    description: 'Watermarked securely on your device.'
+  },
+];
+
 
 export default function WatermarkScreen() {
   const navigate = useNavigate();
@@ -210,6 +241,7 @@ export default function WatermarkScreen() {
         </PrimaryButton>
       </div>
 
+      <FeatureTipsSwipeStack tips={TOOL_TIPS} />
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
     </div>
   );
