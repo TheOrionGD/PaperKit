@@ -119,21 +119,22 @@ export default function ExtractInfoScreen() {
       {/* Schema selector pills */}
       <div style={{ marginTop: '10px', marginBottom: '14px' }}>
         <span style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>Target Schema</span>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px' }}>
           {SCHEMAS.map(s => (
             <button
               key={s.id}
               type="button"
               onClick={() => { setSchemaType(s.id); setExtractedData(null); }}
               style={{
-                padding: '8px 10px',
-                borderRadius: '8px',
-                fontSize: '11px',
+                padding: '10px 12px',
+                borderRadius: '10px',
+                fontSize: '12px',
                 fontWeight: schemaType === s.id ? 700 : 500,
-                border: schemaType === s.id ? '1px solid var(--color-primary)' : '1px solid var(--color-divider)',
+                border: schemaType === s.id ? '2px solid var(--color-primary)' : '1px solid var(--color-divider)',
                 background: schemaType === s.id ? 'var(--color-primary-soft)' : 'var(--color-surface)',
                 color: schemaType === s.id ? 'var(--color-primary)' : 'var(--color-text)',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                textAlign: 'center'
               }}
             >
               {s.label}

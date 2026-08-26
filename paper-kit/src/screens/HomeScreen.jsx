@@ -11,7 +11,7 @@ import FilePreviewModal from '../components/ui/FilePreviewModal';
 import { useRecentFiles } from '../hooks/useFiles';
 import { useAuth } from '../hooks/useAuth';
 import { SearchContext } from '../components/layout/AppShell';
-import { QUICK_TOOLS, PDF_TOOLS, AI_TOOLS, SECURITY_TOOLS, CONVERT_TOOLS } from '../config/tools-config';
+import { QUICK_TOOLS, PDF_TOOLS, AI_TOOLS, SECURITY_TOOLS, CONVERT_TOOLS, IMAGE_FORMAT_TOOLS, IMAGE_COMPRESS_TOOLS, MEDIA_DOWNLOADER_TOOLS, VIDEO_FORMAT_TOOLS, VIDEO_COMPRESS_TOOLS, AUDIO_FORMAT_TOOLS } from '../config/tools-config';
 import { getProcessingHistory } from '../services/tools';
 import { getStorageUsage } from '../services/jobs';
 import { getFileDownloadUrl } from '../services/files';
@@ -125,6 +125,24 @@ export default function HomeScreen() {
     t.label.toLowerCase().includes(query.toLowerCase())
   );
   const filteredConvertTools = CONVERT_TOOLS.filter(t =>
+    t.label.toLowerCase().includes(query.toLowerCase())
+  );
+  const filteredImageFormatTools = IMAGE_FORMAT_TOOLS.filter(t =>
+    t.label.toLowerCase().includes(query.toLowerCase())
+  );
+  const filteredImageCompressTools = IMAGE_COMPRESS_TOOLS.filter(t =>
+    t.label.toLowerCase().includes(query.toLowerCase())
+  );
+  const filteredMediaDownloaderTools = MEDIA_DOWNLOADER_TOOLS.filter(t =>
+    t.label.toLowerCase().includes(query.toLowerCase())
+  );
+  const filteredVideoFormatTools = VIDEO_FORMAT_TOOLS.filter(t =>
+    t.label.toLowerCase().includes(query.toLowerCase())
+  );
+  const filteredVideoCompressTools = VIDEO_COMPRESS_TOOLS.filter(t =>
+    t.label.toLowerCase().includes(query.toLowerCase())
+  );
+  const filteredAudioFormatTools = AUDIO_FORMAT_TOOLS.filter(t =>
     t.label.toLowerCase().includes(query.toLowerCase())
   );
   const filteredRecentFiles = recentFiles.filter(f =>
@@ -311,6 +329,78 @@ export default function HomeScreen() {
           <ToolCategory
             title="Conversions"
             tools={filteredConvertTools}
+            showViewAll
+            onViewAll={() => navigate('/tools')}
+          />
+        </section>
+      )}
+
+      {/* ⭐ Image Format Converter */}
+      {filteredImageFormatTools.length > 0 && (
+        <section className="home-screen__section" aria-label="Image Format Converter">
+          <ToolCategory
+            title="Image Format Converter"
+            tools={filteredImageFormatTools}
+            showViewAll
+            onViewAll={() => navigate('/tools')}
+          />
+        </section>
+      )}
+
+      {/* ⭐ Image Compressor */}
+      {filteredImageCompressTools.length > 0 && (
+        <section className="home-screen__section" aria-label="Image Compressor">
+          <ToolCategory
+            title="Image Compressor ⭐"
+            tools={filteredImageCompressTools}
+            showViewAll
+            onViewAll={() => navigate('/tools')}
+          />
+        </section>
+      )}
+
+      {/* ⭐ Media Downloader */}
+      {filteredMediaDownloaderTools.length > 0 && (
+        <section className="home-screen__section" aria-label="Media Downloader">
+          <ToolCategory
+            title="Media Downloader (YouTube & Spotify)"
+            tools={filteredMediaDownloaderTools}
+            showViewAll
+            onViewAll={() => navigate('/tools')}
+          />
+        </section>
+      )}
+
+      {/* ⭐ Video Format Converter */}
+      {filteredVideoFormatTools.length > 0 && (
+        <section className="home-screen__section" aria-label="Video Format Converter">
+          <ToolCategory
+            title="Video Format Converter"
+            tools={filteredVideoFormatTools}
+            showViewAll
+            onViewAll={() => navigate('/tools')}
+          />
+        </section>
+      )}
+
+      {/* ⭐ Video Compressor */}
+      {filteredVideoCompressTools.length > 0 && (
+        <section className="home-screen__section" aria-label="Video Compressor">
+          <ToolCategory
+            title="Video Compressor"
+            tools={filteredVideoCompressTools}
+            showViewAll
+            onViewAll={() => navigate('/tools')}
+          />
+        </section>
+      )}
+
+      {/* ⭐ Audio Format Converter */}
+      {filteredAudioFormatTools.length > 0 && (
+        <section className="home-screen__section" aria-label="Audio Format Converter">
+          <ToolCategory
+            title="Audio Format Converter"
+            tools={filteredAudioFormatTools}
             showViewAll
             onViewAll={() => navigate('/tools')}
           />

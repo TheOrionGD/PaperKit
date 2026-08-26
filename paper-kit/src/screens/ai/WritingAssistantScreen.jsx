@@ -5,6 +5,7 @@ import { writingAssistant } from '../../services/ai';
 import { uploadFile } from '../../services/files';
 import Toast from '../../components/ui/Toast';
 import { useToast } from '../../hooks/useToast';
+import ReactMarkdown from 'react-markdown';
 import './ai-screen.css';
 
 const TASKS = [
@@ -117,25 +118,24 @@ export default function WritingAssistantScreen() {
       {/* Task selector */}
       <div style={{ marginBottom: '16px' }}>
         <span style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>Writing Style / Task</span>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px' }}>
           {TASKS.map(t => (
             <button
               key={t.id}
               type="button"
               onClick={() => { setTask(t.id); setResult(null); }}
               style={{
-                padding: '8px 10px',
-                borderRadius: '8px',
-                fontSize: '11px',
-                fontWeight: task === t.id ? 700 : 500,
-                border: task === t.id ? '1px solid var(--color-primary)' : '1px solid var(--color-divider)',
+                padding: '10px 12px',
+                borderRadius: '10px',
+                border: task === t.id ? '2px solid var(--color-primary)' : '1px solid var(--color-divider)',
                 background: task === t.id ? 'var(--color-primary-soft)' : 'var(--color-surface)',
                 color: task === t.id ? 'var(--color-primary)' : 'var(--color-text)',
                 cursor: 'pointer',
                 textAlign: 'left'
               }}
             >
-              <div>{t.label}</div>
+              <div style={{ fontWeight: 700, fontSize: '12px' }}>{t.label}</div>
+              <div style={{ fontSize: '10.5px', color: 'var(--color-text-muted)', marginTop: '2px' }}>{t.desc}</div>
             </button>
           ))}
         </div>
@@ -193,8 +193,8 @@ export default function WritingAssistantScreen() {
               </div>
             </div>
 
-            <div style={{ background: 'var(--color-surface)', padding: '16px', borderRadius: '12px', border: '1px solid var(--color-divider)', fontSize: '14px', lineHeight: 1.6 }}>
-              {result.improved_text}
+            <div className="markdown-body" style={{ background: 'var(--color-surface)', padding: '16px', borderRadius: '12px', border: '1px solid var(--color-divider)' }}>
+              <ReactMarkdown>{result.improved_text}</ReactMarkdown>
             </div>
 
             {/* Improvements Checklist */}

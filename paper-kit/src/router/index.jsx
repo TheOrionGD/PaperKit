@@ -39,6 +39,12 @@ const RemovePagesScreen     = lazy(() => import('../screens/tools/RemovePagesScr
 const ReorderPagesScreen    = lazy(() => import('../screens/tools/ReorderPagesScreen'));
 const DuplicatePagesScreen  = lazy(() => import('../screens/tools/DuplicatePagesScreen'));
 const PDFToPDFAScreen       = lazy(() => import('../screens/tools/PDFToPDFAScreen'));
+const ImageConverterScreen  = lazy(() => import('../screens/tools/ImageConverterScreen'));
+const ImageCompressorScreen = lazy(() => import('../screens/tools/ImageCompressorScreen'));
+const MediaDownloaderScreen = lazy(() => import('../screens/tools/MediaDownloaderScreen'));
+const AudioConverterScreen  = lazy(() => import('../screens/tools/AudioConverterScreen'));
+const VideoConverterScreen  = lazy(() => import('../screens/tools/VideoConverterScreen'));
+const VideoCompressorScreen = lazy(() => import('../screens/tools/VideoCompressorScreen'));
 
 /* AI tool screens */
 const SummarizePDFScreen    = lazy(() => import('../screens/ai/SummarizePDFScreen'));
@@ -53,6 +59,7 @@ const ClassifyPDFScreen     = lazy(() => import('../screens/ai/ClassifyPDFScreen
 const ExtractInfoScreen     = lazy(() => import('../screens/ai/ExtractInfoScreen'));
 const WritingAssistantScreen= lazy(() => import('../screens/ai/WritingAssistantScreen'));
 const QualityCheckerScreen  = lazy(() => import('../screens/ai/QualityCheckerScreen'));
+const ImageEnhancerScreen   = lazy(() => import('../screens/ai/ImageEnhancerScreen'));
 
 /* Security & Privacy screens */
 const ProtectPDFScreen      = lazy(() => import('../screens/tools/ProtectPDFScreen'));
@@ -66,7 +73,9 @@ export default function AppRouter() {
   const [_forceProceed, setForceProceed] = useState(false);
   const [splashVisible, setSplashVisible] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    return localStorage.getItem('paperkit_onboarding_done') !== 'true';
+  });
 
   const [healthState, setHealthState] = useState({
     stage: 'connecting',
@@ -195,8 +204,14 @@ export default function AppRouter() {
             <Route path="/tools/reorder-pages"   element={<AppShell headerProps={{ title: 'Reorder Pages' }}><ReorderPagesScreen /></AppShell>} />
             <Route path="/tools/duplicate-pages" element={<AppShell headerProps={{ title: 'Duplicate Pages' }}><DuplicatePagesScreen /></AppShell>} />
             <Route path="/tools/pdf-to-pdfa"     element={<AppShell headerProps={{ title: 'PDF to PDF/A' }}><PDFToPDFAScreen /></AppShell>} />
+            <Route path="/tools/image-converter" element={<AppShell headerProps={{ title: 'Image Converter' }}><ImageConverterScreen /></AppShell>} />
+            <Route path="/tools/image-compressor" element={<AppShell headerProps={{ title: 'Image Compressor' }}><ImageCompressorScreen /></AppShell>} />
+            <Route path="/tools/media-downloader" element={<AppShell headerProps={{ title: 'Media Downloader' }}><MediaDownloaderScreen /></AppShell>} />
+            <Route path="/tools/audio-converter" element={<AppShell headerProps={{ title: 'Audio Converter' }}><AudioConverterScreen /></AppShell>} />
+            <Route path="/tools/video-converter" element={<AppShell headerProps={{ title: 'Video Converter' }}><VideoConverterScreen /></AppShell>} />
+            <Route path="/tools/video-compressor" element={<AppShell headerProps={{ title: 'Video Compressor' }}><VideoCompressorScreen /></AppShell>} />
 
-            {/* AI tool routes */}
+            {/* AI tool routes */ }
             <Route path="/ai/ocr"                element={<AppShell headerProps={{ title: 'OCR Text Recognition' }}><OCRScreen /></AppShell>} />
             <Route path="/tools/ocr"             element={<AppShell headerProps={{ title: 'OCR Text Recognition' }}><OCRScreen /></AppShell>} />
             <Route path="/ai/summarize"          element={<AppShell headerProps={{ title: 'Summarize PDF' }}><SummarizePDFScreen /></AppShell>} />
@@ -210,6 +225,7 @@ export default function AppRouter() {
             <Route path="/ai/writing-assist"     element={<AppShell headerProps={{ title: 'AI Writing Assistant' }}><WritingAssistantScreen /></AppShell>} />
             <Route path="/ai/quality-checker"    element={<AppShell headerProps={{ title: 'Quality Checker' }}><QualityCheckerScreen /></AppShell>} />
             <Route path="/ai/extract-tables"     element={<AppShell headerProps={{ title: 'Extract Tables' }}><ExtractTablesScreen /></AppShell>} />
+            <Route path="/ai/image-enhancer"     element={<AppShell headerProps={{ title: 'AI Image Enhancer' }}><ImageEnhancerScreen /></AppShell>} />
 
             {/* Security & Privacy routes */}
             <Route path="/security/protect"      element={<AppShell headerProps={{ title: 'Protect PDF' }}><ProtectPDFScreen /></AppShell>} />

@@ -267,8 +267,36 @@
 .ai-screen__unavailable-sub {
   font-size: 13px;
   color: var(--color-text-muted);
-  margin: 0;
-  max-width: 280px;
+  max-width: 320px;
+  margin: 0 auto;
+  line-height: 1.4;
+}
+
+/* Markdown styling */
+.markdown-body {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.markdown-body p {
+  margin-bottom: 1em;
+}
+.markdown-body ul, .markdown-body ol {
+  margin-bottom: 1em;
+  padding-left: 1.5em;
+}
+.markdown-body li {
+  margin-bottom: 0.5em;
+}
+.markdown-body strong {
+  font-weight: 700;
+  color: var(--color-text-primary);
 }
 
 /* ── Processing / loading inside result ── */

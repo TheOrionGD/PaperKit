@@ -133,12 +133,15 @@ storage_dir = os.path.join(os.path.dirname(__file__), "storage")
 os.makedirs(storage_dir, exist_ok=True)
 app.mount("/storage", CustomStaticFiles(directory=storage_dir), name="storage")
 
+from routers.media import router as media_router
+
 # Routers
 app.include_router(auth_router)
 app.include_router(files_router)
 app.include_router(tools_router)
 app.include_router(ai_router)
 app.include_router(jobs_router)
+app.include_router(media_router, prefix="/api/media", tags=["media"])
 
 
 from fastapi.responses import Response

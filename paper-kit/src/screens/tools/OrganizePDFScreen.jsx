@@ -32,7 +32,6 @@ export default function OrganizePDFScreen({ mode: _mode = 'organize' }) {
 
   // Full page preview
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
-  const [previewTarget, setPreviewTarget] = useState(null);
 
   const { runProcessing } = useProcessing();
   const { toast, showToast, dismissToast } = useToast();
@@ -400,8 +399,6 @@ export default function OrganizePDFScreen({ mode: _mode = 'organize' }) {
       <FilePreviewModal
         isOpen={previewModalOpen}
         onClose={() => setPreviewModalOpen(false)}
-        fileUrl={previewTarget?.download_url}
-        fileName={previewTarget?.name}
       />
 
       <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />

@@ -7,7 +7,9 @@ from services.processing import extract_text
 from services import ai_service
 from bson import ObjectId
 
-router = APIRouter(prefix="/ai", tags=["ai"])
+from middleware.rate_limit import check_ai_rate_limit
+
+router = APIRouter(prefix="/ai", tags=["ai"], dependencies=[Depends(check_ai_rate_limit)])
 
 
 async def _get_pdf_text(file_id: str, user_id: str, db) -> str:

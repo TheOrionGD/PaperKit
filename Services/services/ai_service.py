@@ -34,18 +34,18 @@ def get_groq_client():
     return _groq_client
 
 
-def _get_gemini_model(model_name: str = "gemini-2.5-flash"):
+def _get_gemini_model(model_name: str = "gemini-3.6-flash"):
     current_settings = get_settings()
     if not current_settings.gemini_api_key:
         raise RuntimeError("GEMINI_API_KEY is not configured")
     import google.generativeai as genai
-    candidate_models = ["gemini-2.5-flash", "gemini-3.5-flash", "gemini-3.7-flash", "gemini-2.5-pro"]
+    candidate_models = ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.7-flash", "gemini-2.5-pro"]
     for m in candidate_models:
         try:
             return genai.GenerativeModel(m)
         except Exception:
             continue
-    return genai.GenerativeModel("gemini-2.5-flash")
+    return genai.GenerativeModel("gemini-3.6-flash")
 
 
 async def generate_text(prompt: str, system_prompt: Optional[str] = None) -> str:

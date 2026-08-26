@@ -38,7 +38,7 @@ export function useFiles(params = {}) {
       setLoading(false);
     }
     fetchFiles();
-  }, [fetchFiles, params]);
+  }, [fetchFiles, JSON.stringify(params)]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const remove = useCallback(async (fileId) => {
     await deleteFile(fileId);

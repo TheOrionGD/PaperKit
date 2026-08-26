@@ -10,6 +10,7 @@ import FilePreviewModal from '../ui/FilePreviewModal';
 import { downloadAndOpenFile } from '../../services/native';
 import './CommonResultScreen.css';
 
+/* eslint-disable react-refresh/only-export-components */
 /**
  * Standard Action Definitions for Dynamic Next Actions
  */

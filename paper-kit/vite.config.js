@@ -14,6 +14,10 @@ export default defineConfig({
         rewrite: path => path.replace(/^\/api/, ''),
       },
     },
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
   },
   define: {
     'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || 'https://paperkit-backend.onrender.com'),

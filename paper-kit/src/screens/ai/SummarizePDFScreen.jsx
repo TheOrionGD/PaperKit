@@ -4,6 +4,7 @@ import { FileText, Sparkles, Copy, Download, Upload, Check, Bot, Search, Refresh
 import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
 import Toast from "../../components/ui/Toast";
 import { useToast } from "../../hooks/useToast";
+import ReactMarkdown from 'react-markdown';
 import { useProcessing } from "../../context/ProcessingContext";
 import { summarizePDF } from "../../services/ai";
 import api from "../../services/api";
@@ -170,7 +171,7 @@ export default function SummarizePDFScreen() {
       {/* Summary Mode Pill Selector (Short, Detailed, Key Points, Important Findings, Keywords) */}
       <div className="ai-screen__options-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '8px', marginBottom: '12px' }}>
         <span className="ai-screen__options-label" style={{ fontWeight: 600, fontSize: '13px' }}>Summarization Format</span>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '6px', width: '100%' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '8px', width: '100%' }}>
           {MODES.map(m => (
             <button
               key={m.id}
@@ -248,8 +249,8 @@ export default function SummarizePDFScreen() {
               </div>
             </div>
 
-            <div className="ai-screen__result-box" style={{ whiteSpace: 'pre-wrap', maxHeight: '300px', overflowY: 'auto' }}>
-              {summary}
+            <div className="ai-screen__result-box markdown-body" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+              <ReactMarkdown>{summary}</ReactMarkdown>
             </div>
 
             {/* ⭐ Smart Workflow Chaining Section matching spec:

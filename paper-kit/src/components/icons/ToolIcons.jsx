@@ -12,15 +12,25 @@ export function ToolIconWrapper({ bgColor, softColor, size = 44, children }) {
       style={{
         width: size,
         height: size,
-        borderRadius: 12,
-        background: softColor,
+        borderRadius: 14,
+        background: `linear-gradient(135deg, ${softColor} 0%, rgba(255,255,255,0.4) 100%)`,
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06), inset 0 2px 4px rgba(255,255,255,0.8)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
+        transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-3px) scale(1.05)';
+        e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.1), inset 0 2px 4px rgba(255,255,255,0.9)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'none';
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.06), inset 0 2px 4px rgba(255,255,255,0.8)';
       }}
     >
-      <div style={{ color: bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ color: bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' }}>
         {children}
       </div>
     </div>
@@ -31,12 +41,12 @@ export function ToolIconWrapper({ bgColor, softColor, size = 44, children }) {
 /* File type icons for file cards */
 export function FileTypeIcon({ type, size = 36 }) {
   const colors = {
-    pdf: { bg: '#FEE2E2', fg: '#EF4444' },
-    word: { bg: '#DBEAFE', fg: '#2563EB' },
-    excel: { bg: '#D1FAE5', fg: '#10B981' },
-    ppt: { bg: '#FEF3C7', fg: '#F59E0B' },
-    image: { bg: '#EDE9FE', fg: '#8B5CF6' },
-    default: { bg: '#F3F4F6', fg: '#6B7280' },
+    pdf: { bg: 'linear-gradient(135deg, #FEE2E2 0%, #FCA5A5 100%)', fg: '#DC2626', shadow: 'rgba(239, 68, 68, 0.25)' },
+    word: { bg: 'linear-gradient(135deg, #DBEAFE 0%, #93C5FD 100%)', fg: '#2563EB', shadow: 'rgba(59, 130, 246, 0.25)' },
+    excel: { bg: 'linear-gradient(135deg, #D1FAE5 0%, #6EE7B7 100%)', fg: '#059669', shadow: 'rgba(16, 185, 129, 0.25)' },
+    ppt: { bg: 'linear-gradient(135deg, #FEF3C7 0%, #FCD34D 100%)', fg: '#D97706', shadow: 'rgba(245, 158, 11, 0.25)' },
+    image: { bg: 'linear-gradient(135deg, #EDE9FE 0%, #C4B5FD 100%)', fg: '#7C3AED', shadow: 'rgba(139, 92, 246, 0.25)' },
+    default: { bg: 'linear-gradient(135deg, #F3F4F6 0%, #D1D5DB 100%)', fg: '#4B5563', shadow: 'rgba(107, 114, 128, 0.25)' },
   };
   const c = colors[type?.toLowerCase()] || colors.default;
 
@@ -53,15 +63,29 @@ export function FileTypeIcon({ type, size = 36 }) {
       style={{
         width: size,
         height: size,
-        borderRadius: 8,
+        borderRadius: 10,
         background: c.bg,
+        boxShadow: `0 4px 10px ${c.shadow}, inset 0 2px 4px rgba(255,255,255,0.5)`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
+        position: 'relative',
+        overflow: 'hidden'
       }}
     >
-      <span style={{ fontSize: 10, fontWeight: 700, color: c.fg, letterSpacing: 0.3 }}>
+      {/* Decorative file fold corner */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        borderWidth: '0 8px 8px 0',
+        borderColor: `transparent #ffffff40 transparent transparent`,
+        borderStyle: 'solid',
+        borderBottomLeftRadius: 4,
+        boxShadow: '-1px 1px 2px rgba(0,0,0,0.05)'
+      }} />
+      <span style={{ fontSize: 11, fontWeight: 800, color: c.fg, letterSpacing: 0.5, textShadow: '0 1px 2px rgba(255,255,255,0.7)' }}>
         {labels[type?.toLowerCase()] || type?.slice(0, 3).toUpperCase() || '?'}
       </span>
     </div>
@@ -408,6 +432,104 @@ export const EditPDFIcon = ({ size }) => (
   </Icon>
 );
 
+export const JpgToPngIcon = ({ size }) => (
+  <Icon color="blue" size={size}>
+    <rect x={3} y={3} width={18} height={18} rx={2} ry={2} />
+    <circle cx={8.5} cy={8.5} r={1.5} />
+    <polyline points="21 15 16 10 5 21" />
+    <path d="M16 3h5v5" />
+  </Icon>
+);
+
+export const PngToJpgIcon = ({ size }) => (
+  <Icon color="green" size={size}>
+    <rect x={3} y={3} width={18} height={18} rx={2} ry={2} />
+    <circle cx={8.5} cy={8.5} r={1.5} />
+    <polyline points="21 15 16 10 5 21" />
+    <path d="M3 16v5h5" />
+  </Icon>
+);
+
+export const WebpToJpgIcon = ({ size }) => (
+  <Icon color="purple" size={size}>
+    <rect x={3} y={3} width={18} height={18} rx={2} ry={2} />
+    <circle cx={8.5} cy={8.5} r={1.5} />
+    <polyline points="21 15 16 10 5 21" />
+    <circle cx={19} cy={5} r={2} />
+  </Icon>
+);
+
+export const WebpToPngIcon = ({ size }) => (
+  <Icon color="teal" size={size}>
+    <rect x={3} y={3} width={18} height={18} rx={2} ry={2} />
+    <circle cx={8.5} cy={8.5} r={1.5} />
+    <polyline points="21 15 16 10 5 21" />
+    <circle cx={5} cy={5} r={2} />
+  </Icon>
+);
+
+export const HeicToJpgIcon = ({ size }) => (
+  <Icon color="pink" size={size}>
+    <rect x={3} y={3} width={18} height={18} rx={2} ry={2} />
+    <circle cx={8.5} cy={8.5} r={1.5} />
+    <polyline points="21 15 16 10 5 21" />
+    <line x1={8} y1={3} x2={16} y2={3} />
+  </Icon>
+);
+
+export const BmpToJpgIcon = ({ size }) => (
+  <Icon color="indigo" size={size}>
+    <rect x={3} y={3} width={18} height={18} rx={2} ry={2} />
+    <circle cx={8.5} cy={8.5} r={1.5} />
+    <polyline points="21 15 16 10 5 21" />
+    <rect x={3} y={3} width={4} height={4} />
+  </Icon>
+);
+
+export const ImageCompressIcon = ({ color = "orange", size }) => (
+  <Icon color={color} size={size}>
+    <rect x={3} y={3} width={18} height={18} rx={2} ry={2} />
+    <path d="M12 8v8" />
+    <path d="m8 12 4 4 4-4" />
+  </Icon>
+);
+
+export const CompressLowIcon = ({ size }) => <ImageCompressIcon color="green" size={size} />;
+export const CompressMedIcon = ({ size }) => <ImageCompressIcon color="orange" size={size} />;
+export const CompressHighIcon = ({ size }) => <ImageCompressIcon color="red" size={size} />;
+export const CompressCustomIcon = ({ size }) => <ImageCompressIcon color="purple" size={size} />;
+
+export const YoutubeIcon = ({ size }) => (
+  <Icon color="red" size={size}>
+    <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z" />
+    <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
+  </Icon>
+);
+
+export const SpotifyIcon = ({ size }) => (
+  <Icon color="green" size={size}>
+    <circle cx="12" cy="12" r="10" />
+    <path d="M8 11.5c2.5-1 5-1 7.5-.5" />
+    <path d="M7 14.5c2-1 4.5-1 6.5-.5" />
+    <path d="M9 8.5c3-1 6-1 9-.5" />
+  </Icon>
+);
+
+export const VideoToolIcon = ({ size, color="blue" }) => (
+  <Icon color={color} size={size}>
+    <path d="M23 7l-7 5 7 5V7z" />
+    <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+  </Icon>
+);
+
+export const AudioToolIcon = ({ size, color="green" }) => (
+  <Icon color={color} size={size}>
+    <path d="M9 18V5l12-2v13" />
+    <circle cx="6" cy="18" r="3" />
+    <circle cx="18" cy="16" r="3" />
+  </Icon>
+);
+
 /* Map from tool key to icon component */
 export const TOOL_ICON_MAP = {
   'edit-pdf':         EditPDFIcon,
@@ -449,6 +571,32 @@ export const TOOL_ICON_MAP = {
   'extract-info':     ExtractInfoIcon,
   'writing-assistant': WritingAssistIcon,
   'quality-checker':  QualityCheckerIcon,
+  'ai-image-enhancer': ImageToPDFIcon,
+  'jpg-to-png':       JpgToPngIcon,
+  'png-to-jpg':       PngToJpgIcon,
+  'webp-to-jpg':      WebpToJpgIcon,
+  'webp-to-png':      WebpToPngIcon,
+  'webp-convert':     WebpToJpgIcon,
+  'heic-to-jpg':      HeicToJpgIcon,
+  'bmp-to-jpg':       BmpToJpgIcon,
+  'bmp-convert':      BmpToJpgIcon,
+  'image-compressor': ImageCompressIcon,
+  'compress-low':     CompressLowIcon,
+  'compress-medium':  CompressMedIcon,
+  'compress-high':    CompressHighIcon,
+  'compress-custom':  CompressCustomIcon,
+  'youtube-downloader': YoutubeIcon,
+  'spotify-downloader': SpotifyIcon,
+  'video-to-mp4':       () => <VideoToolIcon color="blue" />,
+  'video-to-webm':      () => <VideoToolIcon color="green" />,
+  'video-to-mov':       () => <VideoToolIcon color="purple" />,
+  'video-to-gif':       () => <VideoToolIcon color="orange" />,
+  'vcompress-low':      () => <VideoToolIcon color="green" />,
+  'vcompress-medium':   () => <VideoToolIcon color="orange" />,
+  'vcompress-high':     () => <VideoToolIcon color="red" />,
+  'audio-to-mp3':       () => <AudioToolIcon color="green" />,
+  'audio-to-wav':       () => <AudioToolIcon color="blue" />,
+  'audio-to-ogg':       () => <AudioToolIcon color="orange" />,
   'protect-pdf':      ProtectPDFIcon,
   'smart-redaction':  RedactIcon,
   'digital-sign':     SignIcon,

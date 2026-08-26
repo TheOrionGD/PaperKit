@@ -4,6 +4,7 @@ import { FileText, Languages, Copy, Download, Upload, Check } from "lucide-react
 import { useSearchParams, useLocation } from "react-router-dom";
 import Toast from "../../components/ui/Toast";
 import { useToast } from "../../hooks/useToast";
+import ReactMarkdown from 'react-markdown';
 import { useProcessing } from "../../context/ProcessingContext";
 import { translateDocument } from "../../services/ai";
 import "../ai/ai-screen.css";
@@ -271,7 +272,9 @@ export default function TranslatePDFScreen() {
                 </button>
               </div>
             </div>
-            <div className="ai-screen__result-box">{translation}</div>
+            <div className="ai-screen__result-box markdown-body">
+              <ReactMarkdown>{translation}</ReactMarkdown>
+            </div>
           </>
         )}
 

@@ -344,7 +344,7 @@ function ProcessingOverlay({ task, onClose, config }) {
                 <span className="factor-label">Platform</span>
                 <span className="factor-val">
                   {isCapacitor ? (
-                    <><Smartphone size={12} /> Capacitor App</>
+                    <><Smartphone size={12} /> Powered by PaperKit App</>
                   ) : (
                     <><Globe size={12} /> Web Browser</>
                   )}

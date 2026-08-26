@@ -21,6 +21,14 @@ export const DEFAULT_REGISTRY = [
   { toolId: 'pdf-to-image', name: 'PDF to Image', category: 'Convert', route: '/tools/convert?from=pdf&to=image', description: 'Convert PDF pages to high-res images', availability: { available: true } },
   { toolId: 'image-to-pdf', name: 'Image to PDF', category: 'Convert', route: '/tools/convert?from=image&to=pdf', description: 'Convert JPG/PNG images to PDF', availability: { available: true } },
   
+  // Image Tools
+  { toolId: 'jpg-to-png', name: 'JPG to PNG', category: 'Image Tools', route: '/tools/image-converter?from=jpg&to=png', description: 'Convert JPG images to PNG format', availability: { available: true } },
+  { toolId: 'png-to-jpg', name: 'PNG to JPG', category: 'Image Tools', route: '/tools/image-converter?from=png&to=jpg', description: 'Convert PNG images to JPG format', availability: { available: true } },
+  { toolId: 'webp-to-jpg', name: 'WebP to JPG', category: 'Image Tools', route: '/tools/image-converter?from=webp&to=jpg', description: 'Convert WebP images to JPG format', availability: { available: true } },
+  { toolId: 'webp-to-png', name: 'WebP to PNG', category: 'Image Tools', route: '/tools/image-converter?from=webp&to=png', description: 'Convert WebP images to PNG format', availability: { available: true } },
+  { toolId: 'heic-to-jpg', name: 'HEIC to JPG', category: 'Image Tools', route: '/tools/image-converter?from=heic&to=jpg', description: 'Convert Apple HEIC photos to JPG', availability: { available: true } },
+  { toolId: 'bmp-to-jpg', name: 'BMP to JPG', category: 'Image Tools', route: '/tools/image-converter?from=bmp&to=jpg', description: 'Convert Bitmap images to JPG', availability: { available: true } },
+  { toolId: 'image-compressor', name: 'Image Compressor', category: 'Image Tools', route: '/tools/image-compressor', description: 'Compress images with multiple quality presets', availability: { available: true }, capabilities: ['compress', 'optimize', 'resize'] },  
   // AI Tools
   { toolId: 'ai-ocr', name: 'OCR Text Detection', category: 'AI Tools', route: '/ai/ocr', description: 'Extract text & layout from scanned PDFs and images', availability: { available: true } },
   { toolId: 'summarize-pdf', name: 'AI Summary', category: 'AI Tools', route: '/ai/summarize', description: 'Smart summary, key points, findings & action items', availability: { available: true } },
@@ -33,6 +41,7 @@ export const DEFAULT_REGISTRY = [
   { toolId: 'translate-pdf', name: 'AI Translation', category: 'AI Tools', route: '/ai/translate', description: 'Translate document into 15+ languages', availability: { available: true } },
   { toolId: 'writing-assistant', name: 'Writing Assistant', category: 'AI Tools', route: '/ai/writing-assist', description: 'Grammar, paraphrasing, simplifying & formal rewrite', availability: { available: true } },
   { toolId: 'quality-checker', name: 'Quality Checker', category: 'AI Tools', route: '/ai/quality-checker', description: 'Audit structure, citations, consistency & readability', availability: { available: true } },
+  { toolId: 'ai-image-enhancer', name: 'AI Image Enhancer', category: 'AI Tools', route: '/ai/image-enhancer', description: 'Upscale and enhance image quality using AI', availability: { available: true }, capabilities: ['upscale', 'enhance', 'resolution'] },
 
   // Security & Privacy
   { toolId: 'protect-pdf', name: 'Protect PDF', category: 'Security', route: '/security/protect', description: 'Password protection and AES encryption', availability: { available: true } },

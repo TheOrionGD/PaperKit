@@ -43,6 +43,45 @@ export const CONVERT_TOOLS = [
   { id: 'pdf-to-image',  label: 'PDF to Image',  path: '/tools/convert?from=pdf&to=image' },
 ];
 
+export const IMAGE_FORMAT_TOOLS = [
+  { id: 'jpg-to-png',  label: 'JPG to PNG',    description: 'Convert JPG to PNG', path: '/tools/image-converter?from=jpg&to=png', color: 'blue' },
+  { id: 'png-to-jpg',  label: 'PNG to JPG',    description: 'Convert PNG to JPG', path: '/tools/image-converter?from=png&to=jpg', color: 'green' },
+  { id: 'webp-convert',label: 'WebP to JPG/PNG', description: 'Convert WebP to JPG or PNG', path: '/tools/image-converter?from=webp', color: 'teal' },
+  { id: 'heic-to-jpg', label: 'HEIC to JPG',   description: 'Convert Apple HEIC to JPG', path: '/tools/image-converter?from=heic&to=jpg', color: 'pink' },
+  { id: 'bmp-convert', label: 'BMP to JPG/PNG',  description: 'Convert BMP to JPG or PNG', path: '/tools/image-converter?from=bmp', color: 'indigo' },
+];
+
+export const IMAGE_COMPRESS_TOOLS = [
+  { id: 'compress-low',    label: 'Low Compression',    description: 'High quality, larger file size', path: '/tools/image-compressor?preset=low', color: 'green' },
+  { id: 'compress-medium', label: 'Medium Compression', description: 'Balanced quality & size', path: '/tools/image-compressor?preset=medium', color: 'orange' },
+  { id: 'compress-high',   label: 'High Compression',   description: 'Smaller file size, lower quality', path: '/tools/image-compressor?preset=high', color: 'red' },
+  { id: 'compress-custom', label: 'Custom Compression', description: 'User selects compression level', path: '/tools/image-compressor?preset=custom', color: 'purple' },
+];
+
+export const VIDEO_FORMAT_TOOLS = [
+  { id: 'video-to-mp4', label: 'Convert to MP4', description: 'Convert to MP4 format', path: '/tools/video-converter?to=mp4', color: 'blue' },
+  { id: 'video-to-webm', label: 'Convert to WebM', description: 'Convert to WebM format', path: '/tools/video-converter?to=webm', color: 'green' },
+  { id: 'video-to-mov', label: 'Convert to MOV', description: 'Convert to MOV format', path: '/tools/video-converter?to=mov', color: 'purple' },
+  { id: 'video-to-gif', label: 'Convert to GIF', description: 'Convert to animated GIF', path: '/tools/video-converter?to=gif', color: 'orange' },
+];
+
+export const VIDEO_COMPRESS_TOOLS = [
+  { id: 'vcompress-low', label: 'Low Compression', description: 'High quality, large size', path: '/tools/video-compressor?preset=low', color: 'green' },
+  { id: 'vcompress-medium', label: 'Medium Compression', description: 'Balanced quality & size', path: '/tools/video-compressor?preset=medium', color: 'orange' },
+  { id: 'vcompress-high', label: 'High Compression', description: 'Small file size', path: '/tools/video-compressor?preset=high', color: 'red' },
+];
+
+export const AUDIO_FORMAT_TOOLS = [
+  { id: 'audio-to-mp3', label: 'Convert to MP3', description: 'Standard audio format', path: '/tools/audio-converter?to=mp3', color: 'green' },
+  { id: 'audio-to-wav', label: 'Convert to WAV', description: 'Lossless audio format', path: '/tools/audio-converter?to=wav', color: 'blue' },
+  { id: 'audio-to-ogg', label: 'Convert to OGG', description: 'Web audio format', path: '/tools/audio-converter?to=ogg', color: 'orange' },
+];
+
+export const MEDIA_DOWNLOADER_TOOLS = [
+  { id: 'youtube-downloader', label: 'YouTube Video', description: 'Download YouTube videos as MP4', path: '/tools/media-downloader?type=youtube', color: 'red' },
+  { id: 'spotify-downloader', label: 'Spotify Audio', description: 'Download Spotify tracks as MP3', path: '/tools/media-downloader?type=spotify', color: 'green' },
+];
+
 export const QUICK_TOOLS = [
   PDF_TOOLS[0], // Edit PDF
   PDF_TOOLS[1], // Merge PDF
@@ -59,6 +98,12 @@ export const ALL_TOOLS = {
   ai: AI_TOOLS,
   security: SECURITY_TOOLS,
   convert: CONVERT_TOOLS,
+  imageFormat: IMAGE_FORMAT_TOOLS,
+  imageCompress: IMAGE_COMPRESS_TOOLS,
+  videoFormat: VIDEO_FORMAT_TOOLS,
+  videoCompress: VIDEO_COMPRESS_TOOLS,
+  audioFormat: AUDIO_FORMAT_TOOLS,
+  mediaDownloader: MEDIA_DOWNLOADER_TOOLS,
 };
 
 
