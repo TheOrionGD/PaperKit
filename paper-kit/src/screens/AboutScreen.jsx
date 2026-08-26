@@ -32,7 +32,7 @@ export default function AboutScreen() {
       </div>
 
       <div style={{ marginTop: 'var(--space-8)', color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>
-        <p>Version 1.3.5</p>
+        <p>Version 1.3.6</p>
         <p>&copy; {new Date().getFullYear()} hello.theoriongd@gmail.com. All rights reserved.</p>
       </div>
     </div>
