@@ -24,6 +24,7 @@ const OnboardingScreen = lazy(() => import('../screens/welcome/OnboardingScreen'
 const HelpScreen       = lazy(() => import('../screens/HelpScreen'));
 const AboutScreen      = lazy(() => import('../screens/AboutScreen'));
 const NotFoundScreen   = lazy(() => import('../screens/NotFoundScreen'));
+const CategoryHubScreen  = lazy(() => import('../screens/CategoryHubScreen'));
 
 /* Dedicated Tool screens */
 const EditPDFScreen         = lazy(() => import('../screens/tools/EditPDFScreen'));
@@ -45,6 +46,7 @@ const MediaDownloaderScreen = lazy(() => import('../screens/tools/MediaDownloade
 const AudioConverterScreen  = lazy(() => import('../screens/tools/AudioConverterScreen'));
 const VideoConverterScreen  = lazy(() => import('../screens/tools/VideoConverterScreen'));
 const VideoCompressorScreen = lazy(() => import('../screens/tools/VideoCompressorScreen'));
+const ArchiveToolScreen     = lazy(() => import('../screens/tools/ArchiveToolScreen'));
 
 /* AI tool screens */
 const SummarizePDFScreen    = lazy(() => import('../screens/ai/SummarizePDFScreen'));
@@ -190,6 +192,10 @@ export default function AppRouter() {
             <Route path="/help" element={<AppShell headerProps={{ title: 'Help & Support' }}><HelpScreen /></AppShell>} />
             <Route path="/about" element={<AppShell headerProps={{ title: 'About PaperKit' }}><AboutScreen /></AppShell>} />
 
+            {/* Category Hubs — Dedicated container pages */}
+            <Route path="/category/:categoryId" element={<AppShell headerProps={{ title: 'Tools Hub' }}><CategoryHubScreen /></AppShell>} />
+            <Route path="/tools/category/:categoryId" element={<AppShell headerProps={{ title: 'Tools Hub' }}><CategoryHubScreen /></AppShell>} />
+
             {/* PDF Tool routes */}
             <Route path="/tools/edit"            element={<AppShell headerProps={{ title: 'Edit PDF' }}><EditPDFScreen /></AppShell>} />
             <Route path="/tools/merge"           element={<AppShell headerProps={{ title: 'Merge PDF', rightAction: 'check' }}><MergePDFScreen /></AppShell>} />
@@ -210,6 +216,7 @@ export default function AppRouter() {
             <Route path="/tools/audio-converter" element={<AppShell headerProps={{ title: 'Audio Converter' }}><AudioConverterScreen /></AppShell>} />
             <Route path="/tools/video-converter" element={<AppShell headerProps={{ title: 'Video Converter' }}><VideoConverterScreen /></AppShell>} />
             <Route path="/tools/video-compressor" element={<AppShell headerProps={{ title: 'Video Compressor' }}><VideoCompressorScreen /></AppShell>} />
+            <Route path="/tools/archive"          element={<AppShell headerProps={{ title: 'Archive Studio' }}><ArchiveToolScreen /></AppShell>} />
 
             {/* AI tool routes */ }
             <Route path="/ai/ocr"                element={<AppShell headerProps={{ title: 'OCR Text Recognition' }}><OCRScreen /></AppShell>} />

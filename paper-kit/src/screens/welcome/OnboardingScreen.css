@@ -48,9 +48,12 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 24px;
+  padding-top: calc(16px + 7px);
+  margin-top: 7px;
   z-index: 10;
   backdrop-filter: blur(12px);
 }
+
 
 .onboarding-screen__brand {
   display: flex;
@@ -138,22 +141,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: clamp(8px, 1.5vh, 16px) clamp(12px, 3vw, 24px);
   z-index: 5;
   overflow-y: auto;
+  min-height: 0;
+  box-sizing: border-box;
 }
 
 .onboarding-screen__card {
   width: 100%;
-  max-width: 580px;
-  background: rgba(255, 255, 255, 0.85);
+  max-width: 540px;
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(37, 99, 235, 0.15);
-  border-radius: 28px;
-  padding: 40px 36px;
-  box-shadow: 0 25px 60px -15px rgba(37, 99, 235, 0.15), 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  border-radius: 24px;
+  padding: clamp(18px, 2.8vh, 28px) clamp(18px, 3vw, 28px);
+  box-shadow: 0 20px 50px -15px rgba(37, 99, 235, 0.15), 0 8px 20px -5px rgba(0, 0, 0, 0.05);
   animation: slideFadeIn 0.35s ease-out forwards;
+  box-sizing: border-box;
+  margin: auto;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
 }
 
 @keyframes slideFadeIn {
@@ -171,24 +180,24 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
 .onboarding-screen__icon-orb {
-  width: 72px;
-  height: 72px;
-  border-radius: 22px;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 1px solid rgba(37, 99, 235, 0.15);
-  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
 }
 
 .onboarding-screen__badge {
-  font-size: 0.8rem;
+  font-size: 0.74rem;
   font-weight: 700;
-  padding: 6px 16px;
+  padding: 4px 12px;
   border-radius: 30px;
   border: 1px solid;
   letter-spacing: 0.02em;
@@ -196,36 +205,36 @@
 }
 
 .onboarding-screen__title {
-  font-size: 1.8rem;
+  font-size: clamp(1.25rem, 3.2vh, 1.55rem);
   font-weight: 800;
   line-height: 1.25;
   letter-spacing: -0.02em;
   color: #0F172A;
-  margin: 0 0 12px 0;
+  margin: 0 0 6px 0;
 }
 
 .onboarding-screen__subtitle {
-  font-size: 0.98rem;
-  line-height: 1.6;
+  font-size: 0.88rem;
+  line-height: 1.45;
   color: #475569;
-  margin: 0 0 28px 0;
+  margin: 0 0 16px 0;
 }
 
 /* Features List */
 .onboarding-screen__features-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
 .onboarding-screen__feature-item {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  font-size: 0.92rem;
+  gap: 10px;
+  font-size: 0.86rem;
   color: #1E293B;
   font-weight: 500;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .onboarding-screen__feature-icon {
@@ -238,8 +247,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-  padding: 20px 24px 32px;
+  gap: 12px;
+  padding: 10px 24px clamp(14px, 2.5vh, 22px);
   z-index: 10;
 }
 
@@ -248,6 +257,7 @@
   align-items: center;
   gap: 8px;
 }
+
 
 .onboarding-screen__dot {
   width: 8px;
@@ -349,3 +359,124 @@
     padding: 12px 16px;
   }
 }
+
+/* ── Rate Limits Slide ───────────────────────────────────────────────────── */
+
+.ob-rate-limits {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ob-rate-limit-card {
+  border: 1.5px solid;
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: box-shadow 0.2s ease;
+}
+
+.ob-rate-limit-card:hover {
+  box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+}
+
+/* Header row: icon bubble + text + type badge */
+.ob-rate-limit-card__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ob-rate-limit-card__icon-bubble {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1.5px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ob-rate-limit-card__category {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.ob-rate-limit-card__rule {
+  font-size: 0.94rem;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.01em;
+}
+
+.ob-rate-limit-card__badge {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 16px;
+  border: 1px solid;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* "Applies to" note */
+.ob-rate-limit-card__note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.74rem;
+  color: #475569;
+  line-height: 1.35;
+  margin: 0;
+  padding: 6px 8px;
+  background: rgba(255,255,255,0.65);
+  border-radius: 6px;
+}
+
+/* Tip row */
+.ob-rate-limit-card__tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: #92400E;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 6px;
+  padding: 5px 8px;
+  line-height: 1.35;
+}
+
+/* Footer checkmarks */
+.ob-rate-limit-card__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(37, 99, 235, 0.1);
+  margin-top: 2px;
+}
+
+@media (max-width: 640px) {
+  .ob-rate-limit-card {
+    padding: 8px 10px;
+    gap: 5px;
+  }
+  .ob-rate-limit-card__rule {
+    font-size: 0.88rem;
+  }
+}
+
+

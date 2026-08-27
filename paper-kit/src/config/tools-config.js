@@ -82,6 +82,14 @@ export const MEDIA_DOWNLOADER_TOOLS = [
   { id: 'spotify-downloader', label: 'Spotify Audio', description: 'Download Spotify tracks as MP3', path: '/tools/media-downloader?type=spotify', color: 'green' },
 ];
 
+export const ARCHIVE_TOOLS = [
+  { id: 'extract-archive', label: 'Extract & View Archive', description: 'Extract .ZIP, .RAR, .TAR, .GZ, .7Z & .BZ2 files', path: '/tools/archive?mode=extract', color: 'orange' },
+  { id: 'create-zip',       label: 'Create ZIP Archive',    description: 'Compress and package multiple files to .ZIP', path: '/tools/archive?mode=create&format=zip', color: 'blue' },
+  { id: 'create-tar',       label: 'Create TAR / GZ',       description: 'Pack folders into .TAR & .TAR.GZ archives', path: '/tools/archive?mode=create&format=tar', color: 'green' },
+  { id: 'convert-archive',  label: 'Convert Archive',       description: 'Convert RAR, 7Z, TAR & BZ2 to universal ZIP', path: '/tools/archive?mode=extract', color: 'purple' },
+  { id: 'archive-manager',  label: 'Archive Studio',        description: 'Complete multi-format archive manager suite', path: '/tools/archive', color: 'orange' },
+];
+
 export const QUICK_TOOLS = [
   PDF_TOOLS[0], // Edit PDF
   PDF_TOOLS[1], // Merge PDF
@@ -98,6 +106,7 @@ export const ALL_TOOLS = {
   ai: AI_TOOLS,
   security: SECURITY_TOOLS,
   convert: CONVERT_TOOLS,
+  archive: ARCHIVE_TOOLS,
   imageFormat: IMAGE_FORMAT_TOOLS,
   imageCompress: IMAGE_COMPRESS_TOOLS,
   videoFormat: VIDEO_FORMAT_TOOLS,
@@ -105,5 +114,6 @@ export const ALL_TOOLS = {
   audioFormat: AUDIO_FORMAT_TOOLS,
   mediaDownloader: MEDIA_DOWNLOADER_TOOLS,
 };
+
 
 

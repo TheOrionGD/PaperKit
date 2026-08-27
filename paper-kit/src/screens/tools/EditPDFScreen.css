@@ -196,7 +196,7 @@
   border-radius: 4px;
 }
 
-/* Web Editor Workspace */
+/* ── docx-preview Editor Workspace ─────────────────────────────────── */
 .edit-pdf-editor-workspace {
   background: var(--color-surface);
   border: 1px solid var(--color-divider);
@@ -288,221 +288,84 @@
   outline: none;
 }
 
-/* Paper Sheet Canvas — Multi-Page Concurrent A4 Sheets */
-.editor-canvas-container {
-  background: #cbd5e1;
-  padding: 36px 16px;
-  min-height: 540px;
-  max-height: 780px;
+/* ── docx-preview Canvas ─────────────────────────────────────────── */
+.edit-pdf-docx-canvas {
+  background: #e2e8f0;
+  padding: 32px 16px;
+  min-height: 600px;
+  max-height: 80vh;
   overflow-y: auto;
+  overflow-x: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 36px;
 }
 
-.editor-page-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+/* The editable docx-preview body host */
+.edit-pdf-docx-body {
   width: 100%;
-  max-width: 210mm;
-}
-
-.editor-page-card-header {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 14px;
-  background: #1e293b;
-  color: #ffffff;
-  border-radius: 6px 6px 0 0;
-  font-size: 12px;
-  font-weight: 600;
-  box-sizing: border-box;
-}
-
-.page-card-badge {
-  background: rgba(255, 255, 255, 0.18);
-  padding: 2px 8px;
-  border-radius: 12px;
-}
-
-.page-card-meta {
-  opacity: 0.8;
-}
-
-.page-card-delete-btn {
-  background: transparent;
-  border: none;
-  color: #f87171;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition: all 0.15s ease;
-}
-
-.page-card-delete-btn:hover {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
-}
-
-.editor-paper-sheet {
-  background: #ffffff;
-  width: 210mm;
-  max-width: 100%;
-  min-height: 297mm;
-  padding: 20mm 24mm;
-  border-radius: 0 0 4px 4px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08);
-  color: #0f172a;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 15px;
-  line-height: 1.65;
-  outline: none;
-  box-sizing: border-box;
-  position: relative;
-  word-break: break-word;
-  overflow-wrap: break-word;
-}
-
-.editor-add-page-bar {
-  margin-top: 12px;
-  display: flex;
-  justify-content: center;
-}
-
-.editor-add-page-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  background: #ffffff;
-  color: var(--color-primary);
-  border: 1px dashed var(--color-primary);
-  border-radius: 24px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
-}
-
-.editor-add-page-btn:hover {
-  background: var(--color-primary);
-  color: #ffffff;
-  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
-}
-
-.editor-paper-sheet:focus {
-  box-shadow: 0 12px 36px rgba(37, 99, 235, 0.2), 0 0 0 2px var(--color-primary);
-}
-
-.editor-paper-sheet table {
-  width: 100%;
-  max-width: 100%;
-  border-collapse: collapse;
-  margin: 16px 0;
-  table-layout: fixed;
-}
-
-.editor-paper-sheet th,
-.editor-paper-sheet td {
-  border: 1px solid #cbd5e1;
-  padding: 8px 12px;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  vertical-align: top;
+  max-width: 900px;
   outline: none;
   cursor: text;
-  user-select: text;
-  -webkit-user-select: text;
 }
 
-.editor-paper-sheet th:focus,
-.editor-paper-sheet td:focus {
-  background-color: rgba(37, 99, 235, 0.06);
+/* Styles injected by docx-preview sit inside .docx-preview-wrapper */
+.edit-pdf-docx-body .docx-preview-wrapper {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Subtle editing focus ring on the host */
+.edit-pdf-docx-body:focus {
   outline: 2px solid var(--color-primary);
-  outline-offset: -2px;
+  outline-offset: 4px;
+  border-radius: 4px;
 }
 
-.editor-paper-sheet th {
-  background-color: #f1f5f9;
-  font-weight: 600;
-}
-
-.editor-paper-sheet img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  margin: 12px auto;
-}
-
-.editor-paper-sheet h1 {
-  font-size: 24px;
-  font-weight: 800;
-  margin-top: 0;
-  margin-bottom: 12px;
-  color: #0f172a;
-}
-
-.editor-paper-sheet h2 {
-  font-size: 20px;
-  font-weight: 700;
-  margin-top: 16px;
-  margin-bottom: 10px;
-  color: #1e293b;
-}
-
-.editor-paper-sheet h3 {
-  font-size: 17px;
-  font-weight: 600;
-  margin-top: 14px;
-  margin-bottom: 8px;
-  color: #334155;
-}
-
-.editor-paper-sheet p {
-  margin-bottom: 12px;
-}
-
-/* A4 Page Separation & Page Break Indicators */
-.editor-paper-sheet hr.page-break,
-.editor-paper-sheet .page-break-indicator {
-  border: none;
-  height: 24px;
-  background: repeating-linear-gradient(
-    -45deg,
-    #cbd5e1,
-    #cbd5e1 10px,
-    #e2e8f0 10px,
-    #e2e8f0 20px
-  );
-  margin: 36px -24mm;
+/* ── Render Error Banner ─────────────────────────────────────────── */
+.edit-pdf-render-error {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  color: #475569;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  gap: 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
-.editor-stats-bar {
+/* ── Editor Hint Footer ──────────────────────────────────────────── */
+.edit-pdf-editor-hint {
   display: flex;
-  gap: 20px;
-  padding: 10px 24px;
-  background: var(--color-surface);
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  background: var(--color-surface-hover);
   border-top: 1px solid var(--color-divider);
   font-size: 12px;
   color: var(--color-text-muted);
+  flex-wrap: wrap;
+}
+
+/* ── Loading filename label ──────────────────────────────────────── */
+.edit-pdf-loading-filename {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-divider);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Step 5 Auto Download Banner */
@@ -587,49 +450,20 @@
     padding: 8px 12px;
   }
 
-  .editor-toolbar {
-    padding: 8px 10px;
-    gap: 6px;
-    justify-content: flex-start;
-  }
-
-  .toolbar-group {
-    gap: 2px;
-  }
-
-  .toolbar-btn {
-    width: 30px;
-    height: 30px;
-  }
-
-  .toolbar-select {
-    padding: 4px 8px;
-    font-size: 12px;
-  }
-
-  .toolbar-divider {
-    height: 18px;
-    margin: 0 2px;
-  }
-
-  .editor-canvas-container {
-    padding: 12px 8px;
-    min-height: 380px;
-    max-height: 520px;
-  }
-
-  .editor-paper-sheet {
-    padding: 24px 18px;
-    min-height: 420px;
-    font-size: 14px;
-  }
-
-  .editor-stats-bar {
-    padding: 8px 12px;
-    gap: 10px;
-    flex-wrap: wrap;
+  .edit-pdf-editor-hint {
+    flex-direction: column;
+    align-items: flex-start;
     font-size: 11px;
+    padding: 8px 14px;
   }
+
+  .edit-pdf-docx-canvas {
+    padding: 16px 8px;
+    min-height: 400px;
+    max-height: 65vh;
+  }
+
+
 
   .edit-pdf-success__banner {
     flex-direction: column;

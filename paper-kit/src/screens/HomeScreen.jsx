@@ -11,7 +11,7 @@ import FilePreviewModal from '../components/ui/FilePreviewModal';
 import { useRecentFiles } from '../hooks/useFiles';
 import { useAuth } from '../hooks/useAuth';
 import { SearchContext } from '../components/layout/AppShell';
-import { QUICK_TOOLS, PDF_TOOLS, AI_TOOLS, SECURITY_TOOLS, CONVERT_TOOLS, IMAGE_FORMAT_TOOLS, IMAGE_COMPRESS_TOOLS, MEDIA_DOWNLOADER_TOOLS, VIDEO_FORMAT_TOOLS, VIDEO_COMPRESS_TOOLS, AUDIO_FORMAT_TOOLS } from '../config/tools-config';
+import { QUICK_TOOLS, PDF_TOOLS, AI_TOOLS, SECURITY_TOOLS, CONVERT_TOOLS, ARCHIVE_TOOLS, IMAGE_FORMAT_TOOLS, IMAGE_COMPRESS_TOOLS, MEDIA_DOWNLOADER_TOOLS, VIDEO_FORMAT_TOOLS, VIDEO_COMPRESS_TOOLS, AUDIO_FORMAT_TOOLS } from '../config/tools-config';
 import { getProcessingHistory } from '../services/tools';
 import { getStorageUsage } from '../services/jobs';
 import { getFileDownloadUrl } from '../services/files';
@@ -142,6 +142,9 @@ export default function HomeScreen() {
   const filteredVideoCompressTools = VIDEO_COMPRESS_TOOLS.filter(t =>
     t.label.toLowerCase().includes(query.toLowerCase())
   );
+  const filteredArchiveTools = ARCHIVE_TOOLS.filter(t =>
+    t.label.toLowerCase().includes(query.toLowerCase())
+  );
   const filteredAudioFormatTools = AUDIO_FORMAT_TOOLS.filter(t =>
     t.label.toLowerCase().includes(query.toLowerCase())
   );
@@ -172,7 +175,7 @@ export default function HomeScreen() {
         <input
           ref={fileDropInputRef}
           type="file"
-          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,image/*"
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,image/*,.zip,.rar,.tar,.gz,.7z,.bz2,.tgz"
           style={{ display: 'none' }}
           onChange={handleFileDrop}
           id="home-dropzone-input"
@@ -188,10 +191,10 @@ export default function HomeScreen() {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                Drop any document here for instant AI &amp; PDF actions
+                Drop any document, image, or archive here
               </div>
               <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
-                Auto-detects document and recommends smart operations
+                Auto-detects files, PDFs &amp; archives (.ZIP, .RAR, .TAR, .GZ, .7Z, .BZ2)
               </div>
             </div>
           </div>
@@ -224,6 +227,14 @@ export default function HomeScreen() {
                 style={{ background: 'rgba(37, 99, 235, 0.1)', border: '1px solid rgba(37, 99, 235, 0.25)', color: '#2563EB' }}
               >
                 <Eye size={13} style={{ flexShrink: 0 }} /> <span className="truncate">Quick Preview</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/tools/archive', { state: { file: droppedFile } })}
+                className="home-screen__dropzone-btn"
+                style={{ background: 'rgba(234, 88, 12, 0.08)', border: '1px solid rgba(234, 88, 12, 0.25)', color: '#EA580C' }}
+              >
+                <span className="truncate">📦 Extract / Archive</span>
               </button>
               <button
                 type="button"
@@ -294,7 +305,7 @@ export default function HomeScreen() {
             title="AI Document Intelligence"
             tools={filteredAITools}
             showViewAll
-            onViewAll={() => navigate('/ai')}
+            onViewAll={() => navigate('/category/ai')}
           />
         </section>
       )}
@@ -303,10 +314,10 @@ export default function HomeScreen() {
       {filteredPDFTools.length > 0 && (
         <section className="home-screen__section" aria-label="PDF Processing & Pages">
           <ToolCategory
-            title="PDF Processing & Pages"
+            title="PDF Processing &amp; Pages"
             tools={filteredPDFTools}
             showViewAll
-            onViewAll={() => navigate('/tools')}
+            onViewAll={() => navigate('/category/pdf')}
           />
         </section>
       )}
@@ -315,10 +326,10 @@ export default function HomeScreen() {
       {filteredSecurityTools.length > 0 && (
         <section className="home-screen__section" aria-label="Security and Privacy">
           <ToolCategory
-            title="Security & Privacy"
+            title="Security &amp; Privacy"
             tools={filteredSecurityTools}
             showViewAll
-            onViewAll={() => navigate('/tools')}
+            onViewAll={() => navigate('/category/security')}
           />
         </section>
       )}
@@ -330,7 +341,7 @@ export default function HomeScreen() {
             title="Conversions"
             tools={filteredConvertTools}
             showViewAll
-            onViewAll={() => navigate('/tools')}
+            onViewAll={() => navigate('/category/convert')}
           />
         </section>
       )}
@@ -342,7 +353,7 @@ export default function HomeScreen() {
             title="Image Format Converter"
             tools={filteredImageFormatTools}
             showViewAll
-            onViewAll={() => navigate('/tools')}
+            onViewAll={() => navigate('/category/image')}
           />
         </section>
       )}
@@ -354,7 +365,7 @@ export default function HomeScreen() {
             title="Image Compressor ⭐"
             tools={filteredImageCompressTools}
             showViewAll
-            onViewAll={() => navigate('/tools')}
+            onViewAll={() => navigate('/category/image')}
           />
         </section>
       )}
@@ -363,10 +374,10 @@ export default function HomeScreen() {
       {filteredMediaDownloaderTools.length > 0 && (
         <section className="home-screen__section" aria-label="Media Downloader">
           <ToolCategory
-            title="Media Downloader (YouTube & Spotify)"
+            title="Media Downloader (YouTube &amp; Spotify)"
             tools={filteredMediaDownloaderTools}
             showViewAll
-            onViewAll={() => navigate('/tools')}
+            onViewAll={() => navigate('/category/downloader')}
           />
         </section>
       )}
@@ -378,7 +389,7 @@ export default function HomeScreen() {
             title="Video Format Converter"
             tools={filteredVideoFormatTools}
             showViewAll
-            onViewAll={() => navigate('/tools')}
+            onViewAll={() => navigate('/category/video')}
           />
         </section>
       )}
@@ -390,7 +401,19 @@ export default function HomeScreen() {
             title="Video Compressor"
             tools={filteredVideoCompressTools}
             showViewAll
-            onViewAll={() => navigate('/tools')}
+            onViewAll={() => navigate('/category/video')}
+          />
+        </section>
+      )}
+
+      {/* ⭐ Archive & Compression Tools */}
+      {filteredArchiveTools.length > 0 && (
+        <section className="home-screen__section" aria-label="Archive and Compression Tools">
+          <ToolCategory
+            title="Archive &amp; Compression (.ZIP, .RAR, .TAR, .GZ, .7Z, .BZ2)"
+            tools={filteredArchiveTools}
+            showViewAll
+            onViewAll={() => navigate('/category/archive')}
           />
         </section>
       )}
@@ -402,10 +425,12 @@ export default function HomeScreen() {
             title="Audio Format Converter"
             tools={filteredAudioFormatTools}
             showViewAll
-            onViewAll={() => navigate('/tools')}
+            onViewAll={() => navigate('/category/audio')}
           />
         </section>
       )}
+
+
 
       {/* Recent Files */}
       <section className="home-screen__section home-screen__recent" aria-label="Recent Files">

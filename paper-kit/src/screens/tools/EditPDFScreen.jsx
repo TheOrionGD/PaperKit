@@ -1,288 +1,208 @@
-/* EditPDFScreen — Concurrent White A4 Sheet Live Editor with Responsive Design & 3s Auto-Download */
+﻿/* EditPDFScreen — PDF → Word → docx-preview Render → Edit → PDF Export */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Download, Loader2, Plus, Trash2, Bold, Italic, Underline, Strikethrough, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered, Table, Minus, RotateCcw, Pencil, Check, Edit3, Type, Image, ShieldCheck, Save } from 'lucide-react';
+import { Download, Loader2, Pencil, Check, Edit3, Type, Image, ShieldCheck, Save, FileText, AlertCircle } from 'lucide-react';
 import { PrimaryButton, SecondaryButton } from '../../components/ui/Button';
 import Toast from '../../components/ui/Toast';
 import FileUploader from '../../components/common/FileUploader';
 import CommonResultScreen, { ACTION_PRESETS } from '../../components/common/CommonResultScreen';
 import { useUpload } from '../../hooks/useUpload';
 import { useToast } from '../../hooks/useToast';
-import { convertFile, convertHtmlToWord } from '../../services/tools';
+import { convertFile } from '../../services/tools';
+import { uploadFile } from '../../services/files';
 import { downloadAndOpenFile } from '../../services/native';
+import { resolveBackendFileUrl } from '../../services/api';
 import './EditPDFScreen.css';
 
 const TOOL_TIPS = [
   {
     icon: <Edit3 size={20} />,
-    title: 'Full Editing',
-    description: 'Add text, images, and shapes to any PDF.'
+    title: 'True Fidelity',
+    description: 'PDF renders as an exact Word document preview.'
   },
   {
     icon: <Type size={20} />,
     title: 'Rich Text',
-    description: 'Change fonts, colors, and sizes easily.'
+    description: 'Edit text, headings, tables and lists directly.'
   },
   {
     icon: <Image size={20} />,
-    title: 'Insert Media',
-    description: 'Drop images directly into your documents.'
+    title: 'Preserves Layout',
+    description: 'Fonts, spacing and images are kept intact.'
   },
   {
     icon: <ShieldCheck size={20} />,
     title: '100% Private',
-    description: 'Your documents never hit the cloud.'
+    description: 'Your documents are processed securely.'
   },
   {
     icon: <Save size={20} />,
-    title: 'Auto-Save',
-    description: 'Never lose your progress while editing.'
+    title: 'Export to PDF',
+    description: 'One click to save your edits back as a PDF file.'
   },
 ];
 
 
 export default function EditPDFScreen() {
   const _navigate = useNavigate();
-  const location = useLocation();
+  const location  = useLocation();
 
-  // Workflow steps: 'upload' -> 'converting_to_word' -> 'editor' -> 'converting_to_pdf' -> 'success'
+  // Steps: 'upload' → 'converting_to_word' → 'editor' → 'exporting_pdf' → 'success'
   const [step, setStep] = useState('upload');
-  
-  // File & conversion state
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [_uploadedPdfId, setUploadedPdfId] = useState(null);
-  const [_editedWordFileId, setEditedWordFileId] = useState(null);
+
+  const [selectedFile, setSelectedFile]     = useState(null);
+  const [wordResult,   setWordResult]       = useState(null); // { file_id, download_url, filename }
   const [finalPdfResult, setFinalPdfResult] = useState(null);
+  const [renderError,  setRenderError]      = useState(null);
 
-  // Multi-Page A4 Sheets State
-  const [pages, setPages] = useState(['']);
-  const pageRefs = useRef([]);
-  const [activeHeading, setActiveHeading] = useState('p');
-  const [docStats, setDocStats] = useState({ words: 0, chars: 0, paragraphs: 0, readTime: '1 min' });
+  const editorContainerRef = useRef(null);
+  const fileInputRef       = useRef(null);
 
-  // Auto download countdown timer (3 seconds)
-  const [countdown, setCountdown] = useState(3);
+  // Auto-download countdown
+  const [countdown, setCountdown]           = useState(3);
   const [autoDownloaded, setAutoDownloaded] = useState(false);
 
-  const fileInputRef = useRef(null);
-  const { upload } = useUpload();
-  const { toast, showToast, dismissToast } = useToast();
+  const { upload }                          = useUpload();
+  const { toast, showToast, dismissToast }  = useToast();
 
-  function sanitizeHtmlForEditor(rawHtml) {
-    if (!rawHtml) return '';
-    return rawHtml
-      .replace(/<!DOCTYPE[^>]*>/gi, '')
-      .replace(/<\/?html[^>]*>/gi, '')
-      .replace(/<head[\s\S]*?<\/head>/gi, '')
-      .replace(/<\/?body[^>]*>/gi, '')
-      .trim();
-  }
-
-  const splitIntoPages = useCallback((rawHtml) => {
-    if (!rawHtml) return [''];
-    const parts = rawHtml
-      .split(/<!--\s*PAGE_SPLIT\s*-->/g)
-      .map(p => sanitizeHtmlForEditor(p))
-      .filter(p => p.trim());
-    return parts.length > 0 ? parts : [rawHtml];
-  }, []);
-
-  // Update document stats across all active A4 page sheets
-  const updateStats = useCallback(() => {
-    let combinedHtml = '';
-    pageRefs.current.forEach(el => {
-      if (el) combinedHtml += ' ' + el.innerHTML;
-    });
-
-    const text = combinedHtml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-    const words = text ? text.split(/\s+/).length : 0;
-    const chars = text.length;
-    const paragraphs = (combinedHtml.match(/<p/gi) || []).length || (text ? 1 : 0);
-    const readTime = Math.max(1, Math.ceil(words / 200)) + ' min read';
-    setDocStats({ words, chars, paragraphs, readTime });
-  }, []);
-
-  // Populate page sheet DOM innerHTML cleanly without React props resetting cursor selection
-  useEffect(() => {
-    if (step === 'editor') {
-      pages.forEach((pageHtml, index) => {
-        const el = pageRefs.current[index];
-        if (el && !el.dataset.initialized) {
-          el.innerHTML = sanitizeHtmlForEditor(pageHtml);
-          el.dataset.initialized = 'true';
-        }
+  // ── Render DOCX faithfully via docx-preview ──────────────────────────────
+  const renderDocx = useCallback(async (docxBlob) => {
+    if (!editorContainerRef.current) return;
+    try {
+      const { renderAsync } = await import('docx-preview');
+      editorContainerRef.current.innerHTML = '';
+      await renderAsync(docxBlob, editorContainerRef.current, null, {
+        className:         'docx-preview-wrapper',
+        inWrapper:         true,
+        ignoreWidth:       false,
+        ignoreHeight:      false,
+        ignoreFonts:       false,
+        breakPages:        true,
+        useBase64URL:      true,
+        renderHeaders:     true,
+        renderFooters:     true,
+        renderFootnotes:   true,
+        renderEndnotes:    true,
+        experimental:      false,
       });
-      updateStats();
+      // Make the rendered document editable
+      editorContainerRef.current.contentEditable = 'true';
+      editorContainerRef.current.spellcheck      = true;
+      showToast('Document ready for editing ✓', 'success');
+    } catch (err) {
+      console.error('docx-preview render error:', err);
+      setRenderError('Could not render the Word document: ' + err.message);
     }
-  }, [pages, step, updateStats]);
+  }, [showToast]);
 
-  // Process PDF into editable Word format & open editor
+  // ── Main workflow: upload PDF → convert → fetch DOCX → render ─────────────
   const processAndOpenEditor = useCallback(async (file) => {
     if (!file) return;
     setSelectedFile(file);
+    setRenderError(null);
     setStep('converting_to_word');
     try {
-      showToast('Preparing document for live editing...', 'info');
-      const doc = await upload(file);
+      showToast('Uploading PDF...', 'info');
+      const doc   = await upload(file);
       const pdfId = doc._id || doc.id;
-      setUploadedPdfId(pdfId);
 
-      // Perform conversion
+      showToast('Converting PDF to Word...', 'info');
       const result = await convertFile(pdfId, 'pdf', 'word');
 
-      // Extract HTML/Text content for Web Editor
-      let rawHtml = result.html_content ? sanitizeHtmlForEditor(result.html_content) : '';
-      if (!rawHtml && result.text_content) {
-        rawHtml = result.text_content
-          .split('\n')
-          .filter(line => line.trim())
-          .map(line => `<p>${line.trim()}</p>`)
-          .join('');
-      }
+      // Resolve absolute download URL
+      const rawUrl  = result.download_url || result.file_url || '';
+      const absUrl  = resolveBackendFileUrl(rawUrl);
+      setWordResult({
+        file_id:      result.file_id,
+        download_url: absUrl,
+        filename:     result.filename || file.name.replace(/\.pdf$/i, '.docx'),
+      });
 
-      if (!rawHtml) {
-        const stem = file.name.replace(/\.[^/.]+$/, '');
-        rawHtml = `<h1>${stem}</h1><p>Welcome to the Live Editor! Edit text, headings, tables, or add new A4 pages directly.</p><p>When finished, click <strong>SAVE & EXPORT PDF</strong> to generate your updated document.</p>`;
-      }
+      showToast('Fetching Word document...', 'info');
+      const response = await fetch(absUrl);
+      if (!response.ok) throw new Error(`Failed to fetch Word file (${response.status})`);
+      const blob = await response.blob();
 
-      const pageList = splitIntoPages(rawHtml);
-      setPages(pageList);
-      setTimeout(updateStats, 100);
-      showToast('Document ready for editing ✓', 'success');
       setStep('editor');
+      // Give DOM a tick so editorContainerRef mounts
+      setTimeout(() => renderDocx(blob), 60);
     } catch (err) {
       showToast('Could not open document for editing: ' + err.message, 'error');
       setStep('upload');
     }
-  }, [showToast, upload, updateStats, splitIntoPages]);
+  }, [showToast, upload, renderDocx]);
 
-  // Load chained file if passed from smart workflow chaining
+  // Load chained file from smart workflow chaining
   useEffect(() => {
     const incoming = location.state?.chainedFile || location.state?.file;
     if (incoming) {
       const fileObj = incoming instanceof File ? incoming : incoming.file || incoming;
-      setSelectedFile(fileObj);
       processAndOpenEditor(fileObj);
     }
   }, [location.state, processAndOpenEditor]);
 
-  // Handle PDF file selection
   function handleFileSelect(fileOrEvent) {
     const file = fileOrEvent?.target?.files?.[0] || fileOrEvent;
     if (!file) return;
     processAndOpenEditor(file);
   }
 
-  // Formatting commands for Web Editor Toolbar
-  function execCmd(command, value = null) {
-    document.execCommand(command, false, value);
-    updateStats();
-  }
-
-  function handleHeadingChange(e) {
-    const heading = e.target.value;
-    setActiveHeading(heading);
-    execCmd('formatBlock', `<${heading}>`);
-  }
-
-  function handleInsertTable() {
-    const tableHtml = `
-      <table style="width:100%; border-collapse:collapse; margin:16px 0; border:1px solid #cbd5e1;">
-        <thead>
-          <tr style="background:#f1f5f9;">
-            <th style="border:1px solid #cbd5e1; padding:8px; text-align:left;">Header 1</th>
-            <th style="border:1px solid #cbd5e1; padding:8px; text-align:left;">Header 2</th>
-            <th style="border:1px solid #cbd5e1; padding:8px; text-align:left;">Header 3</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="border:1px solid #cbd5e1; padding:8px;">Data 1</td>
-            <td style="border:1px solid #cbd5e1; padding:8px;">Data 2</td>
-            <td style="border:1px solid #cbd5e1; padding:8px;">Data 3</td>
-          </tr>
-        </tbody>
-      </table>
-    `;
-    execCmd('insertHTML', tableHtml);
-  }
-
-  // Add new blank A4 sheet
-  function handleAddPage() {
-    const newPageHtml = '<p>Start typing on this new A4 page...</p>';
-    setPages(prev => [...prev, newPageHtml]);
-    showToast('New A4 page added', 'info');
-    setTimeout(updateStats, 100);
-  }
-
-  // Remove specific A4 page sheet
-  function handleRemovePage(index) {
-    if (pages.length <= 1) {
-      showToast('Document must contain at least one A4 page', 'warning');
-      return;
-    }
-    setPages(prev => prev.filter((_, idx) => idx !== index));
-    showToast(`Removed Page ${index + 1}`, 'info');
-    setTimeout(updateStats, 100);
-  }
-
-  // Save changes: Collect HTML from all A4 sheets -> Word -> PDF & trigger auto download
+  // ── Save: collect edited HTML → upload → convert to PDF ───────────────────
   async function handleSaveChanges() {
-    const combinedPagesHtml = pageRefs.current
-      .filter(Boolean)
-      .map(el => el.innerHTML.trim())
-      .filter(Boolean);
-
-    if (combinedPagesHtml.length === 0) {
-      showToast('Document content cannot be empty', 'warning');
+    if (!editorContainerRef.current) return;
+    const editedHtml = editorContainerRef.current.innerHTML.trim();
+    if (!editedHtml) {
+      showToast('Document is empty — nothing to save', 'warning');
       return;
     }
 
-    const fullDocHtml = combinedPagesHtml.join('<div style="page-break-after: always;"></div>');
-
-    setStep('converting_to_pdf');
+    setStep('exporting_pdf');
     try {
-      showToast('Compiling updated PDF...', 'info');
-      const stem = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, '') : 'document';
-      const editedWordFilename = `${stem}_edited.docx`;
+      showToast('Saving your edits...', 'info');
+      const stem     = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, '') : 'document';
+      const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${stem}</title></head><body>${editedHtml}</body></html>`;
 
-      // Convert Web Editor HTML content back to Word DOCX
-      const wordRes = await convertHtmlToWord(fullDocHtml, editedWordFilename);
-      const newWordId = wordRes.file_id;
-      setEditedWordFileId(newWordId);
+      // Upload edited HTML → backend converts to PDF (existing html→pdf route)
+      const htmlBlob = new Blob([fullHtml], { type: 'text/html' });
+      const htmlFile = new File([htmlBlob], `${stem}_edited.html`, { type: 'text/html' });
 
-      // Convert Word to PDF
-      const pdfRes = await convertFile(newWordId, 'word', 'pdf');
-      
+      showToast('Uploading edited content...', 'info');
+      const uploaded   = await uploadFile(htmlFile);
+      const uploadedId = uploaded._id || uploaded.id;
+
+      showToast('Exporting to PDF...', 'info');
+      const pdfRes     = await convertFile(uploadedId, 'html', 'pdf');
+
       const outFilename = pdfRes.filename || `${stem}_edited.pdf`;
-      const resultObj = {
-        file_id: pdfRes.file_id,
-        download_url: pdfRes.download_url,
-        filename: outFilename,
-        name: outFilename,
-        size: pdfRes.size || selectedFile?.size || 0,
-        mimeType: 'application/pdf',
+      const pdfAbsUrl   = resolveBackendFileUrl(pdfRes.download_url || '');
+      const resultObj   = {
+        file_id:      pdfRes.file_id,
+        download_url: pdfAbsUrl,
+        filename:     outFilename,
+        name:         outFilename,
+        size:         pdfRes.size || selectedFile?.size || 0,
+        mimeType:     'application/pdf',
       };
 
       setFinalPdfResult(resultObj);
       setStep('success');
       setCountdown(3);
       setAutoDownloaded(false);
-      showToast('Changes saved ✓ Generating PDF...', 'success');
+      showToast('Changes saved ✓ PDF ready!', 'success');
     } catch (err) {
-      showToast('Save failed: ' + err.message, 'error');
+      showToast('Export failed: ' + err.message, 'error');
       setStep('editor');
     }
   }
 
-  // Auto Download Timer (3 seconds countdown)
+  // ── Auto-download countdown ────────────────────────────────────────────────
   const triggerPdfDownload = useCallback(() => {
     if (finalPdfResult?.download_url && !autoDownloaded) {
       setAutoDownloaded(true);
       downloadAndOpenFile(
         finalPdfResult.download_url,
-        finalPdfResult.filename || finalPdfResult.name || 'edited_document.pdf',
+        finalPdfResult.filename || 'edited_document.pdf',
         'application/pdf'
       );
       showToast('Download started ✓', 'success');
@@ -291,22 +211,16 @@ export default function EditPDFScreen() {
 
   useEffect(() => {
     if (step !== 'success' || !finalPdfResult || autoDownloaded) return;
-
     const timer = setInterval(() => {
       setCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          triggerPdfDownload();
-          return 0;
-        }
+        if (prev <= 1) { clearInterval(timer); triggerPdfDownload(); return 0; }
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(timer);
   }, [step, finalPdfResult, autoDownloaded, triggerPdfDownload]);
 
-  // Render Success Screen with 3s Auto Download
+  // ── Success Screen ─────────────────────────────────────────────────────────
   if (step === 'success' && finalPdfResult) {
     return (
       <div className="edit-pdf-screen">
@@ -316,12 +230,9 @@ export default function EditPDFScreen() {
           </div>
           <div className="edit-pdf-success__banner-text">
             <h3>{countdown > 0 ? `Downloading PDF in ${countdown}s...` : 'PDF Download Triggered!'}</h3>
-            <p>Your changes have been compiled into a high-fidelity PDF document.</p>
+            <p>Your edited document has been exported as a high-quality PDF.</p>
           </div>
-          <PrimaryButton
-            onClick={triggerPdfDownload}
-            style={{ marginLeft: 'auto', whiteSpace: 'nowrap' }}
-          >
+          <PrimaryButton onClick={triggerPdfDownload} style={{ marginLeft: 'auto', whiteSpace: 'nowrap' }}>
             <Download size={18} style={{ marginRight: '6px' }} />
             Download PDF Now
           </PrimaryButton>
@@ -333,57 +244,50 @@ export default function EditPDFScreen() {
           file={finalPdfResult}
           nextActions={[
             {
-              id: 're-edit',
-              label: 'Re-Edit Document',
-              desc: 'Make further edits in the Web Editor',
-              icon: Pencil,
-              onClick: () => setStep('editor'),
+              id: 're-edit', label: 'Re-Edit Document',
+              desc: 'Go back to the editor to make more changes',
+              icon: Pencil, onClick: () => setStep('editor'),
             },
             ACTION_PRESETS.compress,
             ACTION_PRESETS.protect,
             ACTION_PRESETS.watermark,
             ACTION_PRESETS.aiSummary,
           ]}
-          primaryAction={{
-            label: 'Download Edited PDF',
-            onClick: triggerPdfDownload,
-          }}
+          primaryAction={{ label: 'Download Edited PDF', onClick: triggerPdfDownload }}
           onReset={() => {
             setStep('upload');
             setSelectedFile(null);
-            setUploadedPdfId(null);
-            setEditedWordFileId(null);
+            setWordResult(null);
             setFinalPdfResult(null);
-            setPages(['']);
             setCountdown(3);
             setAutoDownloaded(false);
+            setRenderError(null);
           }}
           sourceWorkflow="pdf-live-editor"
         />
         <FeatureTipsSwipeStack tips={TOOL_TIPS} />
-      <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
+        <Toast key={toast?.key} message={toast?.message} type={toast?.type} onDismiss={dismissToast} />
       </div>
     );
   }
 
   return (
     <div className="edit-pdf-screen">
-      {/* Step 1: Upload PDF */}
+
+      {/* Step 1: Upload */}
       {step === 'upload' && (
         <div className="edit-pdf-step-container">
           <div className="edit-pdf-step-header">
             <h2>Edit PDF Document</h2>
-            <p>Select or drop a PDF file to edit its text and formatting directly in your browser.</p>
+            <p>Select a PDF to convert it to Word and display it for editing at exact resolution.</p>
           </div>
-
           <FileUploader
             accept=".pdf,application/pdf"
             onFileSelect={handleFileSelect}
             title="Select PDF Document to Edit"
-            subtitle="Choose a PDF file to open in the live editor"
+            subtitle="Your PDF will be converted to Word and rendered for in-place editing"
             icon="pdf"
           />
-
           <input
             ref={fileInputRef}
             type="file"
@@ -394,169 +298,75 @@ export default function EditPDFScreen() {
         </div>
       )}
 
-      {/* Loading State: Opening Web Editor */}
+      {/* Loading: Converting PDF → Word */}
       {step === 'converting_to_word' && (
         <div className="edit-pdf-loading-card">
           <Loader2 className="animate-spin" size={48} color="var(--color-primary)" />
-          <h3>Opening Web Editor</h3>
-          <p>Converting PDF content into live A4 editable page sheets...</p>
+          <h3>Converting PDF to Word</h3>
+          <p>Extracting document structure, fonts, tables and images...</p>
           <div className="loading-bar-track">
-            <div className="loading-bar-fill animate-pulse" style={{ width: '65%' }}></div>
+            <div className="loading-bar-fill animate-pulse" style={{ width: '70%' }} />
           </div>
+          {selectedFile && (
+            <span className="edit-pdf-loading-filename">
+              <FileText size={14} style={{ marginRight: 4 }} />
+              {selectedFile.name}
+            </span>
+          )}
         </div>
       )}
 
-      {/* Concurrent White A4 Page Sheets Editor Workspace */}
+      {/* Editor: docx-preview rendered & editable */}
       {step === 'editor' && (
         <div className="edit-pdf-editor-workspace">
           <div className="edit-pdf-editor-header">
             <div>
-              <h2>Live Web Editor ({pages.length} {pages.length === 1 ? 'Page' : 'Pages'})</h2>
-              <p>Edit your document text below, then click <strong>SAVE & EXPORT PDF</strong>.</p>
+              <h2>Document Editor</h2>
+              <p>
+                Rendered from <strong>{wordResult?.filename || 'document.docx'}</strong>
+                {' '}— click any text to start editing.
+              </p>
             </div>
-
             <div className="edit-pdf-editor-actions">
-              <SecondaryButton onClick={() => setStep('upload')}>
-                Cancel
-              </SecondaryButton>
+              <SecondaryButton onClick={() => setStep('upload')}>Cancel</SecondaryButton>
               <PrimaryButton onClick={handleSaveChanges}>
                 <Check size={18} style={{ marginRight: '6px' }} />
-                SAVE & EXPORT PDF
+                SAVE &amp; EXPORT PDF
               </PrimaryButton>
             </div>
           </div>
 
-          {/* Web Editor Formatting Toolbar */}
-          <div className="editor-toolbar">
-            {/* Formatting Group */}
-            <div className="toolbar-group">
-              <button className="toolbar-btn" onClick={() => execCmd('bold')} title="Bold (Ctrl+B)">
-                <Bold size={16} />
-              </button>
-              <button className="toolbar-btn" onClick={() => execCmd('italic')} title="Italic (Ctrl+I)">
-                <Italic size={16} />
-              </button>
-              <button className="toolbar-btn" onClick={() => execCmd('underline')} title="Underline (Ctrl+U)">
-                <Underline size={16} />
-              </button>
-              <button className="toolbar-btn" onClick={() => execCmd('strikeThrough')} title="Strikethrough">
-                <Strikethrough size={16} />
-              </button>
+          {renderError && (
+            <div className="edit-pdf-render-error">
+              <AlertCircle size={18} />
+              <span>{renderError}</span>
             </div>
+          )}
 
-            <div className="toolbar-divider" />
-
-            {/* Headings Selector */}
-            <div className="toolbar-group">
-              <select className="toolbar-select" value={activeHeading} onChange={handleHeadingChange}>
-                <option value="p">Paragraph Text</option>
-                <option value="h1">Heading 1</option>
-                <option value="h2">Heading 2</option>
-                <option value="h3">Heading 3</option>
-              </select>
-            </div>
-
-            <div className="toolbar-divider" />
-
-            {/* Alignment Group */}
-            <div className="toolbar-group">
-              <button className="toolbar-btn" onClick={() => execCmd('justifyLeft')} title="Align Left">
-                <AlignLeft size={16} />
-              </button>
-              <button className="toolbar-btn" onClick={() => execCmd('justifyCenter')} title="Align Center">
-                <AlignCenter size={16} />
-              </button>
-              <button className="toolbar-btn" onClick={() => execCmd('justifyRight')} title="Align Right">
-                <AlignRight size={16} />
-              </button>
-              <button className="toolbar-btn" onClick={() => execCmd('justifyFull')} title="Justify">
-                <AlignJustify size={16} />
-              </button>
-            </div>
-
-            <div className="toolbar-divider" />
-
-            {/* Lists & Table */}
-            <div className="toolbar-group">
-              <button className="toolbar-btn" onClick={() => execCmd('insertUnorderedList')} title="Bullet List">
-                <List size={16} />
-              </button>
-              <button className="toolbar-btn" onClick={() => execCmd('insertOrderedList')} title="Numbered List">
-                <ListOrdered size={16} />
-              </button>
-              <button className="toolbar-btn" onClick={handleInsertTable} title="Insert Table">
-                <Table size={16} />
-              </button>
-              <button className="toolbar-btn" onClick={() => execCmd('insertHorizontalRule')} title="Horizontal Line">
-                <Minus size={16} />
-              </button>
-            </div>
-
-            <div className="toolbar-divider" />
-
-            {/* History & Page Actions */}
-            <div className="toolbar-group toolbar-group--history">
-              <button className="toolbar-btn" onClick={() => execCmd('undo')} title="Undo (Ctrl+Z)">
-                <RotateCcw size={16} />
-              </button>
-            </div>
+          {/* docx-preview canvas */}
+          <div className="edit-pdf-docx-canvas">
+            <div
+              ref={editorContainerRef}
+              className="edit-pdf-docx-body"
+              suppressContentEditableWarning
+            />
           </div>
 
-          {/* Web Editor Canvas: Concurrent White A4 Sheet Stack */}
-          <div className="editor-canvas-container">
-            {pages.map((pageHtml, index) => (
-              <div key={index} className="editor-page-card">
-                <div className="editor-page-card-header">
-                  <span className="page-card-badge">Page {index + 1} of {pages.length}</span>
-                  <span className="page-card-meta">A4 Sheet • 210 × 297 mm</span>
-                  {pages.length > 1 && (
-                    <button
-                      type="button"
-                      className="page-card-delete-btn"
-                      onClick={() => handleRemovePage(index)}
-                      title="Delete this A4 sheet"
-                    >
-                      <Trash2 size={14} /> Remove Page
-                    </button>
-                  )}
-                </div>
-
-                <div
-                  ref={(el) => (pageRefs.current[index] = el)}
-                  className="editor-paper-sheet"
-                  contentEditable
-                  suppressContentEditableWarning
-                  onInput={updateStats}
-                />
-              </div>
-            ))}
-
-            <div className="editor-add-page-bar">
-              <button type="button" className="editor-add-page-btn" onClick={handleAddPage}>
-                <Plus size={16} style={{ marginRight: '6px' }} />
-                Add New A4 Sheet
-              </button>
-            </div>
-          </div>
-
-          {/* Editor Stats Footer Bar */}
-          <div className="editor-stats-bar">
-            <span><strong>{docStats.words}</strong> words</span>
-            <span><strong>{docStats.chars}</strong> characters</span>
-            <span><strong>{docStats.paragraphs}</strong> paragraphs</span>
-            <span>Est. reading time: <strong>{docStats.readTime}</strong></span>
+          <div className="edit-pdf-editor-hint">
+            <span>💡 Click anywhere in the document to edit text, tables, or headings.</span>
+            <span>When finished, click <strong>SAVE &amp; EXPORT PDF</strong>.</span>
           </div>
         </div>
       )}
 
-      {/* Loading State: Compiling PDF */}
-      {step === 'converting_to_pdf' && (
+      {/* Loading: Exporting PDF */}
+      {step === 'exporting_pdf' && (
         <div className="edit-pdf-loading-card">
           <Loader2 className="animate-spin" size={48} color="var(--color-primary)" />
-          <h3>Saving Changes & Compiling PDF</h3>
-          <p>Generating high-fidelity PDF from your A4 page sheets...</p>
+          <h3>Exporting to PDF</h3>
+          <p>Compiling your edits into a high-quality PDF document...</p>
           <div className="loading-bar-track">
-            <div className="loading-bar-fill animate-pulse" style={{ width: '85%' }}></div>
+            <div className="loading-bar-fill animate-pulse" style={{ width: '85%' }} />
           </div>
         </div>
       )}

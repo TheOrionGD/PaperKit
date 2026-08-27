@@ -32,9 +32,27 @@ const FILTER_TABS = [
 function getFileType(filename) {
   if (!filename) return 'default';
   const ext = filename.split('.').pop()?.toLowerCase();
-  const map = { pdf: 'pdf', doc: 'word', docx: 'word', xls: 'excel', xlsx: 'excel', ppt: 'ppt', pptx: 'ppt', jpg: 'image', jpeg: 'image', png: 'image', gif: 'image', webp: 'image' };
+  const map = {
+    pdf: 'pdf',
+    doc: 'word', docx: 'word', odt: 'word', rtf: 'word',
+    xls: 'excel', xlsx: 'excel', ods: 'excel', csv: 'csv',
+    ppt: 'ppt', pptx: 'ppt', odp: 'ppt',
+    txt: 'txt', md: 'txt', log: 'txt',
+    html: 'code', htm: 'code', css: 'code', js: 'code', jsx: 'code',
+    ts: 'code', tsx: 'code', py: 'code', java: 'code', json: 'code',
+    xml: 'code', yaml: 'code', yml: 'code', sh: 'code', sql: 'code',
+    jpg: 'image', jpeg: 'image', png: 'image', gif: 'image',
+    webp: 'image', svg: 'image', heic: 'image', heif: 'image',
+    bmp: 'image', tiff: 'image', tif: 'image', ico: 'image',
+    mp4: 'video', mov: 'video', avi: 'video', mkv: 'video',
+    webm: 'video', wmv: 'video', flv: 'video', m4v: 'video',
+    mp3: 'audio', wav: 'audio', ogg: 'audio', aac: 'audio',
+    flac: 'audio', m4a: 'audio', wma: 'audio',
+    zip: 'zip', rar: 'zip', tar: 'zip', gz: 'zip', '7z': 'zip', bz2: 'zip',
+  };
   return map[ext] || 'default';
 }
+
 
 export default function FilesScreen() {
   const { query: search, setQuery: setSearch } = useContext(SearchContext);

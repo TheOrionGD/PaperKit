@@ -48,6 +48,31 @@ export const DEFAULT_REGISTRY = [
   { toolId: 'smart-redaction', name: 'Redact Data', category: 'Security', route: '/security/redact', description: 'Detect and blackout sensitive PII data', availability: { available: true } },
   { toolId: 'digital-sign', name: 'Digital Signature', category: 'Security', route: '/security/sign', description: 'Draw, upload or stamp digital signatures', availability: { available: true } },
   { toolId: 'metadata-manager', name: 'Metadata Manager', category: 'Security', route: '/security/metadata', description: 'View, edit or sanitize PDF metadata for privacy', availability: { available: true } },
+
+  // Archive & Compression Tools (.ZIP, .RAR, .TAR, .GZ, .7Z, .BZ2)
+  { toolId: 'extract-archive', name: 'Extract Archive (.ZIP, .RAR, .TAR, .GZ, .7Z, .BZ2)', category: 'Archive Tools', route: '/tools/archive?mode=extract', description: 'Extract and inspect files from ZIP, RAR, TAR, GZ, 7Z, and BZ2 archives', availability: { available: true }, capabilities: ['extract', 'inspect', 'decompress'] },
+  { toolId: 'create-zip', name: 'Create ZIP Archive', category: 'Archive Tools', route: '/tools/archive?mode=create&format=zip', description: 'Pack and compress multiple files into a universal .ZIP archive', availability: { available: true }, capabilities: ['zip', 'compress', 'package'] },
+  { toolId: 'create-tar', name: 'Create TAR / GZ Archive', category: 'Archive Tools', route: '/tools/archive?mode=create&format=tar', description: 'Create uncompressed TAR and compressed TAR.GZ packages', availability: { available: true }, capabilities: ['tar', 'gzip', 'package'] },
+  { toolId: 'convert-archive', name: 'Convert Archive Format', category: 'Archive Tools', route: '/tools/archive?mode=extract', description: 'Convert RAR, 7Z, TAR, and BZ2 to universal ZIP archive', availability: { available: true }, capabilities: ['convert', 'zip'] },
+  { toolId: 'archive-manager', name: 'Archive Studio', category: 'Archive Tools', route: '/tools/archive', description: 'Complete multi-format archive extraction and compression suite', availability: { available: true }, capabilities: ['archive', 'zip', 'tar', 'extract'] },
+
+  // Video Tools
+  { toolId: 'video-to-mp4', name: 'Convert to MP4', category: 'Video Tools', route: '/tools/video-converter?to=mp4', description: 'Convert video files to universal MP4 format', availability: { available: true } },
+  { toolId: 'video-to-webm', name: 'Convert to WebM', category: 'Video Tools', route: '/tools/video-converter?to=webm', description: 'Convert videos to high-efficiency WebM', availability: { available: true } },
+  { toolId: 'video-to-mov', name: 'Convert to MOV', category: 'Video Tools', route: '/tools/video-converter?to=mov', description: 'Convert videos to Apple QuickTime MOV', availability: { available: true } },
+  { toolId: 'video-to-gif', name: 'Convert to GIF', category: 'Video Tools', route: '/tools/video-converter?to=gif', description: 'Convert video clips to animated GIF', availability: { available: true } },
+  { toolId: 'vcompress-low', name: 'Video Compressor (Light)', category: 'Video Tools', route: '/tools/video-compressor?preset=low', description: 'Light video compression with maximum quality', availability: { available: true } },
+  { toolId: 'vcompress-medium', name: 'Video Compressor (Balanced)', category: 'Video Tools', route: '/tools/video-compressor?preset=medium', description: 'Balanced video compression for sharing', availability: { available: true } },
+  { toolId: 'vcompress-high', name: 'Video Compressor (Extreme)', category: 'Video Tools', route: '/tools/video-compressor?preset=high', description: 'Maximum file size reduction for videos', availability: { available: true } },
+
+  // Audio Tools
+  { toolId: 'audio-to-mp3', name: 'Convert to MP3', category: 'Audio Tools', route: '/tools/audio-converter?to=mp3', description: 'Convert audio tracks to standard MP3 format', availability: { available: true } },
+  { toolId: 'audio-to-wav', name: 'Convert to WAV', category: 'Audio Tools', route: '/tools/audio-converter?to=wav', description: 'Convert audio to lossless uncompressed WAV', availability: { available: true } },
+  { toolId: 'audio-to-ogg', name: 'Convert to OGG', category: 'Audio Tools', route: '/tools/audio-converter?to=ogg', description: 'Convert audio to web-optimized OGG Vorbis', availability: { available: true } },
+
+  // Media Downloader
+  { toolId: 'youtube-downloader', name: 'YouTube Video Downloader', category: 'Media Downloader', route: '/tools/media-downloader?type=youtube', description: 'Download YouTube videos as high-res MP4', availability: { available: true } },
+  { toolId: 'spotify-downloader', name: 'Spotify Audio Downloader', category: 'Media Downloader', route: '/tools/media-downloader?type=spotify', description: 'Download Spotify tracks as high-bitrate MP3', availability: { available: true } },
 ];
 
 let cachedRegistry = DEFAULT_REGISTRY;

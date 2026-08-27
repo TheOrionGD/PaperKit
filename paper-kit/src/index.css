@@ -316,18 +316,28 @@ input:focus,
 textarea:focus,
 select:focus,
 .file-dropzone:hover,
-.file-uploader:hover,
-.ai-screen__file-picker:hover {
+.file-uploader:hover {
   border-color: var(--color-primary) !important;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3), 0 0 16px rgba(37, 99, 235, 0.22) !important;
 }
 
 /* Header & BottomNav Glowing Borders */
 .back-header,
-.top-bar {
+.top-bar,
+.topbar {
   border-bottom: 1px solid rgba(37, 99, 235, 0.2) !important;
   box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08) !important;
 }
+
+/* 7px gap above all top headers across all pages */
+.topbar,
+.back-header,
+.onboarding-screen__topbar,
+.landing-screen__topbar {
+  margin-top: 7px;
+}
+
+
 
 .bottom-nav {
   border-top: 1px solid rgba(37, 99, 235, 0.2) !important;

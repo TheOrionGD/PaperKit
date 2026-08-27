@@ -2,6 +2,7 @@
 /* ToolIcons.jsx — SVG icon components for all PaperKit tools.
    Each icon uses a colored rounded-square background with a white pictogram.
    Colors come from design tokens. */
+import { Archive, FolderArchive, FileArchive } from 'lucide-react';
 
 
 /* Generic icon wrapper with colored bg */
@@ -38,59 +39,192 @@ export function ToolIconWrapper({ bgColor, softColor, size = 44, children }) {
 }
 
 
-/* File type icons for file cards */
-export function FileTypeIcon({ type, size = 36 }) {
-  const colors = {
-    pdf: { bg: 'linear-gradient(135deg, #FEE2E2 0%, #FCA5A5 100%)', fg: '#DC2626', shadow: 'rgba(239, 68, 68, 0.25)' },
-    word: { bg: 'linear-gradient(135deg, #DBEAFE 0%, #93C5FD 100%)', fg: '#2563EB', shadow: 'rgba(59, 130, 246, 0.25)' },
-    excel: { bg: 'linear-gradient(135deg, #D1FAE5 0%, #6EE7B7 100%)', fg: '#059669', shadow: 'rgba(16, 185, 129, 0.25)' },
-    ppt: { bg: 'linear-gradient(135deg, #FEF3C7 0%, #FCD34D 100%)', fg: '#D97706', shadow: 'rgba(245, 158, 11, 0.25)' },
-    image: { bg: 'linear-gradient(135deg, #EDE9FE 0%, #C4B5FD 100%)', fg: '#7C3AED', shadow: 'rgba(139, 92, 246, 0.25)' },
-    default: { bg: 'linear-gradient(135deg, #F3F4F6 0%, #D1D5DB 100%)', fg: '#4B5563', shadow: 'rgba(107, 114, 128, 0.25)' },
+/* File type icons for file cards — rich SVG pictograms for every format */
+export function getFileType(filename) {
+  if (!filename) return 'default';
+  const ext = filename.split('.').pop()?.toLowerCase();
+  const map = {
+    // Documents
+    pdf: 'pdf',
+    doc: 'word', docx: 'word', odt: 'word', rtf: 'word',
+    xls: 'excel', xlsx: 'excel', ods: 'excel', csv: 'csv',
+    ppt: 'ppt', pptx: 'ppt', odp: 'ppt',
+    txt: 'txt', md: 'txt', log: 'txt',
+    // Code / data
+    html: 'code', htm: 'code', css: 'code', js: 'code', jsx: 'code',
+    ts: 'code', tsx: 'code', py: 'code', java: 'code', json: 'code',
+    xml: 'code', yaml: 'code', yml: 'code', sh: 'code', sql: 'code',
+    // Images
+    jpg: 'image', jpeg: 'image', png: 'image', gif: 'image',
+    webp: 'image', svg: 'image', heic: 'image', heif: 'image',
+    bmp: 'image', tiff: 'image', tif: 'image', ico: 'image',
+    // Video
+    mp4: 'video', mov: 'video', avi: 'video', mkv: 'video',
+    webm: 'video', wmv: 'video', flv: 'video', m4v: 'video',
+    // Audio
+    mp3: 'audio', wav: 'audio', ogg: 'audio', aac: 'audio',
+    flac: 'audio', m4a: 'audio', wma: 'audio',
+    // Archives
+    zip: 'zip', rar: 'zip', tar: 'zip', gz: 'zip',
+    '7z': 'zip', bz2: 'zip',
   };
-  const c = colors[type?.toLowerCase()] || colors.default;
+  return map[ext] || 'default';
+}
 
-  const labels = {
-    pdf: 'PDF',
-    word: 'W',
-    excel: 'XLS',
-    ppt: 'PPT',
-    image: 'IMG',
+export function FileTypeIcon({ type, size = 36 }) {
+  const t = type?.toLowerCase() || 'default';
+
+  const THEMES = {
+    pdf:     { bg: 'linear-gradient(135deg,#FEE2E2 0%,#FCA5A5 100%)',  fg: '#DC2626', shadow: 'rgba(239,68,68,0.22)' },
+    word:    { bg: 'linear-gradient(135deg,#DBEAFE 0%,#93C5FD 100%)',  fg: '#2563EB', shadow: 'rgba(59,130,246,0.22)' },
+    excel:   { bg: 'linear-gradient(135deg,#D1FAE5 0%,#6EE7B7 100%)',  fg: '#059669', shadow: 'rgba(16,185,129,0.22)' },
+    csv:     { bg: 'linear-gradient(135deg,#D1FAE5 0%,#6EE7B7 100%)',  fg: '#059669', shadow: 'rgba(16,185,129,0.22)' },
+    ppt:     { bg: 'linear-gradient(135deg,#FEF3C7 0%,#FCD34D 100%)',  fg: '#D97706', shadow: 'rgba(245,158,11,0.22)' },
+    image:   { bg: 'linear-gradient(135deg,#EDE9FE 0%,#C4B5FD 100%)',  fg: '#7C3AED', shadow: 'rgba(139,92,246,0.22)' },
+    video:   { bg: 'linear-gradient(135deg,#FCE7F3 0%,#F9A8D4 100%)',  fg: '#DB2777', shadow: 'rgba(219,39,119,0.22)' },
+    audio:   { bg: 'linear-gradient(135deg,#FDF4FF 0%,#E879F9 100%)',  fg: '#A21CAF', shadow: 'rgba(162,28,175,0.22)' },
+    txt:     { bg: 'linear-gradient(135deg,#F1F5F9 0%,#CBD5E1 100%)',  fg: '#475569', shadow: 'rgba(71,85,105,0.22)'  },
+    code:    { bg: 'linear-gradient(135deg,#0F172A 0%,#1E3A5F 100%)',  fg: '#38BDF8', shadow: 'rgba(56,189,248,0.22)' },
+    zip:     { bg: 'linear-gradient(135deg,#FFF7ED 0%,#FED7AA 100%)',  fg: '#EA580C', shadow: 'rgba(234,88,12,0.22)'  },
+    default: { bg: 'linear-gradient(135deg,#F3F4F6 0%,#D1D5DB 100%)',  fg: '#4B5563', shadow: 'rgba(107,114,128,0.22)'},
   };
+
+  const theme = THEMES[t] || THEMES.default;
+  const s = Math.round(size * 0.44); // inner icon stroke size
+
+  /* SVG pictogram per type */
+  const icons = {
+    pdf: (
+      <g stroke={theme.fg} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+        <polyline points="14 3 14 9 20 9"/>
+        <line x1="8" y1="13" x2="16" y2="13"/>
+        <line x1="8" y1="17" x2="16" y2="17"/>
+        <line x1="8" y1="9" x2="10" y2="9"/>
+      </g>
+    ),
+    word: (
+      <g stroke={theme.fg} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+        <polyline points="14 3 14 9 20 9"/>
+        <line x1="8" y1="13" x2="16" y2="13"/>
+        <line x1="8" y1="17" x2="13" y2="17"/>
+        <path d="M8 10l2 4 2-4 2 4 2-4" strokeWidth="1.4"/>
+      </g>
+    ),
+    excel: (
+      <g stroke={theme.fg} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+        <polyline points="14 3 14 9 20 9"/>
+        <line x1="8" y1="12" x2="16" y2="12"/>
+        <line x1="8" y1="15" x2="16" y2="15"/>
+        <line x1="8" y1="18" x2="16" y2="18"/>
+        <line x1="12" y1="12" x2="12" y2="18"/>
+      </g>
+    ),
+    csv: (
+      <g stroke={theme.fg} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+        <polyline points="14 3 14 9 20 9"/>
+        <path d="M9 13h-1a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h1" strokeWidth="1.4"/>
+        <polyline points="12 13 14 17 16 13" strokeWidth="1.4"/>
+      </g>
+    ),
+    ppt: (
+      <g stroke={theme.fg} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+        <polyline points="14 3 14 9 20 9"/>
+        <rect x="8" y="12" width="8" height="5" rx="1" strokeWidth="1.4"/>
+        <line x1="12" y1="12" x2="12" y2="10"/>
+      </g>
+    ),
+    image: (
+      <g stroke={theme.fg} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <rect x="3" y="3" width="18" height="18" rx="2"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21 15 16 10 5 21"/>
+      </g>
+    ),
+    video: (
+      <g stroke={theme.fg} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <rect x="2" y="4" width="14" height="16" rx="2"/>
+        <path d="M16 9l6-2v10l-6-2"/>
+      </g>
+    ),
+    audio: (
+      <g stroke={theme.fg} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <path d="M9 18V5l12-2v13"/>
+        <circle cx="6" cy="18" r="3"/>
+        <circle cx="18" cy="16" r="3"/>
+      </g>
+    ),
+    txt: (
+      <g stroke={theme.fg} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+        <polyline points="14 3 14 9 20 9"/>
+        <line x1="8" y1="13" x2="16" y2="13"/>
+        <line x1="8" y1="17" x2="16" y2="17"/>
+      </g>
+    ),
+    code: (
+      <g stroke={theme.fg} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <polyline points="16 18 22 12 16 6"/>
+        <polyline points="8 6 2 12 8 18"/>
+      </g>
+    ),
+    zip: (
+      <g stroke={theme.fg} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        <line x1="12" y1="10" x2="12" y2="16"/>
+        <line x1="9" y1="13" x2="15" y2="13"/>
+      </g>
+    ),
+    default: (
+      <g stroke={theme.fg} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+        <polyline points="14 3 14 9 20 9"/>
+      </g>
+    ),
+  };
+
+  const iconKey = icons[t] ? t : 'default';
 
   return (
     <div
       style={{
         width: size,
         height: size,
-        borderRadius: 10,
-        background: c.bg,
-        boxShadow: `0 4px 10px ${c.shadow}, inset 0 2px 4px rgba(255,255,255,0.5)`,
+        borderRadius: Math.round(size * 0.25),
+        background: theme.bg,
+        boxShadow: `0 4px 10px ${theme.shadow}, inset 0 2px 4px rgba(255,255,255,0.5)`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
       }}
     >
-      {/* Decorative file fold corner */}
+      {/* Decorative fold corner */}
       <div style={{
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        borderWidth: '0 8px 8px 0',
-        borderColor: `transparent #ffffff40 transparent transparent`,
+        position: 'absolute', top: 0, right: 0,
+        borderWidth: `0 ${Math.round(size*0.22)}px ${Math.round(size*0.22)}px 0`,
+        borderColor: 'transparent rgba(255,255,255,0.35) transparent transparent',
         borderStyle: 'solid',
-        borderBottomLeftRadius: 4,
-        boxShadow: '-1px 1px 2px rgba(0,0,0,0.05)'
+        borderBottomLeftRadius: 3,
       }} />
-      <span style={{ fontSize: 11, fontWeight: 800, color: c.fg, letterSpacing: 0.5, textShadow: '0 1px 2px rgba(255,255,255,0.7)' }}>
-        {labels[type?.toLowerCase()] || type?.slice(0, 3).toUpperCase() || '?'}
-      </span>
+      <svg
+        width={s}
+        height={s}
+        viewBox="0 0 24 24"
+        style={{ flexShrink: 0 }}
+      >
+        {icons[iconKey]}
+      </svg>
     </div>
   );
 }
+
 
 /* Individual tool icons */
 const TOOL_COLORS = {
@@ -532,6 +666,7 @@ export const AudioToolIcon = ({ size, color="green" }) => (
 
 /* Map from tool key to icon component */
 export const TOOL_ICON_MAP = {
+
   'edit-pdf':         EditPDFIcon,
   'merge-pdf':        MergeIcon,
   'split-pdf':        SplitIcon,
@@ -591,15 +726,24 @@ export const TOOL_ICON_MAP = {
   'video-to-webm':      () => <VideoToolIcon color="green" />,
   'video-to-mov':       () => <VideoToolIcon color="purple" />,
   'video-to-gif':       () => <VideoToolIcon color="orange" />,
+  'video-converter':    () => <VideoToolIcon color="blue" />,
   'vcompress-low':      () => <VideoToolIcon color="green" />,
   'vcompress-medium':   () => <VideoToolIcon color="orange" />,
   'vcompress-high':     () => <VideoToolIcon color="red" />,
+  'video-compressor':   () => <VideoToolIcon color="purple" />,
   'audio-to-mp3':       () => <AudioToolIcon color="green" />,
   'audio-to-wav':       () => <AudioToolIcon color="blue" />,
   'audio-to-ogg':       () => <AudioToolIcon color="orange" />,
+  'audio-converter':    () => <AudioToolIcon color="teal" />,
   'protect-pdf':      ProtectPDFIcon,
   'smart-redaction':  RedactIcon,
   'digital-sign':     SignIcon,
   'metadata-manager': MetadataIcon,
+  'extract-archive':    () => <ToolIconWrapper bgColor="#EA580C" softColor="rgba(234,88,12,0.12)"><Archive size={20} color="#EA580C" /></ToolIconWrapper>,
+  'create-zip':         () => <ToolIconWrapper bgColor="#2563EB" softColor="rgba(37,99,235,0.12)"><FileArchive size={20} color="#2563EB" /></ToolIconWrapper>,
+  'create-tar':         () => <ToolIconWrapper bgColor="#059669" softColor="rgba(5,150,105,0.12)"><FolderArchive size={20} color="#059669" /></ToolIconWrapper>,
+  'convert-archive':    () => <ToolIconWrapper bgColor="#7C3AED" softColor="rgba(124,58,237,0.12)"><Archive size={20} color="#7C3AED" /></ToolIconWrapper>,
+  'archive-manager':    () => <ToolIconWrapper bgColor="#EA580C" softColor="rgba(234,88,12,0.12)"><FolderArchive size={20} color="#EA580C" /></ToolIconWrapper>,
 };
+
 

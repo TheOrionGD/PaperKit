@@ -1,12 +1,13 @@
 import os
-import shutil
 import uuid
+import httpx
+import yt_dlp
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-import subprocess
 
 router = APIRouter()
+
 
 class DownloadRequest(BaseModel):
     url: str
@@ -31,22 +32,20 @@ async def download_youtube(req: DownloadRequest, background_tasks: BackgroundTas
     output_template = os.path.join(DOWNLOAD_DIR, f"{job_id}_%(title)s.%(ext)s")
     
     try:
-        import sys
         bin_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "bin")
-        command = [
-            sys.executable, "-m", "yt_dlp",
-            "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
-            "-o", output_template,
-            req.url
-        ]
+        
+        ydl_opts = {
+            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+            'outtmpl': output_template,
+            'quiet': True,
+            'no_warnings': True,
+        }
         
         if os.path.exists(bin_dir):
-            command.insert(4, "--ffmpeg-location")
-            command.insert(5, bin_dir)
-        
-        result = subprocess.run(command, capture_output=True, text=True)
-        if result.returncode != 0:
-            raise Exception(f"yt-dlp error: {result.stderr}")
+            ydl_opts['ffmpeg_location'] = bin_dir
+            
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([req.url])
             
         # Find the downloaded file
         downloaded_file = None
@@ -71,31 +70,44 @@ async def download_youtube(req: DownloadRequest, background_tasks: BackgroundTas
         print(f"YouTube Download Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/download-spotify")
 async def download_spotify(req: DownloadRequest, background_tasks: BackgroundTasks):
     if not req.url or "spotify.com" not in req.url:
         raise HTTPException(status_code=400, detail="Valid Spotify URL required")
 
     job_id = str(uuid.uuid4())
-    output_template = os.path.join(DOWNLOAD_DIR, f"{job_id}_" + "{title} - {artists}.{ext}")
+    output_template = os.path.join(DOWNLOAD_DIR, f"{job_id}_%(title)s.%(ext)s")
     
     try:
-        import sys
         bin_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "bin")
-        ffmpeg_path = os.path.join(bin_dir, "ffmpeg")
-        command = [
-            sys.executable, "-m", "spotdl",
-            "--output", output_template,
-            req.url
-        ]
         
-        if os.path.exists(ffmpeg_path):
-            command.insert(3, "--ffmpeg")
-            command.insert(4, ffmpeg_path)
+        # 1. Fetch metadata from Spotify oEmbed
+        track_title = "spotify_track"
+        try:
+            async with httpx.AsyncClient(follow_redirects=True, timeout=10) as client:
+                resp = await client.get(f"https://open.spotify.com/oembed?url={req.url}")
+                if resp.status_code == 200:
+                    data = resp.json()
+                    track_title = data.get("title", "spotify_track")
+        except Exception as oembed_err:
+            print(f"Spotify oEmbed notice: {oembed_err}")
+
+            
+        # 2. Download audio via yt_dlp search
+        query = f"ytsearch1:{track_title} audio"
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'outtmpl': output_template,
+            'quiet': True,
+            'no_warnings': True,
+        }
         
-        result = subprocess.run(command, capture_output=True, text=True)
-        if result.returncode != 0:
-            raise Exception(f"spotdl error: {result.stderr}")
+        if os.path.exists(bin_dir):
+            ydl_opts['ffmpeg_location'] = bin_dir
+            
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([query])
             
         # Find the downloaded file
         downloaded_file = None
@@ -105,7 +117,7 @@ async def download_spotify(req: DownloadRequest, background_tasks: BackgroundTas
                 break
                 
         if not downloaded_file:
-            raise Exception("Downloaded file not found")
+            raise Exception("Downloaded audio file not found")
             
         background_tasks.add_task(cleanup_file, downloaded_file)
         
@@ -118,3 +130,4 @@ async def download_spotify(req: DownloadRequest, background_tasks: BackgroundTas
     except Exception as e:
         print(f"Spotify Download Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+

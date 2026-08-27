@@ -1,0 +1,98 @@
+/* ── CategoryHubScreen.css ────────────────────────────────────────────── */
+
+.category-hub-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-background);
+}
+
+.category-hub-banner {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.category-hub-banner-icon {
+  width: 48px;
+  height: 48px;
+}
+
+.category-hub-banner-text h1 {
+  font-size: clamp(16px, 3.5vw, 20px);
+  margin: 0 0 4px;
+}
+
+.category-hub-search-wrap {
+  padding: var(--space-3) clamp(10px, 3vw, 16px) 0;
+}
+
+.category-hub-list {
+  padding-top: var(--space-3);
+  gap: 12px;
+}
+
+.category-hub-card {
+  padding: 14px 18px;
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.category-hub-card:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12);
+}
+
+.category-hub-card__icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.category-hub-card__default-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--color-primary-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.category-hub-card__content {
+  margin-left: 4px;
+}
+
+.category-hub-card__content .ai-tool-card__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 3px;
+}
+
+.category-hub-card__content .ai-tool-card__desc {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.category-hub-card__chevron {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.category-hub-card:hover .category-hub-card__chevron {
+  transform: translateX(3px);
+  color: var(--color-primary) !important;
+}
+
+.category-hub-empty {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--color-text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}

@@ -14,12 +14,18 @@ import {
   Grid,
   Globe,
   Cpu,
+  Gauge,
+  FileText,
+  Brain,
+  Clock,
   ChevronRight,
   ChevronLeft,
   ArrowRight,
   Play,
   Pause,
-  CheckCircle2
+  CheckCircle2,
+  AlertTriangle,
+  Info
 } from 'lucide-react';
 import ParticleBackground from '../../components/ui/ParticleBackground';
 import './OnboardingScreen.css';
@@ -219,6 +225,44 @@ const ONBOARDING_PAGES = [
       'AI Document classification and auto-tagging system',
       'High-throughput vector search across massive document archives'
     ]
+  },
+  {
+    id: 14,
+    type: 'rate-limits',
+    badge: 'Fair Use Policy',
+    title: 'Usage Limits & Fair Access',
+    subtitle: 'To keep performance fast and reliable for everyone, fair usage limits apply on shared cloud infrastructure.',
+    icon: Gauge,
+    iconColor: '#EA580C',
+    bgColor: 'rgba(234, 88, 12, 0.10)',
+    highlightColor: '#EA580C',
+    limits: [
+      {
+        category: 'PDF Manipulation Tools',
+        icon: 'pdf',
+        color: '#DC2626',
+        softColor: 'rgba(220,38,38,0.10)',
+        borderColor: 'rgba(220,38,38,0.22)',
+        rule: '≤ 15 pages per document',
+        note: 'Merge, Split, Compress, Rotate, Watermark, Edit & all PDF tools.',
+        tip: 'Split large PDFs into chunks under 15 pages before processing.',
+      },
+      {
+        category: 'AI Intelligence Features',
+        icon: 'ai',
+        color: '#7C3AED',
+        softColor: 'rgba(124,58,237,0.10)',
+        borderColor: 'rgba(124,58,237,0.22)',
+        rule: '5 requests per 1–4 hours',
+        note: 'Summarize, Ask PDF, OCR, Translate, Tables & all AI tools.',
+        tip: 'Limits reset automatically. Each AI tool category has an independent counter.',
+      },
+    ],
+    features: [
+      'Limits reset automatically — no account required',
+      'Client-side WASM PDF tools are always unlimited'
+    ]
+
   }
 ];
 
@@ -399,19 +443,80 @@ export default function OnboardingScreen({ onFinish = null }) {
           <h2 className="onboarding-screen__title">{currentPage.title}</h2>
           <p className="onboarding-screen__subtitle">{currentPage.subtitle}</p>
 
-          {/* Feature Bullets */}
-          <div className="onboarding-screen__features-list">
-            {currentPage.features.map((feat, idx) => (
-              <div key={idx} className="onboarding-screen__feature-item">
-                <CheckCircle2
-                  size={18}
-                  color={currentPage.highlightColor}
-                  className="onboarding-screen__feature-icon"
-                />
-                <span>{feat}</span>
+          {/* Feature Bullets — standard slides */}
+          {currentPage.type !== 'rate-limits' && (
+            <div className="onboarding-screen__features-list">
+              {currentPage.features.map((feat, idx) => (
+                <div key={idx} className="onboarding-screen__feature-item">
+                  <CheckCircle2
+                    size={18}
+                    color={currentPage.highlightColor}
+                    className="onboarding-screen__feature-icon"
+                  />
+                  <span>{feat}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Rate Limits special slide */}
+          {currentPage.type === 'rate-limits' && (
+            <div className="ob-rate-limits">
+              {currentPage.limits.map((limit, idx) => (
+                <div
+                  key={idx}
+                  className="ob-rate-limit-card"
+                  style={{ borderColor: limit.borderColor, background: limit.softColor }}
+                >
+                  {/* Card header */}
+                  <div className="ob-rate-limit-card__header">
+                    <div
+                      className="ob-rate-limit-card__icon-bubble"
+                      style={{ background: limit.softColor, borderColor: limit.borderColor }}
+                    >
+                      {limit.icon === 'pdf'
+                        ? <FileText size={18} color={limit.color} />
+                        : <Brain size={18} color={limit.color} />}
+                    </div>
+                    <div>
+                      <div className="ob-rate-limit-card__category" style={{ color: limit.color }}>
+                        {limit.category}
+                      </div>
+                      <div className="ob-rate-limit-card__rule">
+                        {limit.rule}
+                      </div>
+                    </div>
+                    <div
+                      className="ob-rate-limit-card__badge"
+                      style={{ color: limit.color, background: limit.softColor, borderColor: limit.borderColor }}
+                    >
+                      {idx === 0 ? <><FileText size={11} /> PDF</> : <><Clock size={11} /> AI</>}
+                    </div>
+                  </div>
+                  {/* Applies to note */}
+                  <p className="ob-rate-limit-card__note">
+                    <Info size={12} style={{ flexShrink: 0, marginTop: 2 }} />
+                    {limit.note}
+                  </p>
+                  {/* Tip */}
+                  <div className="ob-rate-limit-card__tip">
+                    <AlertTriangle size={12} color="#92400E" style={{ flexShrink: 0, marginTop: 1 }} />
+                    <span>{limit.tip}</span>
+                  </div>
+                </div>
+              ))}
+              {/* Bottom always-unlimited note */}
+              <div className="ob-rate-limit-card__footer">
+                {currentPage.features.map((f, i) => (
+                  <div key={i} className="onboarding-screen__feature-item" style={{ fontSize: '0.82rem' }}>
+                    <CheckCircle2 size={14} color={currentPage.highlightColor} className="onboarding-screen__feature-icon" />
+                    <span>{f}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
+
         </div>
       </main>
 
