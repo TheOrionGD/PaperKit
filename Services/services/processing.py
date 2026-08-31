@@ -1,4 +1,5 @@
 """PDF processing service using PyMuPDF (fitz) + ReportLab + Pure Python"""
+import base64
 import io
 import os
 import uuid
@@ -809,7 +810,7 @@ def word_to_pdf_fallback(word_bytes: bytes) -> bytes:
 
     # Primary method: docx2pdf (MS Word COM automation on Windows with thread COM initialization)
     try:
-        import docx2pdf
+        import docx2pdf  # type: ignore[import-not-found]
         import pythoncom
         tmpdir = tempfile.mkdtemp()
         try:
@@ -842,55 +843,92 @@ def word_to_pdf_fallback(word_bytes: bytes) -> bytes:
     except Exception as e:
         print(f"[Conversion] docx2pdf conversion error: {e}. Using ReportLab document-order fallback...")
 
+    # Validate that the payload is a ZIP-based OOXML file (DOCX, XLSX, PPTX all start with PK\x03\x04)
+    if len(word_bytes) < 4 or word_bytes[:2] != b'PK':
+        raise ValueError(
+            "The uploaded file is not a valid .docx document. "
+            "Legacy .doc (Word 97-2003) binary files are not supported — please save as .docx and retry."
+        )
+
     # Secondary method: ReportLab Document-Order Walker
-    from docx import Document
     from reportlab.lib.pagesizes import letter
     from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
     from reportlab.lib.styles import getSampleStyleSheet
     from reportlab.lib import colors
 
-    doc_stream = io.BytesIO(word_bytes)
-    docx_doc = Document(doc_stream)
-    
     pdf_stream = io.BytesIO()
     pdf_doc = SimpleDocTemplate(pdf_stream, pagesize=letter, leftMargin=36, rightMargin=36, topMargin=36, bottomMargin=36)
     styles = getSampleStyleSheet()
     story = []
 
-    # Walk body elements in EXACT document sequence
-    for elem in docx_doc.element.body:
-        tag = elem.tag.split('}')[-1]
-        
-        if tag == 'p':
-            p_text = "".join([t.text for t in elem.findall('.//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t') if t.text]).strip()
-            if p_text:
-                story.append(Paragraph(p_text, styles['Normal']))
-                story.append(Spacer(1, 6))
+    # Attempt to open with python-docx; fall back to raw zipfile XML extraction if the OOXML
+    # relationship graph is broken (raises "no relationship of type '...officeDocument'").
+    docx_doc = None
+    try:
+        from docx import Document
+        doc_stream = io.BytesIO(word_bytes)
+        docx_doc = Document(doc_stream)
+    except Exception as docx_err:
+        print(f"[Conversion] python-docx open failed: {docx_err}. Falling back to raw zipfile text extraction...")
 
-        elif tag == 'tbl':
-            table_data = []
-            for row_elem in elem.findall('.//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tr'):
-                row_data = []
-                for cell_elem in row_elem.findall('.//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tc'):
-                    cell_text = "".join([t.text for t in cell_elem.findall('.//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t') if t.text]).strip()
-                    row_data.append(Paragraph(cell_text, styles['Normal']))
-                if row_data:
-                    table_data.append(row_data)
+    if docx_doc is not None:
+        # Walk body elements in EXACT document sequence
+        for elem in docx_doc.element.body:
+            tag = elem.tag.split('}')[-1]
 
-            if table_data:
-                t = Table(table_data)
-                t.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.whitesmoke),
-                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                    ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ]))
-                story.append(t)
-                story.append(Spacer(1, 10))
+            if tag == 'p':
+                p_text = "".join([t.text for t in elem.findall('.//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t') if t.text]).strip()
+                if p_text:
+                    story.append(Paragraph(p_text, styles['Normal']))
+                    story.append(Spacer(1, 6))
+
+            elif tag == 'tbl':
+                table_data = []
+                for row_elem in elem.findall('.//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tr'):
+                    row_data = []
+                    for cell_elem in row_elem.findall('.//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tc'):
+                        cell_text = "".join([t.text for t in cell_elem.findall('.//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t') if t.text]).strip()
+                        row_data.append(Paragraph(cell_text, styles['Normal']))
+                    if row_data:
+                        table_data.append(row_data)
+
+                if table_data:
+                    t = Table(table_data)
+                    t.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, 0), colors.whitesmoke),
+                        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                        ('TOPPADDING', (0, 0), (-1, -1), 6),
+                    ]))
+                    story.append(t)
+                    story.append(Spacer(1, 10))
+    else:
+        # Raw zipfile fallback: extract text directly from word/document.xml inside the ZIP
+        import zipfile
+        import xml.etree.ElementTree as ET
+        try:
+            with zipfile.ZipFile(io.BytesIO(word_bytes)) as zf:
+                # Try to locate the main document part regardless of _rels mapping
+                candidate_parts = [n for n in zf.namelist() if n.endswith('document.xml') or n == 'word/document.xml']
+                for part_name in candidate_parts:
+                    try:
+                        xml_bytes = zf.read(part_name)
+                        root = ET.fromstring(xml_bytes)
+                        ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+                        for p_elem in root.iter(f'{{{ns}}}p'):
+                            p_text = "".join((t.text or '') for t in p_elem.iter(f'{{{ns}}}t')).strip()
+                            if p_text:
+                                story.append(Paragraph(p_text, styles['Normal']))
+                                story.append(Spacer(1, 6))
+                        break
+                    except Exception:
+                        continue
+        except Exception as zip_err:
+            print(f"[Conversion] zipfile fallback also failed: {zip_err}")
 
     if not story:
-        story.append(Paragraph("Document empty", styles['Normal']))
+        story.append(Paragraph("Document content could not be extracted.", styles['Normal']))
 
     pdf_doc.build(story)
     return pdf_stream.getvalue()
@@ -911,7 +949,7 @@ def html_to_word_bytes(html_str: str) -> bytes:
 
     # Use html-for-docx parser for high-fidelity conversion of HTML, tables, Base64 images, and inline styles
     try:
-        from html4docx import HtmlToDocx
+        from html4docx import HtmlToDocx  # type: ignore[import-not-found]
         parser = HtmlToDocx()
         parser.add_html_to_document(html_str, docx_doc)
     except Exception as e:

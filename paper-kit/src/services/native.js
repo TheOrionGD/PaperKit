@@ -350,12 +350,25 @@ export async function downloadAndOpenFile(fileUrl, filename = 'document.pdf', mi
 
       const base64Data = await blobToBase64(blob);
 
-      const result = await Filesystem.writeFile({
-        path: filename,
-        data: base64Data,
-        directory: Directory.Documents,
-        recursive: true
-      });
+      let result;
+      try {
+        result = await Filesystem.writeFile({
+          path: filename,
+          data: base64Data,
+          directory: Directory.Documents,
+          recursive: true
+        });
+      } catch (writeErr) {
+        // Directory.Documents may be restricted on Android 10+ without MANAGE_EXTERNAL_STORAGE.
+        // Fall back to Directory.Cache which is always writable.
+        console.warn('[Download] Documents write failed, retrying with Cache directory:', writeErr);
+        result = await Filesystem.writeFile({
+          path: filename,
+          data: base64Data,
+          directory: Directory.Cache,
+          recursive: true
+        });
+      }
 
       try {
         const { FileOpener } = await import('@capacitor-community/file-opener');

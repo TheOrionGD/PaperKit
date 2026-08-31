@@ -8,7 +8,7 @@ import ErrorState from '../components/ui/ErrorState';
 import EmptyState from '../components/ui/EmptyState';
 import ParticleBackground from '../components/ui/ParticleBackground';
 import { getToolsRegistry, getToolsRegistrySync } from '../services/tools';
-import { Wrench, Sparkles, Layers, ArrowRight } from 'lucide-react';
+import { Wrench } from 'lucide-react';
 import './AllToolsScreen.css';
 
 

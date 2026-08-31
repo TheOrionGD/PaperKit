@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
-import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
-import { ShieldCheck, FileCheck, CheckCircle, Download, Eye, Sparkles, Archive, Type, Zap } from 'lucide-react';
+import { ShieldCheck, FileCheck, CheckCircle, Download, Eye, Sparkles } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
 import FileUploader from '../../components/common/FileUploader';
 import { PrimaryButton } from '../../components/ui/Button';
@@ -11,33 +10,6 @@ import { useProcessing } from '../../context/ProcessingContext';
 import { saveProcessedFile } from '../../services/files';
 import './PDFToPDFAScreen.css';
 
-const TOOL_TIPS = [
-  {
-    icon: <Archive size={20} />,
-    title: 'Long-Term Storage',
-    description: 'Converts PDFs to ISO-standard PDF/A.'
-  },
-  {
-    icon: <Type size={20} />,
-    title: 'Embed Fonts',
-    description: 'Ensures documents look identical forever.'
-  },
-  {
-    icon: <CheckCircle size={20} />,
-    title: 'Compliance',
-    description: 'Meets legal archiving requirements.'
-  },
-  {
-    icon: <Zap size={20} />,
-    title: 'Fast Conversion',
-    description: 'Processes large files in seconds.'
-  },
-  {
-    icon: <ShieldCheck size={20} />,
-    title: '100% Secure',
-    description: 'Archived directly on your device.'
-  },
-];
 
 
 const CONFORMANCE_PROFILES = [

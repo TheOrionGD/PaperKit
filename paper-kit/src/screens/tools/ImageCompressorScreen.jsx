@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
-import { Minimize2, Zap, ShieldCheck, Save, ImageDown, Eye, Layers, Share2 } from 'lucide-react';
+import { Minimize2, ShieldCheck, ImageDown, Eye, Layers, Share2 } from 'lucide-react';
 import Toast from '../../components/ui/Toast';
 import CommonResultScreen, { ACTION_PRESETS } from '../../components/common/CommonResultScreen';
 import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';

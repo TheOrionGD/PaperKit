@@ -6,15 +6,11 @@ import {
   FileArchive,
   Download,
   FileText,
-  Eye,
-  CheckCircle2,
-  AlertCircle,
   Loader2,
   Folder,
   Layers,
-  Sparkles,
-  ShieldCheck,
   Zap,
+  ShieldCheck,
   Search,
   Plus,
   Trash2,
@@ -92,7 +88,6 @@ export default function ArchiveToolScreen() {
   // Result state
   const [result, setResult] = useState(null);
 
-  const fileInputRef = useRef(null);
   const multiFileInputRef = useRef(null);
   const { toast, showToast, dismissToast } = useToast();
 
@@ -109,6 +104,7 @@ export default function ArchiveToolScreen() {
         setCreateFiles([fileObj]);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
   // Handle Inspect Archive

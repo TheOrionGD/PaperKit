@@ -10,7 +10,7 @@ import { useToast } from '../hooks/useToast';
 import { getStoredLocalFiles, saveStoredLocalFiles, uploadFile } from '../services/files';
 import './ScannerScreen.css';
 
-async function processScanClientSide(imageSrc, corners, mode, filename) {
+async function processScanClientSide(imageSrc, corners, mode, _filename) {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -56,7 +56,7 @@ async function processScanClientSide(imageSrc, corners, mode, filename) {
         canvas.toBlob((blob) => {
           resolve({ blob, dataUrl: canvas.toDataURL('image/jpeg', 0.92) });
         }, 'image/jpeg', 0.92);
-      } catch (e) {
+      } catch {
         resolve({ blob: null, dataUrl: imageSrc });
       }
     };

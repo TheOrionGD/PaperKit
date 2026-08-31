@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
-import { Image as ImageIcon, FileImage, ShieldCheck, Zap, Image, Layers, Maximize } from 'lucide-react';
+import { Image as ImageIcon, ShieldCheck, Zap, Layers, Maximize } from 'lucide-react';
 import Toast from '../../components/ui/Toast';
 import CommonResultScreen, { ACTION_PRESETS } from '../../components/common/CommonResultScreen';
 import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
@@ -11,7 +11,7 @@ import '../ai/ai-screen.css';
 
 const TOOL_TIPS = [
   {
-    icon: <Image size={20} />,
+    icon: <ImageIcon size={20} />,
     title: 'Universal Formats',
     description: 'Convert between PNG, JPEG, WEBP, and HEIC.'
   },
@@ -43,23 +43,6 @@ const FORMATS = [
   { id: 'image/png', label: 'PNG', sublabel: 'Best for graphics with transparency' },
 ];
 
-const CONVERTER_TIPS = [
-  {
-    icon: <FileImage size={20} />,
-    title: 'Universal Format Support',
-    description: 'Easily convert HEIC, WebP, BMP, and more into widely accepted formats like JPG and PNG.'
-  },
-  {
-    icon: <Zap size={20} />,
-    title: 'Lightning Fast',
-    description: 'All conversions happen instantly on your device without needing to upload anything.'
-  },
-  {
-    icon: <ShieldCheck size={20} />,
-    title: '100% Private',
-    description: 'Your images are processed locally and never sent to any external servers, ensuring complete privacy.'
-  }
-];
 
 function formatSize(bytes) {
   if (!bytes) return '—';

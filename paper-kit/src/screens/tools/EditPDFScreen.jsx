@@ -1,8 +1,8 @@
-﻿/* EditPDFScreen — PDF → Word → docx-preview Render → Edit → PDF Export */
+/* EditPDFScreen — PDF → Word → docx-preview Render → Edit → PDF Export */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Download, Loader2, Pencil, Check, Edit3, Type, Image, ShieldCheck, Save, FileText, AlertCircle } from 'lucide-react';
+import { Download, Loader2, Pencil, Check, Edit3, Type, Image as ImageIcon, ShieldCheck, Save, FileText, AlertCircle } from 'lucide-react';
 import { PrimaryButton, SecondaryButton } from '../../components/ui/Button';
 import Toast from '../../components/ui/Toast';
 import FileUploader from '../../components/common/FileUploader';
@@ -27,7 +27,7 @@ const TOOL_TIPS = [
     description: 'Edit text, headings, tables and lists directly.'
   },
   {
-    icon: <Image size={20} />,
+    icon: <ImageIcon size={20} />,
     title: 'Preserves Layout',
     description: 'Fonts, spacing and images are kept intact.'
   },

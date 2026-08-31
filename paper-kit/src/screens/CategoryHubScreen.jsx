@@ -13,8 +13,6 @@ import {
   Music,
   DownloadCloud,
   Search,
-  CheckCircle2,
-  Wrench
 } from 'lucide-react';
 import {
   PDF_TOOLS,
