@@ -1,10 +1,10 @@
-fastapi==0.115.0
-uvicorn[standard]==0.30.6
+fastapi>=0.103.0,<0.104
+uvicorn[standard]>=0.23.2,<0.24
 motor==3.5.1
 pymongo==4.8.0
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-python-multipart==0.0.12
+python-multipart>=0.0.20
 pydantic-settings==2.4.0
 pymupdf==1.24.11
 groq>=0.11.0
