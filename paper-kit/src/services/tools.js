@@ -2,7 +2,6 @@ import api, { fastGet } from './api';
 
 export const DEFAULT_REGISTRY = [
   // PDF Management
-  { toolId: 'edit-pdf', name: 'Edit PDF', category: 'PDF Tools', route: '/tools/edit', description: 'Convert PDF to Word, edit in web editor, and save back to PDF', availability: { available: true } },
   { toolId: 'merge-pdf', name: 'Merge PDF', category: 'PDF Tools', route: '/tools/merge', description: 'Combine multiple PDFs in custom order', availability: { available: true } },
   { toolId: 'split-pdf', name: 'Split PDF', category: 'PDF Tools', route: '/tools/split', description: 'Split PDF by ranges, every N pages, or single pages', availability: { available: true } },
   { toolId: 'extract-pages', name: 'Extract Pages', category: 'PDF Tools', route: '/tools/extract-pages', description: 'Select and extract specific pages', availability: { available: true } },

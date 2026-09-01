@@ -1,10 +1,12 @@
-"""PDF processing service using PyMuPDF (fitz) + ReportLab + Pure Python"""
 import base64
 import io
+import logging
 import os
 import uuid
 from typing import Optional
 import pymupdf as fitz
+
+logger = logging.getLogger(__name__)
 
 
 def merge_pdfs(pdf_bytes_list: list[bytes], page_size: str = "original", margin_type: str = "none") -> bytes:
@@ -1358,33 +1360,56 @@ def sign_pdf(pdf_bytes: bytes, signatures: list[dict]) -> bytes:
         page_num = int(sig.get("page", 1)) - 1
         if 0 <= page_num < doc.page_count:
             page = doc[page_num]
-            x = float(sig.get("x", 50))
-            y = float(sig.get("y", 50))
-            w = float(sig.get("width", 150))
-            h = float(sig.get("height", 60))
+            pw, ph = page.rect.width, page.rect.height
+
+            w = max(50.0, min(float(sig.get("width", 150)), pw))
+            h = max(20.0, min(float(sig.get("height", 60)), ph))
+            x = max(0.0, min(float(sig.get("x", 50)), pw - w))
+            y = max(0.0, min(float(sig.get("y", 50)), ph - h))
 
             rect = fitz.Rect(x, y, x + w, y + h)
 
+            img_inserted = False
             img_base64 = sig.get("image_base64", "")
-            if img_base64:
+            if img_base64 and isinstance(img_base64, str):
                 if "," in img_base64:
                     img_base64 = img_base64.split(",", 1)[1]
-                try:
-                    img_bytes = base64.b64decode(img_base64)
-                    page.insert_image(rect, stream=img_bytes)
-                except Exception:
-                    pass
+                img_base64 = img_base64.strip()
+                if img_base64:
+                    try:
+                        # Fix base64 padding
+                        missing_padding = len(img_base64) % 4
+                        if missing_padding:
+                            img_base64 += "=" * (4 - missing_padding)
+                        img_bytes = base64.b64decode(img_base64)
+                        page.insert_image(rect, stream=img_bytes)
+                        img_inserted = True
+                    except Exception as e:
+                        logger.warning(f"Signature image decode/insert failed: {e}")
 
-            signer_name = sig.get("signer_name", "")
-            date_text = sig.get("date_text", "")
+            signer_name = sig.get("signer_name", "").strip()
+            date_text = sig.get("date_text", "").strip()
+
             if signer_name or date_text:
-                label_text = f"Digitally signed by: {signer_name}" if signer_name else "Signed"
+                lines = []
+                if signer_name:
+                    lines.append(f"Digitally signed by: {signer_name}")
                 if date_text:
-                    label_text += f"\nDate: {date_text}"
-                page.insert_text(fitz.Point(x, y + h + 10), label_text, fontsize=8, color=(0.2, 0.2, 0.2))
+                    lines.append(f"Date: {date_text}")
+                label_text = "\n".join(lines)
+
+                if img_inserted:
+                    # Place caption box below image
+                    ty = min(y + h + 2, ph - 22)
+                    text_rect = fitz.Rect(x, ty, min(x + max(w, 200.0), pw - 5), min(ty + 25, ph - 2))
+                    page.insert_textbox(text_rect, label_text, fontsize=7.5, color=(0.15, 0.23, 0.54), align=0)
+                else:
+                    # Draw a neat signature border & text if no image present
+                    page.draw_rect(rect, color=(0.2, 0.3, 0.7), width=1)
+                    page.insert_textbox(rect, label_text, fontsize=9, color=(0.1, 0.2, 0.5), align=1)
 
     buf = io.BytesIO()
-    doc.save(buf, garbage=3, deflate=True)
+    doc.save(buf, garbage=4, deflate=True)
     doc.close()
     return buf.getvalue()
 

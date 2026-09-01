@@ -1,7 +1,7 @@
-/* DigitalSignatureScreen — Draw, Type, or Upload Digital Signatures onto PDF (Feature 22 of gv) */
-import { useState, useRef, useEffect } from 'react';
+/* DigitalSignatureScreen — Draw, Type, or Upload Digital Signatures with Interactive PDF Visual Placement */
+import { useState, useRef, useEffect, useCallback } from 'react';
 import FeatureTipsSwipeStack from '../../components/ui/FeatureTipsSwipeStack';
-import { PenTool, Type, Image as ImageIcon, Download, Check, Trash2, Lock, Users, ShieldCheck, Clock } from 'lucide-react';
+import { PenTool, Type, Image as ImageIcon, Download, Check, Trash2, Lock, Users, ShieldCheck, Clock, ChevronLeft, ChevronRight, Move, Sparkles } from 'lucide-react';
 import { uploadFile } from '../../services/files';
 import { signPDF } from '../../services/tools';
 import { PrimaryButton } from '../../components/ui/Button';
@@ -16,6 +16,11 @@ const TOOL_TIPS = [
     description: 'Draw, type, or upload your signature.'
   },
   {
+    icon: <Move size={20} />,
+    title: 'Interactive Placement',
+    description: 'Click or drag on the page preview to place signature.'
+  },
+  {
     icon: <Lock size={20} />,
     title: 'Legally Binding',
     description: 'Secure digital signatures you can trust.'
@@ -23,20 +28,14 @@ const TOOL_TIPS = [
   {
     icon: <Users size={20} />,
     title: 'Multi-Signer',
-    description: 'Add multiple signature fields easily.'
+    description: 'Add custom signer names & date stamps.'
   },
   {
     icon: <ShieldCheck size={20} />,
     title: 'Tamper-Proof',
     description: 'Document integrity is cryptographically sealed.'
   },
-  {
-    icon: <Clock size={20} />,
-    title: 'Time Stamped',
-    description: 'Records exact time of signature.'
-  },
 ];
-
 
 const FONTS = ['Caveat', 'Dancing Script', 'Pacifico', 'Great Vibes', 'cursive'];
 
@@ -44,6 +43,8 @@ export default function DigitalSignatureScreen() {
   const fileInputRef = useRef(null);
   const sigImgInputRef = useRef(null);
   const canvasRef = useRef(null);
+  const pdfRenderCanvasRef = useRef(null);
+  const previewContainerRef = useRef(null);
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [sigMode, setSigMode] = useState('draw'); // draw | type | upload
@@ -52,15 +53,67 @@ export default function DigitalSignatureScreen() {
   const [signerName, setSignerName] = useState('');
   const [includeDate, setIncludeDate] = useState(true);
   const [pageNum, setPageNum] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [pdfPageSize, setPdfPageSize] = useState({ width: 612, height: 792 }); // PDF points
   const [posX, setPosX] = useState(100);
   const [posY, setPosY] = useState(650);
+  const [sigWidth] = useState(160);
+  const [sigHeight] = useState(60);
+
   const [isDrawing, setIsDrawing] = useState(false);
   const [signatureDataUrl, setSignatureDataUrl] = useState(null);
   const [running, setRunning] = useState(false);
   const [signedResult, setSignedResult] = useState(null);
+  const [renderingPdf, setRenderingPdf] = useState(false);
+  const [isDraggingPlacement, setIsDraggingPlacement] = useState(false);
+
   const { toast, showToast, dismissToast } = useToast();
 
-  // Canvas drawing setup
+  // Load & render PDF page preview via pdfjs-dist
+  const renderPdfPage = useCallback(async (file, pageIndex) => {
+    if (!file || !pdfRenderCanvasRef.current) return;
+    setRenderingPdf(true);
+    try {
+      const pdfjsLib = await import('pdfjs-dist');
+      try {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+          'pdfjs-dist/build/pdf.worker.min.mjs',
+          import.meta.url
+        ).toString();
+      } catch {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version || '4.0.379'}/pdf.worker.min.mjs`;
+      }
+
+      const arrayBuffer = await file.arrayBuffer();
+      const doc = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+      setTotalPages(doc.numPages);
+
+      const targetPageNum = Math.min(Math.max(1, pageIndex), doc.numPages);
+      const page = await doc.getPage(targetPageNum);
+      const origViewport = page.getViewport({ scale: 1.0 });
+      setPdfPageSize({ width: origViewport.width, height: origViewport.height });
+
+      const canvas = pdfRenderCanvasRef.current;
+      const viewport = page.getViewport({ scale: 1.5 });
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      const ctx = canvas.getContext('2d');
+      await page.render({ canvasContext: ctx, viewport }).promise;
+    } catch (err) {
+      console.error('Error rendering PDF preview page:', err);
+    } finally {
+      setRenderingPdf(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedFile) {
+      renderPdfPage(selectedFile, pageNum);
+    }
+  }, [selectedFile, pageNum, renderPdfPage]);
+
+  // Setup drawing canvas context
   useEffect(() => {
     if (sigMode === 'draw' && canvasRef.current) {
       const canvas = canvasRef.current;
@@ -72,25 +125,36 @@ export default function DigitalSignatureScreen() {
     }
   }, [sigMode]);
 
+  // Accurate mouse/touch coordinates relative to canvas internal size
+  function getCanvasCoords(e, canvas) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const clientX = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
+    const clientY = e.clientY ?? e.touches?.[0]?.clientY ?? 0;
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  }
+
   function startDrawing(e) {
     setIsDrawing(true);
     const canvas = canvasRef.current;
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
-    const y = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
+    const coords = getCanvasCoords(e, canvas);
     ctx.beginPath();
-    ctx.moveTo(x, y);
+    ctx.moveTo(coords.x, coords.y);
   }
 
   function draw(e) {
     if (!isDrawing) return;
     const canvas = canvasRef.current;
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
-    const y = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
-    ctx.lineTo(x, y);
+    const coords = getCanvasCoords(e, canvas);
+    ctx.lineTo(coords.x, coords.y);
     ctx.stroke();
   }
 
@@ -110,6 +174,16 @@ export default function DigitalSignatureScreen() {
     }
   }
 
+  function hasDrawnContent(canvas) {
+    if (!canvas) return false;
+    const ctx = canvas.getContext('2d');
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    for (let i = 3; i < data.length; i += 4) {
+      if (data[i] > 10) return true;
+    }
+    return false;
+  }
+
   function handleUploadSignatureImage(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -126,12 +200,44 @@ export default function DigitalSignatureScreen() {
     canvas.width = 400;
     canvas.height = 120;
     const ctx = canvas.getContext('2d');
-    ctx.font = `42px ${selectedFont}, cursive`;
+    ctx.font = `42px "${selectedFont}", cursive`;
     ctx.fillStyle = '#1E3A8A';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(typedName, 200, 60);
+    ctx.fillText(typedName.trim(), 200, 60);
     return canvas.toDataURL('image/png');
+  }
+
+  // Interactive PDF Placement Click / Drag
+  function handlePlacementUpdate(clientX, clientY) {
+    if (!previewContainerRef.current) return;
+    const rect = previewContainerRef.current.getBoundingClientRect();
+    const relX = Math.max(0, Math.min(clientX - rect.left, rect.width));
+    const relY = Math.max(0, Math.min(clientY - rect.top, rect.height));
+
+    const pointX = Math.round((relX / rect.width) * pdfPageSize.width);
+    const pointY = Math.round((relY / rect.height) * pdfPageSize.height);
+
+    const clampedX = Math.max(0, Math.min(pointX, pdfPageSize.width - sigWidth));
+    const clampedY = Math.max(0, Math.min(pointY, pdfPageSize.height - sigHeight));
+
+    setPosX(clampedX);
+    setPosY(clampedY);
+  }
+
+  function handlePreviewMouseDown(e) {
+    setIsDraggingPlacement(true);
+    handlePlacementUpdate(e.clientX, e.clientY);
+  }
+
+  function handlePreviewMouseMove(e) {
+    if (isDraggingPlacement) {
+      handlePlacementUpdate(e.clientX, e.clientY);
+    }
+  }
+
+  function handlePreviewMouseUp() {
+    setIsDraggingPlacement(false);
   }
 
   async function handleSignPDF() {
@@ -141,13 +247,28 @@ export default function DigitalSignatureScreen() {
     }
 
     let finalSigData = signatureDataUrl;
-    if (sigMode === 'type') {
-      finalSigData = generateTypedSignatureDataUrl();
-    }
 
-    if (!finalSigData && !signerName) {
-      showToast('Please create a signature or enter your name', 'warning');
-      return;
+    if (sigMode === 'draw') {
+      if (!canvasRef.current || !hasDrawnContent(canvasRef.current)) {
+        if (!signerName.trim()) {
+          showToast('Please draw your signature on the canvas', 'warning');
+          return;
+        }
+        finalSigData = null;
+      } else {
+        finalSigData = canvasRef.current.toDataURL('image/png');
+      }
+    } else if (sigMode === 'type') {
+      if (!typedName.trim()) {
+        showToast('Please type your name for the signature', 'warning');
+        return;
+      }
+      finalSigData = generateTypedSignatureDataUrl();
+    } else if (sigMode === 'upload') {
+      if (!signatureDataUrl) {
+        showToast('Please upload a signature image file', 'warning');
+        return;
+      }
     }
 
     setRunning(true);
@@ -163,10 +284,10 @@ export default function DigitalSignatureScreen() {
           page: Number(pageNum) || 1,
           x: Number(posX) || 100,
           y: Number(posY) || 650,
-          width: 160,
-          height: 60,
-          image_base64: finalSigData,
-          signer_name: signerName || typedName,
+          width: sigWidth,
+          height: sigHeight,
+          image_base64: finalSigData || '',
+          signer_name: signerName.trim() || (sigMode === 'type' ? typedName.trim() : ''),
           date_text: dateStr,
         },
       ];
@@ -181,6 +302,11 @@ export default function DigitalSignatureScreen() {
     }
   }
 
+  // Active signature preview image for overlay
+  const currentSigImagePreview = sigMode === 'type'
+    ? (typedName.trim() ? generateTypedSignatureDataUrl() : null)
+    : signatureDataUrl;
+
   return (
     <div className="compress-screen">
       <div className="compress-screen__body">
@@ -191,7 +317,7 @@ export default function DigitalSignatureScreen() {
               <PenTool size={26} color="#4F46E5" />
             </div>
             <p className="compress-screen__pick-label">Choose PDF to Sign</p>
-            <p className="compress-screen__pick-sub">Draw, type, or upload digital signatures to official documents</p>
+            <p className="compress-screen__pick-sub">Draw, type, or upload digital signatures with real-time visual PDF placement</p>
           </button>
         ) : (
           <div className="compress-screen__file-card" onClick={() => fileInputRef.current?.click()}>
@@ -201,7 +327,7 @@ export default function DigitalSignatureScreen() {
             <div className="compress-screen__file-info">
               <p className="compress-screen__file-name">{selectedFile.name}</p>
               <p className="compress-screen__file-meta">
-                {(selectedFile.size / 1024).toFixed(1)} KB • Ready for digital signature
+                {(selectedFile.size / 1024).toFixed(1)} KB • {totalPages} Page{totalPages > 1 ? 's' : ''} • Ready for digital signature
               </p>
             </div>
           </div>
@@ -270,6 +396,7 @@ export default function DigitalSignatureScreen() {
                 onMouseDown={startDrawing}
                 onMouseMove={draw}
                 onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
                 onTouchStart={startDrawing}
                 onTouchMove={draw}
                 onTouchEnd={stopDrawing}
@@ -312,8 +439,8 @@ export default function DigitalSignatureScreen() {
                 ))}
               </select>
 
-              <div style={{ padding: '16px', borderRadius: '10px', background: '#FFFFFF', border: '1px solid var(--color-divider)', textAlign: 'center', fontSize: '28px', color: '#1E3A8A', fontFamily: `${selectedFont}, cursive` }}>
-                {typedName || 'Your Signature'}
+              <div style={{ padding: '16px', borderRadius: '10px', background: '#FFFFFF', border: '1px solid var(--color-divider)', textAlign: 'center', fontSize: '28px', color: '#1E3A8A', fontFamily: `"${selectedFont}", cursive` }}>
+                {typedName.trim() || 'Your Signature'}
               </div>
             </div>
           )}
@@ -332,7 +459,7 @@ export default function DigitalSignatureScreen() {
                 onClick={() => sigImgInputRef.current?.click()}
                 style={{ padding: '12px 16px', borderRadius: '10px', background: 'var(--color-primary-soft)', color: 'var(--color-primary)', border: '1px dashed var(--color-primary)', fontSize: '13px', fontWeight: 600, cursor: 'pointer', width: '100%' }}
               >
-                Upload Transparent Signature PNG/JPG
+                Upload Signature Image (PNG/JPG)
               </button>
               {signatureDataUrl && (
                 <div style={{ marginTop: '12px', padding: '10px', background: '#fff', borderRadius: '8px', border: '1px solid var(--color-divider)' }}>
@@ -343,7 +470,107 @@ export default function DigitalSignatureScreen() {
           )}
         </div>
 
-        {/* Signer Info & Placement */}
+        {/* Visual PDF Page Preview & Interactive Drag Placement */}
+        {selectedFile && (
+          <div style={{ marginTop: '16px', background: 'var(--color-surface)', padding: '16px', borderRadius: '14px', border: '1px solid var(--color-divider)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700 }}>
+                <Sparkles size={16} color="#4F46E5" /> Page Preview & Placement
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  type="button"
+                  disabled={pageNum <= 1 || renderingPdf}
+                  onClick={() => setPageNum(p => Math.max(1, p - 1))}
+                  style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--color-divider)', background: 'var(--color-surface)', cursor: 'pointer', opacity: pageNum <= 1 ? 0.5 : 1 }}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <span style={{ fontSize: '12px', fontWeight: 600 }}>
+                  Page {pageNum} of {totalPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={pageNum >= totalPages || renderingPdf}
+                  onClick={() => setPageNum(p => Math.min(totalPages, p + 1))}
+                  style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--color-divider)', background: 'var(--color-surface)', cursor: 'pointer', opacity: pageNum >= totalPages ? 0.5 : 1 }}
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+
+            <p style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginBottom: '10px' }}>
+              💡 Click or drag on the page below to position your signature visually.
+            </p>
+
+            <div
+              ref={previewContainerRef}
+              onMouseDown={handlePreviewMouseDown}
+              onMouseMove={handlePreviewMouseMove}
+              onMouseUp={handlePreviewMouseUp}
+              onMouseLeave={handlePreviewMouseUp}
+              style={{
+                position: 'relative',
+                width: '100%',
+                maxHeight: '400px',
+                overflow: 'hidden',
+                borderRadius: '10px',
+                border: '1px solid var(--color-divider)',
+                background: '#4B5563',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                cursor: 'crosshair',
+                userSelect: 'none'
+              }}
+            >
+              <canvas
+                ref={pdfRenderCanvasRef}
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '400px',
+                  objectFit: 'contain',
+                  display: 'block'
+                }}
+              />
+
+              {/* Signature Placement Box Overlay */}
+              <div
+                style={{
+                  position: 'absolute',
+                  left: `${(posX / pdfPageSize.width) * 100}%`,
+                  top: `${(posY / pdfPageSize.height) * 100}%`,
+                  width: `${(sigWidth / pdfPageSize.width) * 100}%`,
+                  height: `${(sigHeight / pdfPageSize.height) * 100}%`,
+                  minWidth: '80px',
+                  minHeight: '30px',
+                  border: '2px dashed #4F46E5',
+                  background: 'rgba(79, 70, 229, 0.15)',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  pointerEvents: 'none',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                  overflow: 'hidden',
+                  padding: '2px'
+                }}
+              >
+                {currentSigImagePreview ? (
+                  <img src={currentSigImagePreview} alt="Signature Overlay" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                ) : (
+                  <div style={{ textAlign: 'center', fontSize: '10px', fontWeight: 700, color: '#1E3A8A' }}>
+                    {signerName || typedName || 'Signature Here'}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Signer Info & Precise Point Coordinates */}
         <div style={{ marginTop: '14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           <div>
             <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>Signer Name</label>
@@ -360,8 +587,9 @@ export default function DigitalSignatureScreen() {
             <input
               type="number"
               min={1}
+              max={totalPages}
               value={pageNum}
-              onChange={e => setPageNum(parseInt(e.target.value) || 1)}
+              onChange={e => setPageNum(Math.min(totalPages, Math.max(1, parseInt(e.target.value) || 1)))}
               style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid var(--color-divider)', fontSize: '12px' }}
             />
           </div>

@@ -46,14 +46,17 @@
 .profile-screen__pro-badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 10px;
+  padding: 2px 8px;
   background: rgba(255, 255, 255, 0.25);
   border-radius: var(--radius-full);
-  font-size: var(--font-size-xs);
+  font-size: 10.5px;
   font-weight: var(--font-weight-semibold);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.4);
   width: fit-content;
+  line-height: 1.2;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .profile-screen__menu {
@@ -239,13 +242,16 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
+  padding: 2px 7px;
   border-radius: 12px;
   background: rgba(16, 185, 129, 0.15);
   border: 1px solid rgba(16, 185, 129, 0.35);
   color: #10B981;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
+  line-height: 1.2;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .profile-screen__user-sub {
@@ -267,27 +273,33 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 10px;
+  padding: 3px 8px;
   background: rgba(16, 185, 129, 0.2);
   border: 1px solid rgba(16, 185, 129, 0.4);
   border-radius: 20px;
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.03em;
   color: #FFFFFF;
+  line-height: 1.2;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .profile-screen__date-pill {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.85);
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 20px;
+  line-height: 1.2;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .profile-screen__quick-settings-btn {
@@ -510,12 +522,17 @@
 }
 
 .profile-screen__card-badge {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 600;
-  padding: 2px 8px;
+  padding: 2px 7px;
   background: var(--color-primary-soft);
   color: var(--color-primary);
   border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.2;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .profile-screen__card-chevron {

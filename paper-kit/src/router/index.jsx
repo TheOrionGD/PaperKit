@@ -27,7 +27,6 @@ const NotFoundScreen   = lazy(() => import('../screens/NotFoundScreen'));
 const CategoryHubScreen  = lazy(() => import('../screens/CategoryHubScreen'));
 
 /* Dedicated Tool screens */
-const EditPDFScreen         = lazy(() => import('../screens/tools/EditPDFScreen'));
 const MergePDFScreen        = lazy(() => import('../screens/tools/MergePDFScreen'));
 const SplitPDFScreen        = lazy(() => import('../screens/tools/SplitPDFScreen'));
 const CompressPDFScreen     = lazy(() => import('../screens/tools/CompressPDFScreen'));
@@ -197,7 +196,6 @@ export default function AppRouter() {
             <Route path="/tools/category/:categoryId" element={<AppShell headerProps={{ title: 'Tools Hub' }}><CategoryHubScreen /></AppShell>} />
 
             {/* PDF Tool routes */}
-            <Route path="/tools/edit"            element={<AppShell headerProps={{ title: 'Edit PDF' }}><EditPDFScreen /></AppShell>} />
             <Route path="/tools/merge"           element={<AppShell headerProps={{ title: 'Merge PDF', rightAction: 'check' }}><MergePDFScreen /></AppShell>} />
             <Route path="/tools/split"           element={<AppShell headerProps={{ title: 'Split PDF' }}><SplitPDFScreen /></AppShell>} />
             <Route path="/tools/compress"        element={<AppShell headerProps={{ title: 'Compress PDF' }}><CompressPDFScreen /></AppShell>} />

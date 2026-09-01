@@ -17,7 +17,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior-y: contain;
-  padding-top: calc(var(--topbar-height, 56px) + 7px);
+  padding-top: var(--topbar-height, 56px);
   padding-bottom: calc(var(--bottomnav-height, 66px) + 16px);
 
   padding-left: var(--space-4);

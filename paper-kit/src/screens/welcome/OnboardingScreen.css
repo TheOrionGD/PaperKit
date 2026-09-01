@@ -195,13 +195,18 @@
 }
 
 .onboarding-screen__badge {
-  font-size: 0.74rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  padding: 4px 12px;
+  padding: 3px 10px;
   border-radius: 30px;
   border: 1px solid;
   letter-spacing: 0.02em;
   text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.2;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .onboarding-screen__title {
@@ -421,7 +426,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 8px;
+  padding: 2px 7px;
   border-radius: 16px;
   border: 1px solid;
   font-size: 0.68rem;
@@ -429,6 +434,8 @@
   letter-spacing: 0.03em;
   white-space: nowrap;
   flex-shrink: 0;
+  line-height: 1.2;
+  box-sizing: border-box;
 }
 
 /* "Applies to" note */

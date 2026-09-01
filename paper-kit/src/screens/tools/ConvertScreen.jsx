@@ -197,13 +197,6 @@ export default function ConvertScreen() {
     if (from === 'pdf' && to === 'word') {
       return [
         {
-          id: 'edit-doc',
-          label: 'Edit Document in Web Editor',
-          desc: 'Edit text live & save back to PDF',
-          icon: FileCode,
-          route: '/tools/edit',
-        },
-        {
           id: 'convert-back',
           label: 'Convert Back to PDF',
           desc: 'Turn Word file back to PDF',

@@ -1,7 +1,6 @@
 /* tools-config.js — Authoritative configuration matching PaperKit specification in gv */
 
 export const PDF_TOOLS = [
-  { id: 'edit-pdf',        label: 'Edit PDF',        description: 'Convert PDF to Word, edit online & save back to PDF', path: '/tools/edit', color: 'purple' },
   { id: 'merge-pdf',       label: 'Merge PDF',       description: 'Combine multiple PDFs into one', path: '/tools/merge', color: 'blue' },
   { id: 'split-pdf',       label: 'Split PDF',       description: 'Split by ranges, every N or single pages', path: '/tools/split', color: 'red' },
   { id: 'compress-pdf',    label: 'Compress PDF',    description: 'Reduce file size with multi-level optimization', path: '/tools/compress', color: 'orange' },
@@ -91,10 +90,10 @@ export const ARCHIVE_TOOLS = [
 ];
 
 export const QUICK_TOOLS = [
-  PDF_TOOLS[0], // Edit PDF
-  PDF_TOOLS[1], // Merge PDF
-  PDF_TOOLS[2], // Split PDF
-  PDF_TOOLS[3], // Compress PDF
+  PDF_TOOLS[0], // Merge PDF
+  PDF_TOOLS[1], // Split PDF
+  PDF_TOOLS[2], // Compress PDF
+  PDF_TOOLS[3], // Extract Pages
   AI_TOOLS[1],  // AI Summary
   AI_TOOLS[4],  // AI Document Chat
   SECURITY_TOOLS[0], // Protect PDF
